@@ -5,6 +5,8 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
+import com.chaquo.python.Python;
+
 public class EngineService extends Service {
     public EngineService() {
     }
@@ -17,8 +19,10 @@ public class EngineService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         startForeground(1, new Notification());
+
+        // Retrieves Python instance
+        Python py = Python.getInstance();
         return super.onStartCommand(intent, flags, startId);
     }
 }
