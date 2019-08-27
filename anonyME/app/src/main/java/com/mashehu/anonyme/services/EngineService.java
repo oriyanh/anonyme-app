@@ -5,6 +5,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
+import com.chaquo.python.PyObject;
 import com.chaquo.python.Python;
 
 public class EngineService extends Service {
@@ -23,6 +24,8 @@ public class EngineService extends Service {
 
         // Retrieves Python instance
         Python py = Python.getInstance();
+        PyObject pyObj = py.getModule("facenet_fr").callAttr("main");
+
         return super.onStartCommand(intent, flags, startId);
     }
 }

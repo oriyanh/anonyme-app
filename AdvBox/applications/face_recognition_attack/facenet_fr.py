@@ -23,9 +23,8 @@ import os
 
 sys.path.append("../../")
 
-from advbox.attacks.tf.tools import  fgsm
-
-from AdvBox.applications.face_recognition_attack.facenet.src import facenet
+from advbox.attacks.tf.tools import fgsm
+from applications.face_recognition_attack.facenet.src import facenet
 
 FACENET_MODEL_CHECKPOINT = "20180402-114759.pb"
 
