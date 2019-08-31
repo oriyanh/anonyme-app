@@ -27,7 +27,7 @@ from AdvBox.advbox.attacks.tf.tools import fgsm
 
 from AdvBox.applications.face_recognition_attack.facenet.src import facenet
 
-FACENET_MODEL_CHECKPOINT = "20180402-114759.pb"
+# FACENET_MODEL_CHECKPOINT = "fn_weights_20180402_114759.pb"
 
 
 def get_pic_from_png(pic_path):
@@ -79,10 +79,10 @@ def generate_inp2adv_name(input_pic, target_pic):
 
 class FacenetFR():
 
-    def __init__(self):
+    def __init__(self, facenet_model_checkpoint):
         self.sess = tf.Session()
         with self.sess.as_default():
-            facenet.load_model(FACENET_MODEL_CHECKPOINT)
+            facenet.load_model(facenet_model_checkpoint)
 
     def generate_embedding(self, pic):
         if type(pic) is str:
@@ -106,7 +106,7 @@ class FacenetFR():
         # if both pictures are same, return 0
         return Euclidian_distance(embedding1, embedding2)
 
-    def generate_adv_whitebox(self, input_pic, target_pic):
+    def generate_adv_whitebox(self, input_pic, target_pic, dest_dir=None):
         # Get input and output tensors
         images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
         embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
@@ -137,7 +137,8 @@ class FacenetFR():
         loss_limit = 0.0008
         loss_cnt_threshold = 10
         #最大迭代次数
-        num_iter = 2000
+        num_iter = 100
+        # num_iter = 2000
 
         last_adv_loss = 0
         cnt = 0
@@ -179,7 +180,8 @@ class FacenetFR():
         #filename = generate_inp2adv_name(input_pic, target_pic) + str(i)
         #调试阶段 文件名不随机
         filename = generate_inp2adv_name(input_pic, target_pic)
-        save_img2png(adv_image[0, ...], filename)
+        full_path = os.path.join(dest_dir, filename)
+        save_img2png(adv_image[0, ...], full_path)
 
         feed_dict = {
             images_placeholder: adv_image,
@@ -188,13 +190,14 @@ class FacenetFR():
         adv_embedding = self.sess.run(embeddings, feed_dict=feed_dict)[0]
         print('The distance between input embedding and target is %2.6f' %
               Euclidian_distance(adv_embedding, target_emb))
+        return full_path + ".png"
 
 
-def main():
-    fr = FacenetFR()
-
-    input_pic = "Bill_Gates_0001.png"
-    target_pic = "chaoren.png"
+def main(files_dir, cache_dir):
+    facenet_model_checkpoint = os.path.join(files_dir, "fn_weights_20180402_114759.pb")
+    fr = FacenetFR(facenet_model_checkpoint)
+    input_pic = os.path.join(files_dir, "bill_gates_0001.png")
+    target_pic = os.path.join(files_dir, "chaoren.png")
     # print fr.compare(input_pic,target_pic)
 
-    fr.generate_adv_whitebox(input_pic, target_pic)
+    return fr.generate_adv_whitebox(input_pic, target_pic, cache_dir)  # returns path to new image
