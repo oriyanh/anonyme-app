@@ -8,8 +8,6 @@ import android.util.Log;
 
 import com.mashehu.anonyme.common.Utilities;
 
-import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_INPUT_PATH;
-import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_OUT_DIR;
 import static com.mashehu.anonyme.common.Constants.INTENT_START_ENGINE;
 import static com.mashehu.anonyme.common.Constants.INTENT_START_PROCESSING_IMAGES;
 
@@ -18,13 +16,11 @@ import static com.mashehu.anonyme.common.Constants.INTENT_START_PROCESSING_IMAGE
  * A {@link BroadcastReceiver} for handling outgoing calls
  */
 public class EngineStartReceiver extends BroadcastReceiver {
-	final static String TAG = "anonyme.EngineStartReceiver";
+	final static String TAG = "anonyme.EngineStartReceiver.";
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		// TODO: This method is called when the BroadcastReceiver is receiving
-		// an Intent broadcast.
-		Log.d(TAG, "Got intent! Action - " + intent.getAction());
+		Log.d(TAG + "onReceive", "Got intent! Action - " + intent.getAction());
 		String action = intent.getAction();
 
 		if (getResultCode() != Activity.RESULT_OK)
@@ -47,14 +43,16 @@ public class EngineStartReceiver extends BroadcastReceiver {
 //		int notificationID = new Random().nextInt(); // to be used to replace notifications when escalating
 
 
+		// copy intent extras
+		Intent startEngineIntent = new Intent(intent);
+		// set different targets for intent
+		startEngineIntent.setClass(context, EngineService.class);
+		startEngineIntent.setAction(INTENT_START_PROCESSING_IMAGES);
 
-		Intent startEngineIntent = new Intent(INTENT_START_PROCESSING_IMAGES, null,
-				context, EngineService.class);
-		startEngineIntent.putExtra(EXTRA_ENGINE_INPUT_PATH, intent.getStringArrayListExtra(EXTRA_ENGINE_INPUT_PATH));
-		startEngineIntent.putExtra(EXTRA_ENGINE_OUT_DIR, intent.getStringExtra(EXTRA_ENGINE_OUT_DIR));
-
-		Log.d(TAG, "startEngine: Starting 'Engine' service");
+		Log.d(TAG + "startEngine", "Starting 'EngineService'");
 		context.startService(startEngineIntent);
+
+
 //		JobIntentService.enqueueWork(context, EngineService.class,
 //				JOB_ID_START_ENGINE_SERVICE, startEngineIntent);
 
