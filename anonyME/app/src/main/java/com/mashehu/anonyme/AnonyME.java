@@ -13,7 +13,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class AnonyME extends Application {
-
+    public static final String TAG = "anonyme.Application.";
     static boolean COPY_ASSETS = false;
 
     @Override
@@ -21,12 +21,12 @@ public class AnonyME extends Application {
         super.onCreate();
 
         // Starts python engine when app starts
-        Constants.FILES_PATH = getFilesDir().toString();
+        Constants.ASSETS_PATH = getFilesDir().toString();
         Constants.CACHE_PATH = getCacheDir().toString();
-        if (COPY_ASSETS) {
-            Log.d("ANONYME", "Copying assets");
+        if (COPY_ASSETS) {  // Copy resources from assets dir (in APK) to local storage
+            Log.d(TAG + "onCreate", "Copying assets");
             try {
-                copyAssets(Constants.FILES_PATH);
+                copyAssets(Constants.ASSETS_PATH);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -34,13 +34,14 @@ public class AnonyME extends Application {
         Python.start(new AndroidPlatform(this));
     }
 
-    public void copyAssets(String dest) throws IOException{
 
+    public void copyAssets(String dest) throws IOException{
         AssetManager assetManager = getApplicationContext().getAssets();
         String[] files = assetManager.list("");
+        assert files != null;
         for (String f : files) {
             if (f.endsWith(".png") || f.endsWith(".pb")) {
-                // Constants.FILES_PATH.toString()
+                // Constants.ASSETS_PATH.toString()
                 OutputStream myOutput = new FileOutputStream(dest + "/" + f);
                 byte[] buffer = new byte[1024];
                 int length;

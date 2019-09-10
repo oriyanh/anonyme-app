@@ -193,11 +193,11 @@ class FacenetFR():
         return full_path + ".png"
 
 
-def main(files_dir, cache_dir):
-    facenet_model_checkpoint = os.path.join(files_dir, "fn_weights_20180402_114759.pb")
+def main(assets_dir, out_dir, input_pic_name):
+    facenet_model_checkpoint = os.path.join(assets_dir, "fn_weights_20180402_114759.pb")
     fr = FacenetFR(facenet_model_checkpoint)
-    input_pic = os.path.join(files_dir, "bill_gates_0001.png")
-    target_pic = os.path.join(files_dir, "chaoren.png")
+    input_pic_path = os.path.join(assets_dir, input_pic_name)
+    target_pic = os.path.join(assets_dir, "chaoren.png")
     # print fr.compare(input_pic,target_pic)
 
-    return fr.generate_adv_whitebox(input_pic, target_pic, cache_dir)  # returns path to new image
+    return fr.generate_adv_whitebox(input_pic_path, target_pic, out_dir)  # returns path to new image
