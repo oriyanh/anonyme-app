@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
 		startEngineIntent.putExtra(EXTRA_ENGINE_OUT_DIR, CACHE_PATH);
 		startEngineIntent.putExtra(EXTRA_ENGINE_NUM_IMAGES, 1);
 		startEngineIntent.putExtra(EXTRA_ENGINE_INPUT_PICS, images);
-		sendBroadcast(startEngineIntent);
+//		sendBroadcast(startEngineIntentK);
 	}
 }
 
