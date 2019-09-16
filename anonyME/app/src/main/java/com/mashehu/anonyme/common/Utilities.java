@@ -4,8 +4,10 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.util.Log;
 
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 
 import com.mashehu.anonyme.R;
@@ -44,4 +46,16 @@ public class Utilities {
 				.build();
 	}
 
+	public static boolean checkPermissions(Context context, String... permissions)
+	{
+		for (String permission: permissions)
+		{
+			if (ActivityCompat.checkSelfPermission(context, permission) !=
+					PackageManager.PERMISSION_GRANTED)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
 }
