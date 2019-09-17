@@ -9,5 +9,18 @@
         android:id="@+id/cameraCaptureFragment"
         android:name="com.mashehu.anonyme.fragments.CameraCaptureFragment"
         android:label="fragment_camera_capture"
-        tools:layout="@layout/fragment_camera_capture" />
+        tools:layout="@layout/fragment_camera_capture" >
+        <action
+            android:id="@+id/action_cameraCaptureFragment_to_confirmImagesFragment"
+            app:destination="@id/confirmImagesFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/confirmImagesFragment"
+        android:name="com.mashehu.anonyme.fragments.ConfirmImagesFragment"
+        android:label="fragment_confirm_images"
+        tools:layout="@layout/fragment_confirm_images" >
+        <argument
+            android:name="imageDirs"
+            app:argType="string[]" />
+    </fragment>
 </navigation>

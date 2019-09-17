@@ -11,11 +11,18 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.camera.core.CameraInfoUnavailableException;
 import androidx.camera.core.CameraX;
+import androidx.camera.core.FlashMode;
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureConfig;
 import androidx.camera.core.Preview;
 import androidx.camera.core.PreviewConfig;
+import androidx.camera.core.UseCase;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
+import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
@@ -23,24 +30,32 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mashehu.anonyme.R;
 import com.mashehu.anonyme.common.Constants;
 
+import java.io.File;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
+import static android.os.Environment.DIRECTORY_PICTURES;
 import static androidx.constraintlayout.widget.Constraints.TAG;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class CameraCaptureFragment extends Fragment implements View.OnLayoutChangeListener{
+public class CameraCaptureFragment extends Fragment implements View.OnLayoutChangeListener {
 
-    private int displayId = -1;
     private Preview preview = null;
+    private ImageCapture imageCapture = null;
     private CameraX.LensFacing lensFacing = CameraX.LensFacing.BACK;
-//    private File outputDirectory = null;
+    private ImageCapture.CaptureMode captureMode = ImageCapture.CaptureMode.MAX_QUALITY;
+    private static boolean isBulkCapture = false;
 
     public CameraCaptureFragment() {
         // Required empty public constructor
@@ -71,51 +86,70 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         assert getActivity() != null;
         assert getView() != null;
         TextureView viewFinder = getView().findViewById(R.id.view_finder);
-
-//        DisplayManager displayManager = (DisplayManager)viewFinder.getContext().getSystemService(
-//                Context.DISPLAY_SERVICE);
-//
-//        displayManager.registerDisplayListener(new DisplayManager.DisplayListener() {
-//            @Override
-//            public void onDisplayAdded(int displayId) {
-//                return;
-//            }
-//
-//            @Override
-//            public void onDisplayRemoved(int displayId) {
-//                return;
-//            }
-//
-//            @Override
-//            public void onDisplayChanged(int displayId) {
-//                if (displayId == CameraCaptureFragment.this.displayId)
-//                {
-//                    assert getView() != null;
-//                    CameraCaptureFragment.this.preview.setTargetRotation(
-//                            getView().getDisplay().getRotation());
-//                }
-//            }
-//        }, null);
-
-//        assert getContext() != null;
-//        outputDirectory = MainActivity.getOutputDirectory(getContext());
-//
-//        viewFinder.post(() -> {
-//                displayId = viewFinder.getDisplay().getDisplayId();
-//            });
-
-        boolean cameraPermission = ActivityCompat.checkSelfPermission(getActivity(),
-                Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
-        if (!cameraPermission)
-        {
+        boolean permissionsGranted = (ActivityCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED);
+        if (!permissionsGranted) {
             ActivityCompat.requestPermissions(getActivity(),
                     new String[]{Manifest.permission.CAMERA},
-                    Constants.CAMERA_PERMISSION_REQUEST_CODE);
+                    Constants.ANONYME_PERMISSION_REQUEST_CODE);
+        } else {
+            viewFinder.post(this::initializeCameraPreview);
+            initializeImageCapture();
         }
-        else
-        {
-            viewFinder.post(this::startCamera);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            assert getView() != null;
+            TextureView viewFinder = getView().findViewById(R.id.view_finder);
+            viewFinder.post(this::initializeCameraPreview);
+            initializeImageCapture();
+        } else {
+            if (getActivity() != null) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
+                        Manifest.permission.CAMERA)) {
+                    AlertDialog.Builder askPermissionsDialog = new AlertDialog.Builder(getActivity());
+                    askPermissionsDialog.setMessage("Pretty please?")
+                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    if (getActivity() != null) {
+                                        ActivityCompat.requestPermissions(getActivity(),
+                                                new String[]{Manifest.permission.CAMERA},
+                                                Constants.ANONYME_PERMISSION_REQUEST_CODE);
+                                    }
+                                }
+                            }).setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (getActivity() != null) {
+                                getActivity().finish();
+                            }
+                        }
+                    });
+                    askPermissionsDialog.create();
+                }
+            }
         }
+    }
+
+    private boolean tryBindToLifeCycle(UseCase useCase) {
+        try {
+            CameraX.bindToLifecycle(this, useCase);
+        } catch (IllegalArgumentException e) {
+            Log.e(TAG, e.getMessage());
+
+            assert getContext() != null;
+            Toast.makeText(getContext().getApplicationContext(), "Bind too many use cases.",
+                    Toast.LENGTH_SHORT)
+                    .show();
+
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -245,93 +279,30 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
-        {
-            startCamera();
-        }
-        else
-        {
-            if (getActivity() != null)
-            {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
-                        Manifest.permission.CAMERA))
-                {
-                    AlertDialog.Builder askPermissionsDialog = new AlertDialog.Builder(getActivity());
-                    askPermissionsDialog.setMessage("Pretty please?").setPositiveButton("Yes",
-                            new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if (getActivity() != null)
-                            {
-                                ActivityCompat.requestPermissions(getActivity(),
-                                        new String[]{Manifest.permission.CAMERA},
-                                        Constants.CAMERA_PERMISSION_REQUEST_CODE);
-                            }
-                        }
-                    }).setNegativeButton("No", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if (getActivity() != null)
-                            {
-                                getActivity().finish();
-                            }
-                        }
-                    });
-                    askPermissionsDialog.create();
-                }
-            }
-        }
+    public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft,
+                               int oldTop, int oldRight, int oldBottom) {
+        updateTransform();
     }
 
-    private void startCamera()
-    {
+    private void initializeCameraPreview() {
         assert getView() != null;
         TextureView viewFinder = getView().findViewById(R.id.view_finder);
-//
-//        assert getContext() != null;
-//        DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
-//
-//        assert getActivity() != null;
-//        getActivity().getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
-//        Rational screenApectRatio = new Rational(metrics.widthPixels, metrics.heightPixels);
 
         // TODO:: Get last lens facing from shared preferences
         PreviewConfig previewConfig = new PreviewConfig.Builder()
                 .setLensFacing(lensFacing)
-//                .setTargetAspectRatio(screenApectRatio)
-//                .setTargetRotation(getActivity().getWindowManager().getDefaultDisplay()
-//                        .getRotation())
                 .build();
 
         preview = new Preview(previewConfig);
         preview.setOnPreviewOutputUpdateListener(output -> {
-                ViewGroup parent = (ViewGroup)viewFinder.getParent();
-                parent.removeView(viewFinder);
-                parent.addView(viewFinder, 0);
-                viewFinder.setSurfaceTexture(output.getSurfaceTexture());
+            ViewGroup parent = (ViewGroup) viewFinder.getParent();
+            parent.removeView(viewFinder);
+            parent.addView(viewFinder, 0);
+            viewFinder.setSurfaceTexture(output.getSurfaceTexture());
         });
-
-//        ImageCaptureConfig imageCaptureConfig = new ImageCaptureConfig.Builder()
-//                .setTargetAspectRatio(screenApectRatio)
-//                .setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
-//                .build();
-
-//        ImageCapture imageCapture = new ImageCapture(imageCaptureConfig);
         viewFinder.addOnLayoutChangeListener(this);
 
-        try {
-            CameraX.bindToLifecycle(this, preview);
-        } catch (IllegalArgumentException e) {
-            Log.e(TAG, e.getMessage());
-
-            assert getContext() != null;
-            Toast.makeText(getContext().getApplicationContext(), "Bind too many use cases.",
-                    Toast.LENGTH_SHORT)
-                    .show();
-
+        if (!tryBindToLifeCycle(preview)) {
             preview = null;
             return;
         }
@@ -339,8 +310,133 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         updateTransform();
     }
 
-    @Override
-    public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-        updateTransform();
+    private void refreshFlashButtonIcon() {
+        assert getView() != null;
+        ImageButton flashToggle = getView().findViewById(R.id.torch_toggle);
+        if (imageCapture != null) {
+            flashToggle.setVisibility(View.VISIBLE);
+            flashToggle.setOnClickListener((view) ->
+            {
+                FlashMode flashMode = imageCapture.getFlashMode();
+                if (flashMode == FlashMode.ON) {
+                    imageCapture.setFlashMode(FlashMode.OFF);
+                } else if (flashMode == FlashMode.OFF) {
+                    imageCapture.setFlashMode(FlashMode.AUTO);
+                } else if (flashMode == FlashMode.AUTO) {
+                    imageCapture.setFlashMode(FlashMode.ON);
+                } // TODO:: Why does auto turn flash on? */
+                refreshFlashButtonIcon();
+            });
+            FlashMode flashMode = imageCapture.getFlashMode();
+            switch (flashMode) {
+                case ON:
+                    flashToggle.setImageResource(R.drawable.ic_flash_on);
+                    break;
+                case OFF:
+                    flashToggle.setImageResource(R.drawable.ic_flash_off);
+                    break;
+                case AUTO:
+                    flashToggle.setImageResource(R.drawable.ic_flash_auto);
+                    break;
+            }
+        }
+
+        // Should never happen
+        else {
+            flashToggle.setVisibility(View.GONE);
+            flashToggle.setOnClickListener(null);
+        }
+    }
+
+    void initializeImageCapture() {
+        ImageCaptureConfig config =
+                new ImageCaptureConfig.Builder()
+                        .setLensFacing(lensFacing)
+                        .setCaptureMode(captureMode)
+                        .setUseCaseEventListener(new UseCase.EventListener() {
+                            @Override
+                            public void onBind(@NonNull String cameraId) {
+
+                            }
+
+                            @Override
+                            public void onUnbind() {
+
+                            }
+                        })
+                        .build();
+        imageCapture = new ImageCapture(config);
+
+        if (!tryBindToLifeCycle(imageCapture)) {
+            imageCapture = null;
+            return;
+        }
+
+        assert getActivity() != null;
+        ImageButton button = getActivity().findViewById(R.id.take_picture);
+
+        final File dir = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES),
+                getActivity().getString(R.string.app_name));
+        if (!dir.exists())
+        {
+            if (!dir.mkdirs())
+            {
+                Log.e(TAG, "Failed to create directory");
+            }
+            else
+            {
+                Log.d(TAG, "Created directory" + dir);
+            }
+        }
+        else
+        {
+            Log.d(TAG, "Directory exists, all good :)");
+        }
+
+        button.setOnClickListener((view) ->
+                {
+                    final File imageFile = new File(dir,
+                            Calendar.getInstance().getTimeInMillis() + ".jpg");
+                    imageCapture.takePicture(
+                            imageFile,
+                            new ImageCapture.OnImageSavedListener() {
+                                @Override
+                                public void onImageSaved(@NonNull File file) {
+                                    Log.d(TAG, "Saved image to " + file);
+                                    if (!isBulkCapture)
+                                    {
+                                        Bundle args = new Bundle();
+                                        String[] imageDirs = {imageFile.getAbsolutePath()};
+                                        args.putStringArray("imageDirs", imageDirs);
+                                        Navigation.findNavController(view).navigate(
+                                                R.id.action_cameraCaptureFragment_to_confirmImagesFragment,
+                                                args);
+                                    }
+                                }
+
+                                @Override
+                                public void onError(
+                                        @NonNull ImageCapture.ImageCaptureError error,
+                                        @NonNull String message,
+                                        Throwable cause) {
+                                    Log.e(TAG, "Failed to save image.", cause);
+                                }
+                            });
+
+                    // In bulk capture mode, dims screen for 50 ms for shutter effect
+                    assert getView() != null;
+                    TextView shutterView = getView().findViewById(R.id.shutter_view);
+                    Handler shutterHandler = new Handler();
+
+                    shutterView.setVisibility(View.VISIBLE);
+                    shutterHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            shutterView.setVisibility(View.GONE);
+                        }
+                    }, 50L);
+                });
+
+        refreshFlashButtonIcon();
     }
 }

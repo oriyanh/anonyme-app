@@ -1,7 +1,12 @@
 package com.mashehu.anonyme.common;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+
 final public class Constants {
-	public static int CAMERA_PERMISSION_REQUEST_CODE = 1993;
+	public static int ANONYME_PERMISSION_REQUEST_CODE = 1993;
+	public static String[] PERMISSIONS = {Manifest.permission.CAMERA,
+			Manifest.permission.WRITE_EXTERNAL_STORAGE};
 	public static String CACHE_PATH;
 	public static String ASSETS_PATH;
 
