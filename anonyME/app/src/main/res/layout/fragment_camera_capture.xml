@@ -8,10 +8,11 @@
     tools:context=".fragments.CameraCaptureFragment">
 
     <LinearLayout
+        android:id="@+id/linearLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:layout_marginBottom="40dp"
+        android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <ImageButton
@@ -26,12 +27,31 @@
         <ImageButton
             android:id="@+id/torch_toggle"
             android:layout_width="64dp"
-            android:layout_height="64dp" />
+            android:layout_height="64dp"
+
+            android:background="@drawable/rounded_button"
+            android:contentDescription="TurnOnFlash"
+            android:visibility="gone" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/shutter_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@android:color/background_dark"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:visibility="gone" />
 
     <TextureView
         android:id="@+id/view_finder"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

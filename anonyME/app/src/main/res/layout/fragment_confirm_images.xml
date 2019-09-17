@@ -8,16 +8,14 @@
     android:layout_height="match_parent"
     tools:context=".fragments.ConfirmImagesFragment">
 
-<!--    <androidx.camera.view.CameraView-->
-<!--        android:id="@+id/camera"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:adjustViewBounds="true"-->
-<!--        android:keepScreenOn="true"-->
-<!--        app:aspectRatio="4:3"-->
-<!--        app:autoFocus="true"-->
-<!--        app:facing="back"-->
-<!--        app:flash="auto"-->
-<!--        />-->
-
+    <!-- TODO: Get rid of this when finished testing-->
+    <TextView
+        android:id="@+id/files_dir_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TextView"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
