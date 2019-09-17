@@ -5,12 +5,8 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.chaquo.python.PyObject;
-import com.chaquo.python.Python;
-
 import java.util.ArrayList;
 
-import static com.mashehu.anonyme.common.Constants.ENGINE_MODULE_NAME;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_ASSETS_PATH;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_INPUT_PICS;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_NUM_IMAGES;
@@ -59,11 +55,21 @@ public class EngineService extends Service {
 	}
 
 
-	public String processImage(String assets_dir, String out_dir, String pic_name) {
-		Python py = Python.getInstance();
-		PyObject res = py.getModule(ENGINE_MODULE_NAME).
-				callAttr("main", assets_dir, out_dir, pic_name);
+	public String processImage(String assets_dir, String out_dir, String img) {
+		EngineStartAsyncTask task = new EngineStartAsyncTask(assets_dir, out_dir);
+		task.delegate = this;
+		task.execute(img);
 
-		return res.toString();
+//		Python py = Python.getInstance();
+//		PyObject res = py.getModule(ENGINE_MODULE_NAME).
+//				callAttr("main", assets_dir, out_dir, img);
+//
+//		return res.toString();
+		return null;
+	}
+
+	public void moveToGallery(String img) {
+		MoveToGalleryAsyncTask task = new MoveToGalleryAsyncTask();
+		task.execute(img); //todo implement actual mechanism
 	}
 }
