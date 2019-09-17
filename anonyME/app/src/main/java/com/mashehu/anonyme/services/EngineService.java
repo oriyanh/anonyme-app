@@ -2,10 +2,12 @@ package com.mashehu.anonyme.services;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.IBinder;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_ASSETS_PATH;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_INPUT_PICS;
@@ -14,7 +16,7 @@ import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_OUT_DIR;
 import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_ID_PROGRESS;
 import static com.mashehu.anonyme.common.Utilities.createNotification;
 
-public class EngineService extends Service {
+public class EngineService extends Service implements ImageMover{
 	final static String TAG = "anonyme.EngineService.";
 
 	public EngineService() {
@@ -38,25 +40,26 @@ public class EngineService extends Service {
 
 		// TODO generate single string to represent list of images to process, or start different python process per image
 		ArrayList<String> images = intent.getStringArrayListExtra(EXTRA_ENGINE_INPUT_PICS); // ArrayList containing list of images to process
+		ArrayList<String> results = new ArrayList<>(num_images); // ArrayList containing list of images to process
 		Log.d(TAG + "onStartCommand", "Processing " + num_images + " images");
 		int progress = 0;
+		ArrayList<AsyncTask<String, Void, String>> futures = new ArrayList<>(num_images);
 		for (String img : images) {
 			progress++;
 			Log.d(TAG + "onStartCommand", "Processing image #" + progress + ": " + img);
-			String res = processImage(assets_dir, out_dir, img);
-			Log.d(TAG + "onStartCommand", "result file path = " + res);
+			futures.add(processImage(assets_dir, out_dir, img));
+//			Log.d(TAG + "onStartCommand", "result file path = " + res);
 			//TODO start worker thread to move resulting image to camera roll album, using `res`
 			// OR start THREAD that runs `processImage()` , then this thread moves the resulting image to the camera roll
 			// OR start a DIFFERENT SERVICE that does the same thing. Then the CURRENT SERVICE can be a background service, maybe?
 		}
 
-		//TODO send notification when all is done
 		return super.onStartCommand(intent, flags, startId);
 	}
 
 
-	public String processImage(String assets_dir, String out_dir, String img) {
-		EngineStartAsyncTask task = new EngineStartAsyncTask(assets_dir, out_dir);
+	public AsyncTask<String, Void, String> processImage(String assets_dir, String out_dir, String img) {
+		EngineAsyncTask task = new EngineAsyncTask(assets_dir, out_dir);
 		task.delegate = this;
 		task.execute(img);
 
@@ -65,11 +68,17 @@ public class EngineService extends Service {
 //				callAttr("main", assets_dir, out_dir, img);
 //
 //		return res.toString();
-		return null;
+		return task;
 	}
 
 	public void moveToGallery(String img) {
+		Log.d(TAG + "moveToGallery", "result file path = " + img);
+
 		MoveToGalleryAsyncTask task = new MoveToGalleryAsyncTask();
 		task.execute(img); //todo implement actual mechanism
 	}
+}
+
+interface ImageMover {
+	public void moveToGallery(String img);
 }
