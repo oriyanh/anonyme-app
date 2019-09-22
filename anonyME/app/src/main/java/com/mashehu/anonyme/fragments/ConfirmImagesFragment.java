@@ -14,6 +14,8 @@ import android.widget.TextView;
 
 import com.mashehu.anonyme.R;
 
+import java.util.ArrayList;
+
 /**
  * A simple {@link Fragment} subclass.
  */
@@ -40,8 +42,9 @@ public class ConfirmImagesFragment extends Fragment {
         TextView filesDirTextView = getView().findViewById(R.id.files_dir_text_view);
         if (getArguments() != null)
         {
-            String[] imageDirs = getArguments().getStringArray("imageDirs");
-            filesDirTextView.setText(imageDirs.length + imageDirs[0]);
+            ArrayList<String> imageDirs = getArguments().getStringArrayList("imageDirs");
+            if (imageDirs != null)
+                filesDirTextView.setText(String.format("%s%s", imageDirs.size(), imageDirs.get(0)));
         }
     }
 }

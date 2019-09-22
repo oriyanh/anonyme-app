@@ -5,13 +5,20 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Environment;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 
 import com.mashehu.anonyme.R;
+import com.mashehu.anonyme.fragments.ui.ImageData;
 
+import java.io.File;
+import java.util.ArrayList;
+
+import static android.os.Environment.DIRECTORY_DCIM;
+import static android.os.Environment.DIRECTORY_PICTURES;
 import static com.mashehu.anonyme.common.Constants.APP_NAME;
 import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_DESC_PROGRESS;
 import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_ID_PROGRESS;
@@ -57,5 +64,22 @@ public class Utilities {
 			}
 		}
 		return true;
+	}
+
+	public static ArrayList<ImageData> getGalleryContent() {
+		ArrayList<ImageData> images = new ArrayList<>();
+		File galleryDir = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_DCIM), "Camera");
+		File[] galleryFiles = galleryDir.listFiles();
+		if (galleryFiles != null) {
+			for (File f : galleryDir.listFiles()) {
+				if (f.isFile()) {  // To avoid adding inner directories. TODO add capability to show inner directories as well
+					ImageData img = new ImageData();
+					img.setImagePath(f.getAbsolutePath());
+					images.add(img);
+				}
+			}
+		}
+
+		return images;
 	}
 }

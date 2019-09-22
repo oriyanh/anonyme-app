@@ -14,7 +14,7 @@ import java.io.OutputStream;
 
 public class AnonyME extends Application {
     public static final String TAG = "anonyme.Application.";
-    static boolean COPY_ASSETS = false;
+    static boolean COPY_ASSETS = true;
 
     @Override
     public void onCreate() {

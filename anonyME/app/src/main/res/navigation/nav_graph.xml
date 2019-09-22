@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/cameraCaptureFragment">
+    app:startDestination="@id/galleryFragment">
 
     <fragment
         android:id="@+id/cameraCaptureFragment"
@@ -21,6 +21,17 @@
         tools:layout="@layout/fragment_confirm_images" >
         <argument
             android:name="imageDirs"
-            app:argType="string[]" />
+            app:argType="java.util.ArrayList"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+    <fragment
+        android:id="@+id/galleryFragment"
+        android:name="com.mashehu.anonyme.fragments.GalleryFragment"
+        android:label="gallery_fragment"
+        tools:layout="@layout/gallery_fragment" >
+        <action
+            android:id="@+id/action_galleryFragment_to_confirmImagesFragment"
+            app:destination="@id/confirmImagesFragment" />
     </fragment>
 </navigation>
