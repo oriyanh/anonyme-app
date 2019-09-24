@@ -6,13 +6,19 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.mashehu.anonyme.R;
+
+import java.util.ArrayList;
+
+import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
 
 import java.util.ArrayList;
 
@@ -42,9 +48,17 @@ public class ConfirmImagesFragment extends Fragment {
         TextView filesDirTextView = getView().findViewById(R.id.files_dir_text_view);
         if (getArguments() != null)
         {
-            ArrayList<String> imageDirs = getArguments().getStringArrayList("imageDirs");
+            ArrayList<String> imageDirs = getArguments().getStringArrayList(IMAGE_DIRS_ARGUMENT_KEY);
             if (imageDirs != null)
                 filesDirTextView.setText(String.format("%s%s", imageDirs.size(), imageDirs.get(0)));
         }
+
+        ImageButton returnButton = getView().findViewById(R.id.return_button);
+        returnButton.setOnClickListener((v) -> {
+                Bundle args = new Bundle();
+                args.putBoolean("isBulkCapture", true);
+                Navigation.findNavController(view).navigate(
+                        R.id.action_confirmImagesFragment_to_cameraCaptureFragment, args);
+            });
     }
 }
