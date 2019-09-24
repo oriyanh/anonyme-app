@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/confirm_images_layout"
@@ -8,27 +7,50 @@
     android:layout_height="match_parent"
     tools:context=".fragments.ConfirmImagesFragment">
 
-    <!-- TODO: Get rid of this when finished testing-->
-    <TextView
-        android:id="@+id/files_dir_text_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageButton
-        android:layout_marginTop="32dp"
-        android:layout_marginStart="32dp"
-        android:padding="4dp"
-        android:id="@+id/return_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@android:drawable/ic_menu_revert"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        />
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:weightSum="100">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="5">
+
+            <ImageButton
+                android:id="@+id/return_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="32dp"
+                android:layout_marginTop="32dp"
+                android:contentDescription="@string/backStr"
+                android:padding="4dp"
+                android:src="@android:drawable/ic_menu_revert" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="80"
+            android:weightSum="100">
+
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/confirmImagesviewPager"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="100"/>
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="5" />
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="5" />
+    </TableLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

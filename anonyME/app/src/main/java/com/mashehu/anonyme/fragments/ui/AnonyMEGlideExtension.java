@@ -19,4 +19,15 @@ public class AnonyMEGlideExtension {
 				.centerCrop();
 //				.override(50, 50);
 	}
+
+	@GlideOption
+	@NonNull
+	public static BaseRequestOptions<?> confirmImagesLarge(BaseRequestOptions<?> options)
+	{
+		return options
+				.fitCenter()
+				.centerCrop()
+				.centerInside();
+//				.override(50, 50);
+	}
 }
