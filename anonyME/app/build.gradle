@@ -27,7 +27,7 @@ android {
 //            }
 //        }
         python {
-            buildPython "C:\\Users\\oriyan\\WPy-3670\\python-3.6.7.amd64\\python.exe"
+            buildPython "C:\\Users\\Segal\\Documents\\School\\Final Project\\venv\\Scripts\\python.exe"
             pip {
                 install "tensorflow"
                 install "scipy"

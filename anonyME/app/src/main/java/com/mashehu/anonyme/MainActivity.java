@@ -2,10 +2,15 @@ package com.mashehu.anonyme;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.collection.ArraySet;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.pm.ShortcutInfoCompat;
+import androidx.core.content.pm.ShortcutManagerCompat;
+import androidx.core.graphics.drawable.IconCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -17,6 +22,7 @@ import com.mashehu.anonyme.services.EngineStartReceiver;
 import java.util.ArrayList;
 
 import static com.mashehu.anonyme.common.Constants.ANONYME_PERMISSION_REQUEST_CODE;
+import static com.mashehu.anonyme.common.Constants.ANYNOME_SHARE_SHORTCUT_ID;
 import static com.mashehu.anonyme.common.Constants.ASSETS_PATH;
 import static com.mashehu.anonyme.common.Constants.CACHE_PATH;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_ASSETS_PATH;
@@ -48,6 +54,7 @@ public class MainActivity extends FragmentActivity {
                     ANONYME_PERMISSION_REQUEST_CODE);
         }
 
+        addShareShortcut(this);
 
         Intent startEngineIntent = new Intent(INTENT_START_ENGINE, null,
                 getApplicationContext(), EngineStartReceiver.class);
@@ -110,6 +117,25 @@ public class MainActivity extends FragmentActivity {
                         finish();
                     }
                 }).show();
+    }
+
+    private void addShareShortcut(Context context) {
+        ArraySet<String> categories = new ArraySet<>();
+        categories.add("com.mashehu.anonyme.sharingshortcuts.category.IMAGE_SHARE_TARGET");
+
+        ArrayList<ShortcutInfoCompat> shareShortcuts = new ArrayList<>();
+
+        shareShortcuts.add(new ShortcutInfoCompat.Builder(
+                context, ANYNOME_SHARE_SHORTCUT_ID)
+                .setShortLabel("Anonymize")
+                .setLongLabel("Anonymize")
+                .setLongLived()
+                .setIcon(IconCompat.createWithResource(context, R.drawable.ic_launcher_foreground))
+                .setIntent(new Intent(Intent.ACTION_DEFAULT))
+                .setCategories(categories)
+                .build());
+
+        ShortcutManagerCompat.addDynamicShortcuts(context, shareShortcuts);
     }
 }
 

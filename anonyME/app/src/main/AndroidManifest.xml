@@ -16,7 +16,7 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
 
-                <data android:mimeType="image/jpg" />
+                <data android:mimeType="image/jpeg" />
                 <data android:mimeType="image/png" />
             </intent-filter>
             <intent-filter>
@@ -24,7 +24,7 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
 
-                <data android:mimeType="image/jpg" />
+                <data android:mimeType="image/jpeg" />
                 <data android:mimeType="image/png" />
             </intent-filter>
 
