@@ -12,7 +12,6 @@ import androidx.core.app.NotificationCompat;
 
 import com.mashehu.anonyme.R;
 
-import static com.mashehu.anonyme.common.Constants.APP_NAME;
 import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_DESC_PROGRESS;
 import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_ID_PROGRESS;
 import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_NAME_PROGRESS;
@@ -38,8 +37,9 @@ public class Utilities {
 
 
 	public static Notification createNotification(String message, Context context, String channel) {
+		String appName = context.getString(R.string.app_name);
 		return new NotificationCompat.Builder(context, channel)
-				.setContentTitle(APP_NAME)
+				.setContentTitle(appName)
 				.setContentText(message)
 				.setSmallIcon(R.mipmap.ic_launcher)
 				.setPriority(NotificationCompat.PRIORITY_HIGH)
