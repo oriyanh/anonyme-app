@@ -13,6 +13,10 @@
         <action
             android:id="@+id/action_cameraCaptureFragment_to_confirmImagesFragment"
             app:destination="@id/confirmImagesFragment" />
+        <argument
+            android:name="isBulkCapture"
+            app:argType="boolean"
+            android:defaultValue="false" />
     </fragment>
     <fragment
         android:id="@+id/confirmImagesFragment"
@@ -21,6 +25,14 @@
         tools:layout="@layout/fragment_confirm_images" >
         <argument
             android:name="imageDirs"
-            app:argType="string[]" />
+            app:argType="java.util.ArrayList" />
+        <action
+            android:id="@+id/action_confirmImagesFragment_to_cameraCaptureFragment"
+            app:destination="@id/cameraCaptureFragment"
+            app:popUpTo="@+id/cameraCaptureFragment">
+            <argument
+                android:name="isBulkCapture"
+                android:defaultValue="true" />
+        </action>
     </fragment>
 </navigation>

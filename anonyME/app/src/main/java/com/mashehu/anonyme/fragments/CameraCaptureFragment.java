@@ -1,9 +1,5 @@
 package com.mashehu.anonyme.fragments;
 
-import android.Manifest;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.content.pm.PackageManager;
 import android.graphics.Matrix;
 import android.os.Bundle;
 
@@ -21,11 +17,11 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
-import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
+import android.view.ScaleGestureDetector;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -36,15 +32,18 @@ import android.widget.Toast;
 
 import com.mashehu.anonyme.R;
 import com.mashehu.anonyme.common.Constants;
+import com.mashehu.anonyme.common.Utilities;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
-import static android.os.Environment.DIRECTORY_PICTURES;
 import static androidx.constraintlayout.widget.Constraints.TAG;
+import static com.mashehu.anonyme.common.Constants.ANONYME_PERMISSION_REQUEST_CODE;
+import static com.mashehu.anonyme.common.Constants.CAMERA_ROLL_PATH;
+import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
+import static com.mashehu.anonyme.common.Constants.PERMISSIONS;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -55,7 +54,12 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
     private ImageCapture imageCapture = null;
     private CameraX.LensFacing lensFacing = CameraX.LensFacing.BACK;
     private ImageCapture.CaptureMode captureMode = ImageCapture.CaptureMode.MAX_QUALITY;
+//    private int zoomLevel = 1;
     private static boolean isBulkCapture = false;
+    private String cameraId;
+    private TextureView viewFinder;
+//    private ScaleGestureDetector detector;
+    private static final String TAG = "anonyme.Capture";
 
     public CameraCaptureFragment() {
         // Required empty public constructor
@@ -92,59 +96,30 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
 //                args);
         // end section
 
+        // Loads bulk capture mode flag from arguments
+        if (getArguments() != null)
+        {
+            isBulkCapture = getArguments().getBoolean(Constants.BULK_CAPTURE_KEY);
+        }
+
         assert getActivity() != null;
         assert getView() != null;
-        TextureView viewFinder = getView().findViewById(R.id.view_finder);
-        boolean permissionsGranted = (ActivityCompat.checkSelfPermission(getActivity(),
-                Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED);
-        if (!permissionsGranted) {
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{Manifest.permission.CAMERA},
-                    Constants.ANONYME_PERMISSION_REQUEST_CODE);
-        } else {
-            viewFinder.post(this::initializeCameraPreview);
-            initializeImageCapture();
+
+        viewFinder = getView().findViewById(R.id.view_finder);
+        while (!Utilities.checkPermissions(getContext(), PERMISSIONS))
+        {
+            ActivityCompat.requestPermissions(getActivity(), PERMISSIONS,
+                    ANONYME_PERMISSION_REQUEST_CODE);
         }
+        bindCameraUseCases();
+
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            assert getView() != null;
-            TextureView viewFinder = getView().findViewById(R.id.view_finder);
-            viewFinder.post(this::initializeCameraPreview);
-            initializeImageCapture();
-        } else {
-            if (getActivity() != null) {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
-                        Manifest.permission.CAMERA)) {
-                    AlertDialog.Builder askPermissionsDialog = new AlertDialog.Builder(getActivity());
-                    askPermissionsDialog.setMessage("Pretty please?")
-                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    if (getActivity() != null) {
-                                        ActivityCompat.requestPermissions(getActivity(),
-                                                new String[]{Manifest.permission.CAMERA},
-                                                Constants.ANONYME_PERMISSION_REQUEST_CODE);
-                                    }
-                                }
-                            }).setNegativeButton("No", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if (getActivity() != null) {
-                                getActivity().finish();
-                            }
-                        }
-                    });
-                    askPermissionsDialog.create();
-                }
-            }
-        }
-    }
-
+    /**
+     * Safely attempts to bind camera use-cases to life cycle
+     * @param useCase - use case to bind to life cycle
+     * @return True if use-case was successfully bound to lifecycle, otherwise - False.
+     */
     private boolean tryBindToLifeCycle(UseCase useCase) {
         try {
             CameraX.bindToLifecycle(this, useCase);
@@ -162,6 +137,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
     }
 
     /**
+     * Get the display's rotation in degrees
      * @return One of 0, 90, 180, 270.
      */
     private int getDisplayRotation() {
@@ -192,16 +168,21 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
             Size srcSize, int parentWidth, int parentHeight, int displayRotation) {
         int inWidth = srcSize.getWidth();
         int inHeight = srcSize.getHeight();
+
         if (displayRotation == 0 || displayRotation == 180) {
+
             // Need to reverse the width and height since we're in landscape orientation.
             inWidth = srcSize.getHeight();
             inHeight = srcSize.getWidth();
         }
+
         int outWidth = parentWidth;
         int outHeight = parentHeight;
+
         if (inWidth != 0 && inHeight != 0) {
             float vfRatio = inWidth / (float) inHeight;
             float parentRatio = parentWidth / (float) parentHeight;
+
             // Match shortest sides together.
             if (vfRatio < parentRatio) {
                 outWidth = parentWidth;
@@ -215,7 +196,6 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
     }
 
     private void updateTransform() {
-        String cameraId = null;
         PreviewConfig config = (PreviewConfig) preview.getUseCaseConfig();
         CameraX.LensFacing previewLensFacing = config.getLensFacing(/*valueIfMissing=*/ null);
 
@@ -235,6 +215,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
                     "Unable to get camera id for the camera device config "
                             + config.getLensFacing(), e);
         }
+
         Size srcResolution = preview.getAttachedSurfaceResolution(cameraId);
         if (srcResolution.getWidth() == 0 || srcResolution.getHeight() == 0) {
             return;
@@ -257,14 +238,16 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         int viewHeight = (bottom - top);
 
         int displayRotation = getDisplayRotation();
-        Size scaled =
-                calculatePreviewViewDimens(
-                        srcResolution, viewWidth, viewHeight, displayRotation);
+        Size scaled = calculatePreviewViewDimens(srcResolution, viewWidth,
+                viewHeight, displayRotation);
+
         // Compute the center of the view.
         int centerX = viewWidth / 2;
         int centerY = viewHeight / 2;
+
         // Do corresponding rotation to correct the preview direction
         matrix.postRotate(-getDisplayRotation(), centerX, centerY);
+
         // Compute the scale value for center crop mode
         float xScale = scaled.getWidth() / (float) viewWidth;
         float yScale = scaled.getHeight() / (float) viewHeight;
@@ -272,18 +255,15 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
             xScale = scaled.getWidth() / (float) viewHeight;
             yScale = scaled.getHeight() / (float) viewWidth;
         }
+
         // Only two digits after the decimal point are valid for postScale. Need to get ceiling of
-        // two
-        // digits floating value to do the scale operation. Otherwise, the result may be scaled not
-        // large enough and will have some blank lines on the screen.
+        // two digits floating value to do the scale operation. Otherwise,
+        // the result may be scaled not large enough and will have some blank lines on the screen.
         xScale = new BigDecimal(xScale).setScale(2, BigDecimal.ROUND_CEILING).floatValue();
         yScale = new BigDecimal(yScale).setScale(2, BigDecimal.ROUND_CEILING).floatValue();
-        // Do corresponding scale to resolve the deformation problem
+
+        // Do corresponding scale to resolve deformation problem
         matrix.postScale(xScale, yScale, centerX, centerY);
-        // Compute the new left/top positions to do translate
-        // TODO:: dafuq is this shit
-//        int layoutL = centerX - (scaled.getWidth() / 2);
-//        int layoutT = centerY - (scaled.getHeight() / 2);
         textureView.setTransform(matrix);
     }
 
@@ -293,9 +273,15 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         updateTransform();
     }
 
+    private void bindCameraUseCases()
+    {
+        CameraX.unbindAll();
+        viewFinder.post(this::initializeCameraPreview);
+        initializeImageCapture();
+    }
+
     private void initializeCameraPreview() {
         assert getView() != null;
-        TextureView viewFinder = getView().findViewById(R.id.view_finder);
 
         // TODO:: Get last lens facing from shared preferences
         PreviewConfig previewConfig = new PreviewConfig.Builder()
@@ -303,12 +289,14 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
                 .build();
 
         preview = new Preview(previewConfig);
+
         preview.setOnPreviewOutputUpdateListener(output -> {
             ViewGroup parent = (ViewGroup) viewFinder.getParent();
             parent.removeView(viewFinder);
             parent.addView(viewFinder, 0);
             viewFinder.setSurfaceTexture(output.getSurfaceTexture());
         });
+
         viewFinder.addOnLayoutChangeListener(this);
 
         if (!tryBindToLifeCycle(preview)) {
@@ -316,6 +304,33 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
             return;
         }
 
+        ImageButton flipCameraButton = getView().findViewById(R.id.flip_camera);
+        flipCameraButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (lensFacing == CameraX.LensFacing.BACK)
+                {
+                    lensFacing = CameraX.LensFacing.FRONT;
+                }
+                else if (lensFacing == CameraX.LensFacing.FRONT)
+                {
+                    lensFacing = CameraX.LensFacing.BACK;
+                }
+                bindCameraUseCases();
+            }
+        });
+
+//        if (detector == null)
+//        {
+//            ZoomListener zoomListener = new ZoomListener();
+//            detector = new ScaleGestureDetector(getContext(), zoomListener);
+//            viewFinder.setOnTouchListener(new View.OnTouchListener() {
+//                @Override
+//                public boolean onTouch(View v, MotionEvent event) {
+//                    return detector.onTouchEvent(event);
+//                }
+//            });
+//        }
         updateTransform();
     }
 
@@ -333,7 +348,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
                     imageCapture.setFlashMode(FlashMode.AUTO);
                 } else if (flashMode == FlashMode.AUTO) {
                     imageCapture.setFlashMode(FlashMode.ON);
-                } // TODO:: Why does auto turn flash on? */
+                }
                 refreshFlashButtonIcon();
             });
             FlashMode flashMode = imageCapture.getFlashMode();
@@ -384,17 +399,19 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         assert getActivity() != null;
         ImageButton button = getActivity().findViewById(R.id.take_picture);
 
-        final File dir = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES),
-                getActivity().getString(R.string.app_name));
-        if (!dir.exists())
+        // Keeping this so we can remember how to use access this directory in the future.
+//        final File dir = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES),
+//                getActivity().getString(R.string.app_name));
+
+        if (!CAMERA_ROLL_PATH.exists())
         {
-            if (!dir.mkdirs())
+            if (!CAMERA_ROLL_PATH.mkdirs())
             {
                 Log.e(TAG, "Failed to create directory");
             }
             else
             {
-                Log.d(TAG, "Created directory" + dir);
+                Log.d(TAG, "Created directory" + CAMERA_ROLL_PATH.toString());
             }
         }
         else
@@ -404,7 +421,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
 
         button.setOnClickListener((view) ->
                 {
-                    final File imageFile = new File(dir,
+                    final File imageFile = new File(CAMERA_ROLL_PATH,
                             Calendar.getInstance().getTimeInMillis() + ".jpg");
                     imageCapture.takePicture(
                             imageFile,
@@ -415,8 +432,9 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
                                     if (!isBulkCapture)
                                     {
                                         Bundle args = new Bundle();
-                                        String[] imageDirs = {imageFile.getAbsolutePath()};
-                                        args.putStringArray("imageDirs", imageDirs);
+                                        ArrayList<String> imageDirs = new ArrayList<>();
+                                        imageDirs.add(imageFile.getAbsolutePath());
+                                        args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, imageDirs);
                                         Navigation.findNavController(view).navigate(
                                                 R.id.action_cameraCaptureFragment_to_confirmImagesFragment,
                                                 args);
@@ -448,4 +466,63 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
 
         refreshFlashButtonIcon();
     }
+
+//    private class ZoomListener extends ScaleGestureDetector.SimpleOnScaleGestureListener{
+//        @Override
+//        public boolean onScale(ScaleGestureDetector detector) {
+//
+//            // Fetches max digital zoom for phone's camera
+//            assert getActivity() != null;
+//            CameraManager cameraManager = (CameraManager)getActivity().getSystemService(
+//                    Context.CAMERA_SERVICE);
+//            CameraCharacteristics characteristics;
+//            float maxZoomLevel;
+//            Rect curCameraCrop;
+//            try {
+//                characteristics = cameraManager.getCameraCharacteristics(
+//                        cameraId);
+//                maxZoomLevel = characteristics.get(
+//                        CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) * 10;
+//                curCameraCrop = characteristics.get(
+//                        CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+//            }
+//            catch (CameraAccessException e)
+//            {
+//                Log.e(TAG, "Failed to fetch camera characteristics");
+//                return false;
+//            }
+//            catch (NullPointerException e)
+//            {
+//                Log.e(TAG, "Failed to fetch camera max zoom");
+//                return false;
+//            }
+//
+//            if ((detector.getCurrentSpan() > detector.getPreviousSpan()) &&
+//                    (maxZoomLevel > zoomLevel))
+//            {
+//                zoomLevel++;
+//            }
+//            else if ((detector.getCurrentSpan() < detector.getPreviousSpan()) && (zoomLevel > 1))
+//            {
+//                zoomLevel--;
+//            }
+//            assert curCameraCrop != null;
+//            int minWidth = (int) (curCameraCrop.width() / maxZoomLevel);
+//            int minHeight = (int) (curCameraCrop.height() / maxZoomLevel);
+//            int widthDiff = curCameraCrop.width() - minWidth;
+//            int heightDiff = curCameraCrop.height() - minHeight;
+//            int cropWidth = (widthDiff / 100 * zoomLevel) & 3;
+//            int cropHeight = (heightDiff / 100 * zoomLevel) & 3;
+//            Rect zoom = new Rect(cropWidth, cropHeight, curCameraCrop.width() - cropWidth,
+//                    curCameraCrop.height() - cropHeight);
+//
+//            preview.zoom(zoom);
+//            Matrix transformMatrix = viewFinder.getTransform(null);
+//            transformMatrix.setScale(detector.getScaleFactor(), detector.getScaleFactor(),
+//                    detector.getCurrentSpanX(), detector.getCurrentSpanY());
+//            viewFinder.setTransform(transformMatrix);
+//
+//            return super.onScale(detector);
+//        }
+//    }
 }
