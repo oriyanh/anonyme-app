@@ -3,6 +3,7 @@ apply plugin: "com.chaquo.python"
 
 android {
 
+
     // TODO:: Remove this when done with google example
     lintOptions {
         disable 'RestrictedApi'
@@ -16,16 +17,16 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-//        flavorDimensions "abi"
-        ndk {
-            abiFilters "x86"
-        }
-//        productFlavors {
-//            x86 {
-//                dimension "abi"
-//                ndk { abiFilters "arm64-v8a" }
-//            }
+        flavorDimensions "abi"
+//        ndk {
+//            abiFilters "x86"
 //        }
+        productFlavors {
+            arm {
+                dimension "abi"
+                ndk { abiFilters "x86" }
+            }
+        }
         python {
             buildPython "C:\\Users\\oriyan\\WPy-3670\\python-3.6.7.amd64\\python.exe"
             pip {
@@ -38,12 +39,15 @@ android {
                 install "requests"
                 install "psutil"
                 install "numpy"
-//                extractPackages "AdvBox"
+                extractPackages "AdvBox"
             }
         }
     }
     buildTypes {
         release {
+            ndk {
+                abiFilters "armeabi-v7a"
+            }
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -53,6 +57,7 @@ android {
         targetCompatibility = 1.8
     }
     buildToolsVersion = '28.0.3'
+    flavorDimensions 'abi'
 }
 
 dependencies {
@@ -76,7 +81,7 @@ dependencies {
     // If you want to use Camera2 extensions
     implementation "androidx.camera:camera-camera2:$camerax_version"
 
-    def nav_version = "2.2.0-alpha03"
+    def nav_version = '2.2.0-alpha03'
 
     // Java
     implementation "androidx.navigation:navigation-fragment:$nav_version"

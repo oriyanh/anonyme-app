@@ -36,7 +36,7 @@ import static com.mashehu.anonyme.common.Utilities.processImages;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ConfirmImagesFragment extends Fragment{
+public class ConfirmImagesFragment extends Fragment {
 	public static final String TAG = "anonyme.ConfirmImagesFragment";
 	//	ViewPager2 viewPager;
 	FloatingActionButton sendButton;
@@ -52,6 +52,17 @@ public class ConfirmImagesFragment extends Fragment{
 							 Bundle savedInstanceState) {
 		// Inflate the layout for this fragment
 		return inflater.inflate(R.layout.fragment_confirm_images, container, false);
+	}
+
+	@Override
+	public void onSaveInstanceState(@NonNull Bundle outState) {
+		if (recyclerView != null) {
+			ConfirmImageLargeAdapter adapter = (ConfirmImageLargeAdapter) recyclerView.getAdapter();
+			assert adapter != null;
+			ArrayList<String> images = adapter.getImagePaths();
+			outState.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, images);
+		}
+		super.onSaveInstanceState(outState);
 	}
 
 	@Override

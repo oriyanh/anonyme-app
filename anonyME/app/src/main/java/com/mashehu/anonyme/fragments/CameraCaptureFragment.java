@@ -86,6 +86,12 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        if (savedInstanceState != null) {
+            ArrayList<String> images = savedInstanceState.getStringArrayList(IMAGE_DIRS_ARGUMENT_KEY);
+            for (String img : images) {
+                Log.d(TAG, "img: " + img);
+            }
+        }
 
         // this section is only for debugging, bypassing camera
 //        Bundle args = new Bundle();
