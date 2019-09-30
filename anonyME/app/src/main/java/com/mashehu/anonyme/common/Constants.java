@@ -14,6 +14,8 @@ final public class Constants {
 	public static File ASSETS_PATH;
 	public static File CAMERA_ROLL_PATH;
 
+	public static final String SP_IS_PROCESSING_KEY = "SP_IS_PROCESSING_IMAGES";
+
 	public static final String INTENT_START_ENGINE = "com.mashehu.anonyme.services.action.START_ENGINE";
 	public static final String INTENT_START_PROCESSING_IMAGES = "com.mashehu.anonyme.services.action.START_PROCESSING_IMAGES";
 

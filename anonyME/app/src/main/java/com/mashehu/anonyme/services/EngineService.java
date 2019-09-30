@@ -1,14 +1,25 @@
 package com.mashehu.anonyme.services;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
-import android.os.AsyncTask;
+import android.net.Uri;
 import android.os.IBinder;
 import android.util.Log;
 
-import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.FileProvider;
 
+import com.chaquo.python.Python;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static com.mashehu.anonyme.common.Constants.CAMERA_ROLL_PATH;
+import static com.mashehu.anonyme.common.Constants.ENGINE_MODULE_NAME;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_ASSETS_PATH;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_INPUT_PICS;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_NUM_IMAGES;
@@ -16,8 +27,11 @@ import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_OUT_DIR;
 import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_ID_PROGRESS;
 import static com.mashehu.anonyme.common.Utilities.createNotification;
 
-public class EngineService extends Service implements ImageMover{
+public class EngineService extends Service {
 	final static String TAG = "anonyme.EngineService.";
+	final static String ACTION_STOP = "com.mashehu.anonyme.action.STOP";
+
+	private ExecutorService singleThreadExecutor;
 
 	public EngineService() {
 	}
@@ -30,55 +44,157 @@ public class EngineService extends Service implements ImageMover{
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		startForeground(1, createNotification("bla", // TODO send meaningful notifications to demonstrate progress
-								getApplicationContext(),
-								NOTIFICATION_CH_ID_PROGRESS));
 
-		int num_images = intent.getIntExtra(EXTRA_ENGINE_NUM_IMAGES, 1); // to be used for demonstrating progress?
-		String assets_dir = intent.getStringExtra(EXTRA_ENGINE_ASSETS_PATH);
-		String out_dir = intent.getStringExtra(EXTRA_ENGINE_OUT_DIR);
+	    if (ACTION_STOP.equals(intent.getAction()))
+        {
+            Log.d(TAG, "Called to stop service");
+            stopForeground(true);
+			NotificationManagerCompat.from(this).notify(1, createNotification("Canceling...", null, getApplicationContext(), null, NOTIFICATION_CH_ID_PROGRESS));
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+	    else
+		{
+			singleThreadExecutor = Executors.newSingleThreadExecutor();
 
-		// TODO generate single string to represent list of images to process, or start different python process per image
-		ArrayList<String> images = intent.getStringArrayListExtra(EXTRA_ENGINE_INPUT_PICS); // ArrayList containing list of images to process
-		ArrayList<String> results = new ArrayList<>(num_images); // ArrayList containing list of images to process
-		Log.d(TAG + "onStartCommand", "Processing " + num_images + " images");
-		int progress = 0;
-		ArrayList<AsyncTask<String, Void, String>> futures = new ArrayList<>(num_images);
-		for (String img : images) {
-			progress++;
-			Log.d(TAG + "onStartCommand", "Processing image #" + progress + ": " + img);
-			futures.add(processImage(assets_dir, out_dir, img));
+			Intent stopService = new Intent(this, EngineService.class);
+			stopService.setAction(ACTION_STOP);
+			PendingIntent pendingStopService = PendingIntent.getService(
+					this, 0, stopService, PendingIntent.FLAG_CANCEL_CURRENT);
+			startForeground(1, createNotification("Anonymization in progress...", "Tap to cancel", // TODO send meaningful notifications to demonstrate progress
+					getApplicationContext(), pendingStopService,
+					NOTIFICATION_CH_ID_PROGRESS));
+
+			int num_images = intent.getIntExtra(EXTRA_ENGINE_NUM_IMAGES, 1); // to be used for demonstrating progress?
+			String assetsDir = intent.getStringExtra(EXTRA_ENGINE_ASSETS_PATH);
+			String outputDir = intent.getStringExtra(EXTRA_ENGINE_OUT_DIR);
+
+			// TODO generate single string to represent list of images to process, or start different python process per image
+			// ArrayList containing list of images to process
+			ArrayList<String> images = intent.getStringArrayListExtra(EXTRA_ENGINE_INPUT_PICS);
+			Log.d(TAG + "onStartCommand", "Processing " + num_images + " images");
+			int progress = 0;
+
+			singleThreadExecutor.execute(() -> {
+					try
+					{
+						String res = null;
+						Python py = Python.getInstance();
+						for (String image: images)
+						{
+							if (Thread.interrupted())
+							{
+								throw new InterruptedException();
+							}
+
+							Log.d(TAG + "onStartCommand", "Processing image #" + progress + ": " + image);
+							res = py.getModule(ENGINE_MODULE_NAME).callAttr(
+									"main", assetsDir, outputDir, image).toString();
+							Log.d(TAG, "Finished processing - output located in " + res);
+						}
+
+						Intent showImages;
+
+						if (images.size() == 1)
+						{
+							assert res != null;
+							File outputFile = new File(res);
+							Uri cameraRollUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", outputFile);
+							showImages = new Intent(Intent.ACTION_VIEW);
+							showImages.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+							showImages.setDataAndType(cameraRollUri, "image/*");
+							showImages.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+						}
+						else
+						{
+							showImages = new Intent(Intent.ACTION_VIEW, Uri.parse("content://media/internal/images/media"));
+						}
+
+
+						PendingIntent pShowImages = PendingIntent.getActivity(getApplicationContext(), 0, showImages, PendingIntent.FLAG_ONE_SHOT);
+						NotificationManagerCompat.from(this).notify(1, createNotification("Anonymization complete", "Tap to view image", this, pShowImages, NOTIFICATION_CH_ID_PROGRESS));
+					}
+					catch (InterruptedException e)
+					{
+						Log.d(TAG, "Task cancelled");
+						NotificationManagerCompat.from(this).cancel(1);
+					}
+				});
+
+//			ArrayList<AsyncTask<String, Void, String>> futures = new ArrayList<>(num_images);
+//			for (String img : images) {
+//				progress++;
+
+//				futures.add(processImage(assets_dir, out_dir, img));
 //			Log.d(TAG + "onStartCommand", "result file path = " + res);
-			//TODO start worker thread to move resulting image to camera roll album, using `res`
-			// OR start THREAD that runs `processImage()` , then this thread moves the resulting image to the camera roll
-			// OR start a DIFFERENT SERVICE that does the same thing. Then the CURRENT SERVICE can be a background service, maybe?
+			super.onStartCommand(intent, flags, startId);
+			return START_NOT_STICKY;
 		}
-
-		return super.onStartCommand(intent, flags, startId);
 	}
 
+	@Override
+	public void onDestroy() {
+		singleThreadExecutor.shutdownNow();
+		super.onDestroy();
+	}
 
-	public AsyncTask<String, Void, String> processImage(String assets_dir, String out_dir, String img) {
-		EngineAsyncTask task = new EngineAsyncTask(assets_dir, out_dir);
-		task.delegate = this;
-		task.execute(img);
+//	private class PythonAnonymizer implements Callable<String>
+//	{
+//
+//		private String inputDir;
+//		private String outputDir;
+//		private String imageFile;
+//
+//		PythonAnonymizer(String inputDir, String outputDir, String imageFile)
+//		{
+//			this.inputDir = inputDir;
+//			this.outputDir = outputDir;
+//			this.imageFile = imageFile;
+//		}
+//
+//		@Override
+//		public String call() {
+//
+//			try
+//			{
+//				Python py = Python.getInstance();
+//				return py.getModule(ENGINE_MODULE_NAME).callAttr(
+//						"main", inputDir, outputDir, imageFile).toString();
+//			}
+//			catch (InterruptedException e)
+//			{
+//				Log.d(TAG, "Task cancelled.");
+//			}
+//		}
+//	}
+}
 
+
+//	public AsyncTask<String, Void, String> processImage(String assets_dir, String out_dir, String img) {
+//		EngineAsyncTask task = new EngineAsyncTask(assets_dir, out_dir);
+//		task.delegate = this;
+//		task.execute(img);
+//
 //		Python py = Python.getInstance();
 //		PyObject res = py.getModule(ENGINE_MODULE_NAME).
 //				callAttr("main", assets_dir, out_dir, img);
 //
 //		return res.toString();
-		return task;
-	}
-
-	public void moveToGallery(String img) {
-		Log.d(TAG + "moveToGallery", "result file path = " + img);
-
-		MoveToGalleryAsyncTask task = new MoveToGalleryAsyncTask();
-		task.execute(img); //todo implement actual mechanism
-	}
-}
-
+//		return task;
+//	}
+//
+//	public void moveToGallery(String img) {
+//		Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(img));
+//		PendingIntent pendingIntent = PendingIntent.getActivity(
+//				this.getApplicationContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
+//		Notification viewImageNotification = createNotification(
+//				"Anonymization complete", "Tap to view result", this, pendingIntent, NOTIFICATION_CH_ID_PROGRESS);
+//
+//		Log.d(TAG + "moveToGallery", "result file path = " + img);
+//
+//		MoveToGalleryAsyncTask task = new MoveToGalleryAsyncTask();
+//		task.execute(img); //todo implement actual mechanism
+//	}
 interface ImageMover {
 	public void moveToGallery(String img);
 }

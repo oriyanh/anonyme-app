@@ -10,9 +10,11 @@ import androidx.core.graphics.drawable.IconCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
@@ -25,6 +27,7 @@ import static com.mashehu.anonyme.common.Constants.ANONYME_PERMISSION_REQUEST_CO
 import static com.mashehu.anonyme.common.Constants.ANYNOME_SHARE_SHORTCUT_ID;
 import static com.mashehu.anonyme.common.Constants.ASSETS_PATH;
 import static com.mashehu.anonyme.common.Constants.CACHE_PATH;
+import static com.mashehu.anonyme.common.Constants.CAMERA_ROLL_PATH;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_ASSETS_PATH;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_INPUT_PICS;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_NUM_IMAGES;
@@ -35,7 +38,7 @@ import static com.mashehu.anonyme.common.Constants.PERMISSIONS;
 public class MainActivity extends FragmentActivity {
     public static final String TAG = "anonyme.MainActivity.";
 
-//	BroadcastReceiver engineStartReceiver;
+	BroadcastReceiver engineStartReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,10 +46,10 @@ public class MainActivity extends FragmentActivity {
         setContentView(R.layout.activity_main);
 
         // register receiver - uncomment if necessary
-//		engineStartReceiver = new EngineStartReceiver();
-//		IntentFilter filter = new IntentFilter();
-//		filter.addAction(INTENT_START_ENGINE);
-//		registerReceiver(engineStartReceiver, filter);
+		engineStartReceiver = new EngineStartReceiver();
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(INTENT_START_ENGINE);
+		registerReceiver(engineStartReceiver, filter);
 
         // TODO:: Implement full permissions here, not in fragment (Possibly in app)
         if (!Utilities.checkPermissions(this, PERMISSIONS)) {
@@ -60,13 +63,14 @@ public class MainActivity extends FragmentActivity {
                 getApplicationContext(), EngineStartReceiver.class);
 
         ArrayList<String> images = new ArrayList<>();
-        images.add("bill_gates_0001.png");
+        images.add(ASSETS_PATH.toString() + "/bill_gates_0001.png");
+        images.add(ASSETS_PATH.toString() + "/bond_007.png");
 
-        startEngineIntent.putExtra(EXTRA_ENGINE_ASSETS_PATH, ASSETS_PATH);
-        startEngineIntent.putExtra(EXTRA_ENGINE_OUT_DIR, CACHE_PATH);
+        startEngineIntent.putExtra(EXTRA_ENGINE_ASSETS_PATH, ASSETS_PATH.toString());
+        startEngineIntent.putExtra(EXTRA_ENGINE_OUT_DIR, CAMERA_ROLL_PATH.toString());
         startEngineIntent.putExtra(EXTRA_ENGINE_NUM_IMAGES, 1);
         startEngineIntent.putExtra(EXTRA_ENGINE_INPUT_PICS, images);
-//		sendBroadcast(startEngineIntentK);
+		sendBroadcast(startEngineIntent);
     }
 
     @Override

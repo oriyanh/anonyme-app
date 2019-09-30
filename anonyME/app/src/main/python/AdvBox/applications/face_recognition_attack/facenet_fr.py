@@ -200,4 +200,4 @@ def main(assets_dir, out_dir, input_pic_name):
     target_pic = os.path.join(assets_dir, "chaoren.png")
     # print fr.compare(input_pic,target_pic)
 
-    return fr.generate_adv_whitebox(input_pic_path, target_pic, out_dir)  # returns path to new image
+    return fr.generate_adv_whitebox(input_pic_name, target_pic, out_dir)  # returns path to new image
