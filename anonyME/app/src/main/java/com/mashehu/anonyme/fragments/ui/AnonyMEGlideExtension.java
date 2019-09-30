@@ -8,26 +8,21 @@ import com.bumptech.glide.request.BaseRequestOptions;
 
 @GlideExtension
 public class AnonyMEGlideExtension {
-	private AnonyMEGlideExtension() {}
-
-	@GlideOption
-	@NonNull
-	public static BaseRequestOptions<?> galleryThumbnail(BaseRequestOptions<?> options)
-	{
-		return options
-				.fitCenter()
-				.centerCrop();
-//				.override(50, 50);
+	private AnonyMEGlideExtension() {
 	}
 
 	@GlideOption
 	@NonNull
-	public static BaseRequestOptions<?> confirmImagesLarge(BaseRequestOptions<?> options)
-	{
+	public static BaseRequestOptions<?> galleryThumbnail(BaseRequestOptions<?> options) {
+		return options
+				.fitCenter()
+				.centerCrop();
+	}
+
+	@GlideOption
+	@NonNull
+	public static BaseRequestOptions<?> confirmImagesLarge(BaseRequestOptions<?> options) {
 		return options
 				.fitCenter();
-//				.centerCrop()
-//				.centerInside();
-//				.override(50, 50);
 	}
 }

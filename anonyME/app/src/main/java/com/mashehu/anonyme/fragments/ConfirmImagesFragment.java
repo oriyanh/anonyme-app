@@ -5,26 +5,21 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
-import androidx.navigation.NavHostController;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
-import androidx.viewpager2.widget.ViewPager2;
 
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mashehu.anonyme.R;
@@ -41,11 +36,12 @@ import static com.mashehu.anonyme.common.Utilities.processImages;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ConfirmImagesFragment extends Fragment {
+public class ConfirmImagesFragment extends Fragment{
 	public static final String TAG = "anonyme.ConfirmImagesFragment";
-	ViewPager2 viewPager;
+	//	ViewPager2 viewPager;
 	FloatingActionButton sendButton;
 	RecyclerView recyclerView;
+
 	public ConfirmImagesFragment() {
 		// Required empty public constructor
 	}
@@ -72,8 +68,8 @@ public class ConfirmImagesFragment extends Fragment {
 			ImageData imageData = new ImageData();
 			imageData.setImagePath(img);
 			images.add(imageData);
-			images.add(imageData);
-			images.add(imageData);
+//			images.add(imageData);
+//			images.add(imageData);
 		}
 
 
@@ -102,7 +98,7 @@ public class ConfirmImagesFragment extends Fragment {
 //		});
 
 		sendButton.setOnClickListener(v -> {
-			ConfirmImageLargeAdapter adapter = (ConfirmImageLargeAdapter)recyclerView.getAdapter();
+			ConfirmImageLargeAdapter adapter = (ConfirmImageLargeAdapter) recyclerView.getAdapter();
 			processImages(getActivity().getApplicationContext(), adapter.getImagePaths());
 		});
 
@@ -138,4 +134,7 @@ public class ConfirmImagesFragment extends Fragment {
 			}
 		});
 	}
+
 }
+
+

@@ -1,59 +1,131 @@
 package com.mashehu.anonyme.fragments;
 
-import androidx.lifecycle.ViewModelProviders;
-
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.Button;
 
 import com.mashehu.anonyme.R;
 import com.mashehu.anonyme.common.Utilities;
 import com.mashehu.anonyme.fragments.ui.ImageData;
 import com.mashehu.anonyme.fragments.ui.ThumbnailAdapter;
+import com.mashehu.anonyme.fragments.ui.ThumbnailViewHolder;
 
 import java.util.ArrayList;
 
-public class GalleryFragment extends Fragment {
+import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
 
-    private GalleryViewModel mViewModel;
-    private ImageView thumbnail;
-    RecyclerView recyclerView;
-    GridLayoutManager layoutManager;
-    public static GalleryFragment newInstance() {
-        return new GalleryFragment();
-    }
+public class GalleryFragment extends Fragment implements GallerySelectionHandler {
+	public static final String TAG = "anonyme.GalleryFragment";
+	RecyclerView recyclerView;
+	GridLayoutManager layoutManager;
+	boolean selectionMode;
+	Button sendImagesBtn;
+	private ArrayList<String> imagesToProcess;
 
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.gallery_fragment, container, false);
-    }
 
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        mViewModel = ViewModelProviders.of(this).get(GalleryViewModel.class);
-        // TODO: Use the ViewModel
+	public static GalleryFragment newInstance() {
+		return new GalleryFragment();
+	}
 
-        assert getActivity() != null;
+	@Override
+	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+							 @Nullable Bundle savedInstanceState) {
+		return inflater.inflate(R.layout.gallery_fragment, container, false);
+	}
 
-        thumbnail = getActivity().findViewById(R.id.thumbnail_view);
-        recyclerView = getActivity().findViewById(R.id.galleryRecyclerView);
-        layoutManager = new GridLayoutManager(getActivity().getApplicationContext(), 4);
-        recyclerView.setLayoutManager(layoutManager);
+	@Override
+	public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
 
-        ArrayList<ImageData> images = Utilities.getGalleryContent();
-        ThumbnailAdapter adapter = new ThumbnailAdapter(getActivity().getApplicationContext(), images);
-        recyclerView.setAdapter(adapter);
-    }
+		assert getActivity() != null;
+		this.imagesToProcess = new ArrayList<>();
+
+		sendImagesBtn = getActivity().findViewById(R.id.sendImageBtn);
+
+		sendImagesBtn.setOnClickListener(v -> {
+			if (imagesToProcess.size() > 0) {
+				startProcessing(v);
+			}
+			else {
+				Log.d(TAG, "No images to process!");
+			}
+		});
+
+		recyclerView = getActivity().findViewById(R.id.galleryRecyclerView);
+		layoutManager = new GridLayoutManager(getActivity().getApplicationContext(), 4);
+		recyclerView.setLayoutManager(layoutManager);
+
+		ArrayList<ImageData> images = Utilities.getGalleryContent();
+		ThumbnailAdapter adapter = new ThumbnailAdapter(getActivity().getApplicationContext(), this, images);
+		recyclerView.setAdapter(adapter);
+	}
+
+	public void setSelectionMode(boolean isMultipleSelection) {
+		if (isMultipleSelection == this.selectionMode) {
+			return;
+		}
+
+		this.selectionMode = isMultipleSelection;
+	}
+
+	public boolean getSelectionMode() {
+		return selectionMode;
+	}
+
+	@Override
+	public void toggleCheckbox(ThumbnailViewHolder holder, String img) {
+		if (getSelectionMode()) {
+			if (holder.checkbox.getVisibility() == View.VISIBLE) {
+				holder.checkbox.setVisibility(View.INVISIBLE);
+				removeImage(img);
+			}
+			else {
+				holder.checkbox.setVisibility(View.VISIBLE);
+				submitImage(img);
+			}
+		}
+		else {
+			imagesToProcess.clear();
+			imagesToProcess.add(img);
+		}
+	}
+
+	@Override
+	public void removeImage(String img) {
+		Log.d(TAG, "Removing image: " + img);
+		imagesToProcess.remove(img);
+	}
+
+	@Override
+	public void submitImage(String img) {
+		Log.d(TAG, "Adding image: " + img);
+		if (!imagesToProcess.contains(img)) {
+			imagesToProcess.add(img);
+		}
+	}
+
+	@Override
+	public void clear() {
+		imagesToProcess.clear();
+	}
+
+	public void startProcessing(View v) {
+		Bundle args = new Bundle();
+		args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, imagesToProcess);
+		Navigation.findNavController(v).navigate(
+				R.id.action_global_confirmImagesFragment,
+				args);
+	}
 
 }

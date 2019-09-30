@@ -10,9 +10,12 @@ import com.mashehu.anonyme.R;
 
 public class ThumbnailViewHolder extends RecyclerView.ViewHolder {
 	public ImageView img;
+	public ImageView checkbox;
 
 	public ThumbnailViewHolder(@NonNull View itemView) {
 		super(itemView);
-		img = itemView.findViewById(R.id.thumbnail_view);
+		img = itemView.findViewById(R.id.thumbnailView);
+		checkbox = itemView.findViewById(R.id.thumbnailCheckbox);
+		checkbox.setVisibility(View.INVISIBLE);
 	}
 }

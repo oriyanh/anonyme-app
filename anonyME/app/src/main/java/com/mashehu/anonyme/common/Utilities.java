@@ -92,9 +92,9 @@ public class Utilities {
 		Intent startEngineIntent = new Intent(INTENT_START_ENGINE, null,
 				context, EngineStartReceiver.class);
 
-		images.clear();
-		images.add(ASSETS_PATH.toString() + "/bill_gates_0001.png");
-		images.add(ASSETS_PATH.toString() + "/bill_gates_0001.png");
+//		images.clear();
+//		images.add(ASSETS_PATH.toString() + "/bill_gates_0001.png");
+//		images.add(ASSETS_PATH.toString() + "/bill_gates_0001.png");
 
 		startEngineIntent.putExtra(EXTRA_ENGINE_ASSETS_PATH, ASSETS_PATH.toString());
 		startEngineIntent.putExtra(EXTRA_ENGINE_OUT_DIR, CAMERA_ROLL_PATH.toString());

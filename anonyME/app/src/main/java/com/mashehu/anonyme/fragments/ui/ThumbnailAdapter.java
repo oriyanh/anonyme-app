@@ -1,30 +1,29 @@
 package com.mashehu.anonyme.fragments.ui;
 
 import android.content.Context;
-import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.mashehu.anonyme.R;
+import com.mashehu.anonyme.fragments.GallerySelectionHandler;
 
 import java.util.ArrayList;
 
-import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
-
 public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailViewHolder> {
-	private ArrayList<ImageData> images;
+	private static final String TAG = "anonyme.ThumbnailAdapter";
+	private ArrayList<ImageData> imageList;
 	private Context context;
-	private boolean multipleSelectionMode = false;
+	private GallerySelectionHandler selector;
 
-	public ThumbnailAdapter(Context context, ArrayList<ImageData> images) {
-		this.images = images;
+	public ThumbnailAdapter(Context context, GallerySelectionHandler selector, ArrayList<ImageData> images) {
+		this.imageList = images;
 		this.context = context;
+		this.selector = selector;
 	}
 
 	@NonNull
@@ -36,30 +35,38 @@ public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailViewHolder> 
 
 	@Override
 	public void onBindViewHolder(@NonNull ThumbnailViewHolder holder, int position) {
+		String img = imageList.get(position).getImagePath();
 
 		holder.img.setOnClickListener(v -> {
-			if (!multipleSelectionMode) {
-				Bundle args = new Bundle();
-				String img = images.get(position).getImagePath();
-				ArrayList<String> images = new ArrayList<>();
-				images.add(img);
-				args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, images);
-				Navigation.findNavController(v).navigate(
-						R.id.action_global_confirmImagesFragment,
-						args);
+			Log.d(TAG, "Normal click on image");
+			if (!selector.getSelectionMode()) {
+				selector.toggleCheckbox(null, img);
+				selector.startProcessing(v);
 			}
-			else {} //TODO work on multiple selection mode
+			else {
+				selector.toggleCheckbox(holder, img);
+			}
 		});
-		holder.img.setOnLongClickListener(v -> true);
+
+		holder.img.setOnLongClickListener(v -> {
+			Log.d(TAG, "Long click on image");
+
+			if (!selector.getSelectionMode()) {
+				selector.setSelectionMode(true);
+			}
+			selector.toggleCheckbox(holder, img);
+			return true;
+		});
 
 		GlideApp.with(context)
-				.load(images.get(position).getImagePath())
+				.load(img)
 				.galleryThumbnail()
 				.into(holder.img);
 	}
 
 	@Override
 	public int getItemCount() {
-		return images.size();
+		return imageList.size();
 	}
+
 }

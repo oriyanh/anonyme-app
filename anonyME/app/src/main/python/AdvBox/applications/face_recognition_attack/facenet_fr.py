@@ -32,7 +32,8 @@ from AdvBox.applications.face_recognition_attack.facenet.src import facenet
 
 def get_pic_from_png(pic_path):
 	img = misc.imread(os.path.expanduser(pic_path), mode='RGB')
-	return regularize_pic(img)
+	temp_img = img[:160, :160, :3]
+	return regularize_pic(temp_img)
 
 
 def regularize_pic(img):
@@ -200,8 +201,8 @@ def main(assets_dir, out_dir, input_pic_name):
 	print ("Input pic path: " + input_pic_name)
 	fr = FacenetFR(facenet_model_checkpoint)
 	input_pic_path = os.path.join(assets_dir, input_pic_name)
-	# target_pic = os.path.join(assets_dir, "chaoren.png")
-	target_pic = os.path.join(out_dir, "IMG_20190921_133905.jpg")
+	target_pic = os.path.join(assets_dir, "chaoren.png")
+	# target_pic = os.path.join(out_dir, "IMG_20190921_133905.jpg")
 	# print fr.compare(input_pic,target_pic)
 
 	return fr.generate_adv_whitebox(input_pic_name, target_pic, out_dir)  # returns path to new image
@@ -209,4 +210,5 @@ def main(assets_dir, out_dir, input_pic_name):
 if __name__ == '__main__':
 	main(r"D:\Oriyan\School\HUJI PDF\eng_proj_repo\anonyME\app\src\main\assets",
 		 r"D:\Oriyan\School\HUJI PDF\eng_proj_repo\anonyME\app\src\main\python\AdvBox\applications\face_recognition_attack",
+		 # r"D:\Oriyan\School\HUJI PDF\eng_proj_repo\anonyME\app\src\main\assets\bill_gates_0001.png")
 		 r"D:\Oriyan\School\HUJI PDF\eng_proj_repo\anonyME\app\src\main\python\AdvBox\applications\face_recognition_attack\IMG_20190921_134019.jpg")
