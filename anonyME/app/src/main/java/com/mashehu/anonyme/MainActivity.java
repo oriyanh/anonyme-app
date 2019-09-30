@@ -48,18 +48,6 @@ public class MainActivity extends FragmentActivity {
                     ANONYME_PERMISSION_REQUEST_CODE);
         }
 
-
-        Intent startEngineIntent = new Intent(INTENT_START_ENGINE, null,
-                getApplicationContext(), EngineStartReceiver.class);
-
-        ArrayList<String> images = new ArrayList<>();
-        images.add("bill_gates_0001.png");
-
-        startEngineIntent.putExtra(EXTRA_ENGINE_ASSETS_PATH, ASSETS_PATH);
-        startEngineIntent.putExtra(EXTRA_ENGINE_OUT_DIR, CACHE_PATH);
-        startEngineIntent.putExtra(EXTRA_ENGINE_NUM_IMAGES, 1);
-        startEngineIntent.putExtra(EXTRA_ENGINE_INPUT_PICS, images);
-//		sendBroadcast(startEngineIntentK);
     }
 
     @Override

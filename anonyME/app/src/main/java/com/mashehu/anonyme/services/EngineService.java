@@ -2,8 +2,10 @@ package com.mashehu.anonyme.services;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -14,6 +16,7 @@ import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_INPUT_PICS;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_NUM_IMAGES;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_OUT_DIR;
 import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_ID_PROGRESS;
+import static com.mashehu.anonyme.common.Constants.SP_IS_PROCESSING_KEY;
 import static com.mashehu.anonyme.common.Utilities.createNotification;
 
 public class EngineService extends Service implements ImageMover{
@@ -33,17 +36,18 @@ public class EngineService extends Service implements ImageMover{
 		startForeground(1, createNotification("bla", // TODO send meaningful notifications to demonstrate progress
 								getApplicationContext(),
 								NOTIFICATION_CH_ID_PROGRESS));
-
-		int num_images = intent.getIntExtra(EXTRA_ENGINE_NUM_IMAGES, 1); // to be used for demonstrating progress?
+		if (intent == null) {
+			super.onStartCommand(intent, flags, startId);
+		}
 		String assets_dir = intent.getStringExtra(EXTRA_ENGINE_ASSETS_PATH);
 		String out_dir = intent.getStringExtra(EXTRA_ENGINE_OUT_DIR);
 
 		// TODO generate single string to represent list of images to process, or start different python process per image
 		ArrayList<String> images = intent.getStringArrayListExtra(EXTRA_ENGINE_INPUT_PICS); // ArrayList containing list of images to process
-		ArrayList<String> results = new ArrayList<>(num_images); // ArrayList containing list of images to process
-		Log.d(TAG + "onStartCommand", "Processing " + num_images + " images");
+		ArrayList<String> results = new ArrayList<>(images.size()); // ArrayList containing list of images to process
+		Log.d(TAG + "onStartCommand", "Processing " + images.size() + " images");
 		int progress = 0;
-		ArrayList<AsyncTask<String, Void, String>> futures = new ArrayList<>(num_images);
+		ArrayList<AsyncTask<String, Void, String>> futures = new ArrayList<>(images.size());
 		for (String img : images) {
 			progress++;
 			Log.d(TAG + "onStartCommand", "Processing image #" + progress + ": " + img);
@@ -72,13 +76,11 @@ public class EngineService extends Service implements ImageMover{
 	}
 
 	public void moveToGallery(String img) {
+		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		sp.edit().putBoolean(SP_IS_PROCESSING_KEY, false).apply();
 		Log.d(TAG + "moveToGallery", "result file path = " + img);
 
-		MoveToGalleryAsyncTask task = new MoveToGalleryAsyncTask();
-		task.execute(img); //todo implement actual mechanism
+//		MoveToGalleryAsyncTask task = new MoveToGalleryAsyncTask();
+//		task.execute(img); //todo implement actual mechanism
 	}
-}
-
-interface ImageMover {
-	public void moveToGallery(String img);
 }

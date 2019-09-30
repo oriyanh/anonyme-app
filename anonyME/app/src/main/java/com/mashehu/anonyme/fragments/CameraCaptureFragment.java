@@ -436,7 +436,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
                                         imageDirs.add(imageFile.getAbsolutePath());
                                         args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, imageDirs);
                                         Navigation.findNavController(view).navigate(
-                                                R.id.action_cameraCaptureFragment_to_confirmImagesFragment,
+                                                R.id.action_global_confirmImagesFragment,
                                                 args);
                                     }
                                 }

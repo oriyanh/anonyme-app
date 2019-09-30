@@ -31,173 +31,182 @@ from AdvBox.applications.face_recognition_attack.facenet.src import facenet
 
 
 def get_pic_from_png(pic_path):
-    img = misc.imread(os.path.expanduser(pic_path), mode='RGB')
-    return regularize_pic(img)
+	img = misc.imread(os.path.expanduser(pic_path), mode='RGB')
+	return regularize_pic(img)
+
 
 def regularize_pic(img):
-    return img * 2.0 / 255.0 - 1.0
+	return img * 2.0 / 255.0 - 1.0
+
 
 def restore_pic(img):
-    return (img + 1.0) * 255.0 / 2.0
+	return (img + 1.0) * 255.0 / 2.0
 
 
 def save_img2png(input_image, name):
-    input_image = np.reshape(
-        input_image, (input_image.shape[0], input_image.shape[1], input_image.shape[2]))
-    img = np.round(restore_pic(input_image)).astype(np.uint8)
-    img_ouput = Image.fromarray(img)
-    filename = name + '.png'
-    img_ouput.save(filename)
+	input_image = np.reshape(
+		input_image, (input_image.shape[0], input_image.shape[1], input_image.shape[2]))
+	img = np.round(restore_pic(input_image)).astype(np.uint8)
+	img_ouput = Image.fromarray(img)
+	filename = name + '.png'
+	img_ouput.save(filename)
 
 
 def Euclidian_distance(embeddings1, embeddings2):
-    # Euclidian distance
-    diff = np.subtract(embeddings1, embeddings2)
-    dist = np.sum(np.square(diff))
-    return np.sqrt(dist)
+	# Euclidian distance
+	diff = np.subtract(embeddings1, embeddings2)
+	dist = np.sum(np.square(diff))
+	return np.sqrt(dist)
 
 
 def cosine_distance(embeddings1, embeddings2):
-    # Distance based on cosine similarity
-    dot = np.sum(np.multiply(embeddings1, embeddings2), axis=1)
-    norm = np.linalg.norm(embeddings1, axis=1) * np.linalg.norm(embeddings2, axis=1)
-    similarity = dot / norm
-    dist = np.arccos(similarity) / math.pi
-    return dist
+	# Distance based on cosine similarity
+	dot = np.sum(np.multiply(embeddings1, embeddings2), axis=1)
+	norm = np.linalg.norm(embeddings1, axis=1) * np.linalg.norm(embeddings2, axis=1)
+	similarity = dot / norm
+	dist = np.arccos(similarity) / math.pi
+	return dist
 
 
 def generate_inp2adv_name(input_pic, target_pic):
-    (filepath, temp_input) = os.path.split(input_pic)
-    (shotname_input, extension) = os.path.splitext(temp_input)
+	(filepath, temp_input) = os.path.split(input_pic)
+	(shotname_input, extension) = os.path.splitext(temp_input)
 
-    (filepath, temp_target) = os.path.split(target_pic)
-    (shotname_target, extension) = os.path.splitext(temp_target)
+	(filepath, temp_target) = os.path.split(target_pic)
+	(shotname_target, extension) = os.path.splitext(temp_target)
 
-    return shotname_input + "_2_" + shotname_target
-
+	return shotname_input + "_2_" + shotname_target
 
 
 class FacenetFR():
 
-    def __init__(self, facenet_model_checkpoint):
-        self.sess = tf.Session()
-        with self.sess.as_default():
-            facenet.load_model(facenet_model_checkpoint)
+	def __init__(self, facenet_model_checkpoint):
+		self.sess = tf.Session()
+		with self.sess.as_default():
+			facenet.load_model(facenet_model_checkpoint)
 
-    def generate_embedding(self, pic):
-        if type(pic) is str:
-            pic = get_pic_from_png(pic)
-        else:
-            pic = regularize_pic(pic)
+	def generate_embedding(self, pic):
+		if type(pic) is str:
+			pic = get_pic_from_png(pic)
+		else:
+			pic = regularize_pic(pic)
 
-        # Get input and output tensors
-        images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
-        embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
-        phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
+		# Get input and output tensors
+		images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
+		embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
+		phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
 
-        # Run forward pass to calculate embeddings
-        feed_dict = {images_placeholder: [pic], phase_train_placeholder: False}
-        return self.sess.run(embeddings, feed_dict=feed_dict)[0]
+		# Run forward pass to calculate embeddings
+		feed_dict = {images_placeholder: [pic], phase_train_placeholder: False}
+		return self.sess.run(embeddings, feed_dict=feed_dict)[0]
 
-    def compare(self, input_pic, target_pic):
-        embedding1 = self.generate_embedding(input_pic)
-        embedding2 = self.generate_embedding(target_pic)
+	def compare(self, input_pic, target_pic):
+		embedding1 = self.generate_embedding(input_pic)
+		embedding2 = self.generate_embedding(target_pic)
 
-        # if both pictures are same, return 0
-        return Euclidian_distance(embedding1, embedding2)
+		# if both pictures are same, return 0
+		return Euclidian_distance(embedding1, embedding2)
 
-    def generate_adv_whitebox(self, input_pic, target_pic, dest_dir=None):
-        # Get input and output tensors
-        images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
-        embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
-        phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
+	def generate_adv_whitebox(self, input_pic, target_pic, dest_dir=None):
+		# Get input and output tensors
+		images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
+		embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
+		phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
 
-        target_emb = self.generate_embedding(target_pic)
+		target_emb = self.generate_embedding(target_pic)
 
-        #攻击步长
-        eta = 0.01
-        #loss函数目的是将起下降
-        loss = tf.sqrt(tf.reduce_sum(tf.square(embeddings - target_emb)))
+		# 攻击步长
+		eta = 0.01
+		# loss函数目的是将起下降
+		loss = tf.sqrt(tf.reduce_sum(tf.square(embeddings - target_emb)))
 
-        #定义FGSM迭代器
-        adv_x=fgsm(images_placeholder,
-                   loss=loss,
-                    eps=eta,
-                    ord=np.inf,
-                    bounds=(-1.0,1.0))
+		# 定义FGSM迭代器
+		adv_x = fgsm(images_placeholder,
+					 loss=loss,
+					 eps=eta,
+					 ord=np.inf,
+					 bounds=(-1.0, 1.0))
 
-        input_image = get_pic_from_png(input_pic)
-        adv_image = np.reshape(
-            input_image, (-1, input_image.shape[0], input_image.shape[1], input_image.shape[2]))
+		input_image = get_pic_from_png(input_pic)
+		adv_image = np.reshape(
+			input_image, (-1, input_image.shape[0], input_image.shape[1], input_image.shape[2]))
 
+		# 损失函数小于adv_loss_stop 认为满足需要了 退出
+		adv_loss_stop = 0.01
+		# loss阈值 衡量前后两次loss差别过小 认为已经稳定了 收敛了 连续loss_cnt_threshold次小于loss_limit退出
+		loss_limit = 0.0008
+		loss_cnt_threshold = 10
+		# 最大迭代次数
+		num_iter = 100
+		# num_iter = 2000
 
-        #损失函数小于adv_loss_stop 认为满足需要了 退出
-        adv_loss_stop=0.01
-        #loss阈值 衡量前后两次loss差别过小 认为已经稳定了 收敛了 连续loss_cnt_threshold次小于loss_limit退出
-        loss_limit = 0.0008
-        loss_cnt_threshold = 10
-        #最大迭代次数
-        num_iter = 100
-        # num_iter = 2000
+		last_adv_loss = 0
+		cnt = 0
+		flag = False
 
-        last_adv_loss = 0
-        cnt = 0
-        flag = False
+		for i in range(num_iter):
+			feed_dict = {
+				images_placeholder: adv_image,
+				phase_train_placeholder: False
+			}
+			# 调用迭代器
+			adv_image, adv_loss = self.sess.run([adv_x, loss], feed_dict=feed_dict)
 
-        for i in range(num_iter):
-            feed_dict = {
-                images_placeholder: adv_image,
-                phase_train_placeholder: False
-            }
-            #调用迭代器
-            adv_image, adv_loss = self.sess.run([adv_x, loss], feed_dict=feed_dict)
+			print('[%d] Bias from original image: %2.6f Loss: %2.6f' % (i, np.sqrt(
+				np.sum(np.square(adv_image[0, ...] - input_image))), adv_loss))
 
-            print('[%d] Bias from original image: %2.6f Loss: %2.6f' % (i, np.sqrt(
-                np.sum(np.square(adv_image[0, ...] - input_image))), adv_loss))
+			if np.absolute(adv_loss - last_adv_loss) < loss_limit:
+				if flag:
+					cnt += 1
+				else:
+					flag = True
+			else:
+				flag = False
+				cnt = 0
 
-            if np.absolute(adv_loss - last_adv_loss) < loss_limit:
-                if flag:
-                    cnt += 1
-                else:
-                    flag = True
-            else:
-                flag = False
-                cnt = 0
+			if cnt == loss_cnt_threshold:
+				print('always get too tiny loss...')
+				break
 
-            if cnt == loss_cnt_threshold:
-                print('always get too tiny loss...')
-                break
+			if adv_loss < adv_loss_stop:
+				print('get final result...')
+				break
 
-            if adv_loss < adv_loss_stop:
-                print('get final result...')
-                break
+			last_adv_loss = adv_loss
 
-            last_adv_loss = adv_loss
+		if i == num_iter - 1:
+			print('Out of maximum iterative number...')
+		# filename = generate_inp2adv_name(input_pic, target_pic) + str(i)
+		# 调试阶段 文件名不随机
+		filename = generate_inp2adv_name(input_pic, target_pic)
+		full_path = os.path.join(dest_dir, filename)
+		save_img2png(adv_image[0, ...], full_path)
 
-
-        if i == num_iter - 1:
-            print('Out of maximum iterative number...')
-        #filename = generate_inp2adv_name(input_pic, target_pic) + str(i)
-        #调试阶段 文件名不随机
-        filename = generate_inp2adv_name(input_pic, target_pic)
-        full_path = os.path.join(dest_dir, filename)
-        save_img2png(adv_image[0, ...], full_path)
-
-        feed_dict = {
-            images_placeholder: adv_image,
-            phase_train_placeholder: False
-        }
-        adv_embedding = self.sess.run(embeddings, feed_dict=feed_dict)[0]
-        print('The distance between input embedding and target is %2.6f' %
-              Euclidian_distance(adv_embedding, target_emb))
-        return full_path + ".png"
+		feed_dict = {
+			images_placeholder: adv_image,
+			phase_train_placeholder: False
+		}
+		adv_embedding = self.sess.run(embeddings, feed_dict=feed_dict)[0]
+		print('The distance between input embedding and target is %2.6f' %
+			  Euclidian_distance(adv_embedding, target_emb))
+		return full_path + ".png"
 
 
 def main(assets_dir, out_dir, input_pic_name):
-    facenet_model_checkpoint = os.path.join(assets_dir, "fn_weights_20180402_114759.pb")
-    fr = FacenetFR(facenet_model_checkpoint)
-    input_pic_path = os.path.join(assets_dir, input_pic_name)
-    target_pic = os.path.join(assets_dir, "chaoren.png")
-    # print fr.compare(input_pic,target_pic)
+	facenet_model_checkpoint = os.path.join(assets_dir, "fn_weights_20180402_114759.pb")
+	print("model: " + facenet_model_checkpoint)
+	print ("assets dir: " + assets_dir)
+	print ("out dir: " + out_dir)
+	print ("Input pic path: " + input_pic_name)
+	fr = FacenetFR(facenet_model_checkpoint)
+	input_pic_path = os.path.join(assets_dir, input_pic_name)
+	# target_pic = os.path.join(assets_dir, "chaoren.png")
+	target_pic = os.path.join(out_dir, "IMG_20190921_133905.jpg")
+	# print fr.compare(input_pic,target_pic)
 
-    return fr.generate_adv_whitebox(input_pic_path, target_pic, out_dir)  # returns path to new image
+	return fr.generate_adv_whitebox(input_pic_name, target_pic, out_dir)  # returns path to new image
+
+if __name__ == '__main__':
+	main(r"D:\Oriyan\School\HUJI PDF\eng_proj_repo\anonyME\app\src\main\assets",
+		 r"D:\Oriyan\School\HUJI PDF\eng_proj_repo\anonyME\app\src\main\python\AdvBox\applications\face_recognition_attack",
+		 r"D:\Oriyan\School\HUJI PDF\eng_proj_repo\anonyME\app\src\main\python\AdvBox\applications\face_recognition_attack\IMG_20190921_134019.jpg")

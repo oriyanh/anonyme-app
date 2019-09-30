@@ -15,6 +15,8 @@ import com.mashehu.anonyme.R;
 
 import java.util.ArrayList;
 
+import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
+
 public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailViewHolder> {
 	private ArrayList<ImageData> images;
 	private Context context;
@@ -41,9 +43,9 @@ public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailViewHolder> 
 				String img = images.get(position).getImagePath();
 				ArrayList<String> images = new ArrayList<>();
 				images.add(img);
-				args.putStringArrayList("imageDirs", images);
+				args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, images);
 				Navigation.findNavController(v).navigate(
-						R.id.action_galleryFragment_to_confirmImagesFragment,
+						R.id.action_global_confirmImagesFragment,
 						args);
 			}
 			else {} //TODO work on multiple selection mode

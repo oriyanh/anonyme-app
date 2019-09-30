@@ -28,4 +28,6 @@ final public class Constants {
 
 	public static final String ENGINE_MODULE_NAME = "AdvBox.applications.face_recognition_attack.facenet_fr";
 	public static final String IMAGE_DIRS_ARGUMENT_KEY = "imageDirs";
+
+	public static final String SP_IS_PROCESSING_KEY = "SP_IS_PROCESSING_IMAGES";
 }

@@ -8,10 +8,7 @@ import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
-import androidx.recyclerview.widget.PagerSnapHelper;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.viewpager2.widget.CompositePageTransformer;
-import androidx.viewpager2.widget.MarginPageTransformer;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.viewpager2.widget.ViewPager2;
 
 import android.util.Log;
@@ -20,15 +17,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mashehu.anonyme.R;
-import com.mashehu.anonyme.common.Utilities;
 import com.mashehu.anonyme.fragments.ui.ConfirmImageLargeAdapter;
 import com.mashehu.anonyme.fragments.ui.ImageData;
-import com.mashehu.anonyme.fragments.ui.ThumbnailAdapter;
+import com.mashehu.anonyme.fragments.ui.SwipeToDeleteCallback;
 
 import java.util.ArrayList;
 
 import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
+import static com.mashehu.anonyme.common.Utilities.processImages;
 
 
 /**
@@ -37,7 +35,7 @@ import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
 public class ConfirmImagesFragment extends Fragment {
 	public static final String TAG = "anonyme.ConfirmImagesFragment";
 	ViewPager2 viewPager;
-
+	FloatingActionButton sendButton;
 	public ConfirmImagesFragment() {
 		// Required empty public constructor
 	}
@@ -56,27 +54,30 @@ public class ConfirmImagesFragment extends Fragment {
 
 		assert getView() != null;
 		assert getActivity() != null;
+		assert getArguments() != null;
 
-//        thumbnail = getActivity().findViewById(R.id.thumbnail_view);
 		viewPager = getActivity().findViewById(R.id.confirmImagesviewPager);
-//        layoutManager = new GridLayoutManager(getActivity().getApplicationContext(), 4);
-//        recyclerView.setLayoutManager(layoutManager);
-
-		ArrayList<ImageData> images = Utilities.getGalleryContent();
+		ArrayList<String> imagePaths = getArguments().getStringArrayList(IMAGE_DIRS_ARGUMENT_KEY);
+		ArrayList<ImageData> images = new ArrayList<>();
+		for (String img : imagePaths) {
+			ImageData imageData = new ImageData();
+			imageData.setImagePath(img);
+			images.add(imageData);
+		}
 		ConfirmImageLargeAdapter adapter = new ConfirmImageLargeAdapter(getActivity().getApplicationContext(), images);
-		viewPager.setAdapter(adapter);
 		viewPager.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
-//		CompositePageTransformer transformer = new CompositePageTransformer();
-//		transformer.addTransformer(new MarginPageTransformer(50));
-//		transformer.addTransformer((page, position) -> {
-//			page.setTranslationX(Math.abs(position) * 500f);
-//			page.setScaleX(1f);
-//			page.setScaleY(1f);
-//		});
-//		viewPager.setPageTransformer(transformer);
 		viewPager.setClipToPadding(false);
 		viewPager.setClipChildren(false);
 		viewPager.setOffscreenPageLimit(3);
+
+		ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeToDeleteCallback(adapter));
+		viewPager.addItemDecoration(itemTouchHelper);
+		viewPager.setAdapter(adapter);
+
+		sendButton = view.findViewById(R.id.fabSendButton);
+		sendButton.setOnClickListener(v -> {
+			processImages(getActivity().getApplicationContext(), adapter.getImagePaths());
+		});
 
 		int offsetPx = getResources().getDimensionPixelOffset(R.dimen.offset);
 		int pageMarginPx = getResources().getDimensionPixelOffset(R.dimen.pageMargin);
@@ -101,7 +102,11 @@ public class ConfirmImagesFragment extends Fragment {
 			if (imageDirs != null)
 				Log.d(TAG, String.format("Number of images: %s\nFirst image: %s", imageDirs.size(), imageDirs.get(0)));
 		}
+		setupListeners(view);
 
+	}
+
+	private void setupListeners(@NonNull View view) {
 		ImageButton returnButton = getView().findViewById(R.id.return_button);
 		returnButton.setOnClickListener((v) -> {
 			Bundle args = new Bundle();
@@ -109,5 +114,7 @@ public class ConfirmImagesFragment extends Fragment {
 			Navigation.findNavController(view).navigate(
 					R.id.action_confirmImagesFragment_to_cameraCaptureFragment, args);
 		});
+
+
 	}
 }

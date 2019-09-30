@@ -28,7 +28,7 @@ import static com.mashehu.anonyme.common.Constants.ANYNOME_SHARE_SHORTCUT_ID;
 
 public class AnonyME extends Application {
     public static final String TAG = "anonyme.Application.";
-    static boolean COPY_ASSETS = true;
+    static boolean COPY_ASSETS = false;
 
     @Override
     public void onCreate() {
