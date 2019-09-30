@@ -25,9 +25,9 @@ public class AnonyMEGlideExtension {
 	public static BaseRequestOptions<?> confirmImagesLarge(BaseRequestOptions<?> options)
 	{
 		return options
-				.fitCenter()
-				.centerCrop()
-				.centerInside();
+				.fitCenter();
+//				.centerCrop()
+//				.centerInside();
 //				.override(50, 50);
 	}
 }

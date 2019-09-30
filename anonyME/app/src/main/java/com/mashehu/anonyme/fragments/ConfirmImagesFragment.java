@@ -7,8 +7,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.NavDestination;
+import androidx.navigation.NavHostController;
 import androidx.navigation.Navigation;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.PagerSnapHelper;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.SnapHelper;
 import androidx.viewpager2.widget.ViewPager2;
 
 import android.util.Log;
@@ -36,6 +45,7 @@ public class ConfirmImagesFragment extends Fragment {
 	public static final String TAG = "anonyme.ConfirmImagesFragment";
 	ViewPager2 viewPager;
 	FloatingActionButton sendButton;
+	RecyclerView recyclerView;
 	public ConfirmImagesFragment() {
 		// Required empty public constructor
 	}
@@ -56,46 +66,20 @@ public class ConfirmImagesFragment extends Fragment {
 		assert getActivity() != null;
 		assert getArguments() != null;
 
-		viewPager = getActivity().findViewById(R.id.confirmImagesviewPager);
 		ArrayList<String> imagePaths = getArguments().getStringArrayList(IMAGE_DIRS_ARGUMENT_KEY);
 		ArrayList<ImageData> images = new ArrayList<>();
 		for (String img : imagePaths) {
 			ImageData imageData = new ImageData();
 			imageData.setImagePath(img);
 			images.add(imageData);
+			images.add(imageData);
+			images.add(imageData);
 		}
-		ConfirmImageLargeAdapter adapter = new ConfirmImageLargeAdapter(getActivity().getApplicationContext(), images);
-		viewPager.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
-		viewPager.setClipToPadding(false);
-		viewPager.setClipChildren(false);
-		viewPager.setOffscreenPageLimit(3);
 
-		ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeToDeleteCallback(adapter));
-		viewPager.addItemDecoration(itemTouchHelper);
-		viewPager.setAdapter(adapter);
 
+		setupRecyclerView(images);
 		sendButton = view.findViewById(R.id.fabSendButton);
-		sendButton.setOnClickListener(v -> {
-			processImages(getActivity().getApplicationContext(), adapter.getImagePaths());
-		});
 
-		int offsetPx = getResources().getDimensionPixelOffset(R.dimen.offset);
-		int pageMarginPx = getResources().getDimensionPixelOffset(R.dimen.pageMargin);
-		viewPager.setPageTransformer((page, position) -> {
-			ViewPager2 vp = (ViewPager2) page.getParent().getParent();
-			float offset = position * -(2 * offsetPx + pageMarginPx);
-			if (vp.getOrientation() == ViewPager2.ORIENTATION_HORIZONTAL) {
-				if (ViewCompat.getLayoutDirection(vp) == ViewCompat.LAYOUT_DIRECTION_RTL) {
-					page.setTranslationX(-offset);
-				}
-				else {
-					page.setTranslationX(offset);
-				}
-			}
-			else {
-				page.setTranslationY(offset);
-			}
-		});
 
 		if (getArguments() != null) {
 			ArrayList<String> imageDirs = getArguments().getStringArrayList(IMAGE_DIRS_ARGUMENT_KEY);
@@ -107,14 +91,51 @@ public class ConfirmImagesFragment extends Fragment {
 	}
 
 	private void setupListeners(@NonNull View view) {
-		ImageButton returnButton = getView().findViewById(R.id.return_button);
-		returnButton.setOnClickListener((v) -> {
-			Bundle args = new Bundle();
-			args.putBoolean("isBulkCapture", true);
-			Navigation.findNavController(view).navigate(
-					R.id.action_confirmImagesFragment_to_cameraCaptureFragment, args);
+//		ImageButton returnButton = getView().findViewById(R.id.return_button);
+//		returnButton.setOnClickListener((v) -> {
+//			Bundle args = new Bundle();
+//			args.putBoolean("isBulkCapture", true);
+//			NavController navController = Navigation.findNavController(view);
+//
+//			Navigation.findNavController(view).navigate(
+//					R.id.action_confirmImagesFragment_to_cameraCaptureFragment, args);
+//		});
+
+		sendButton.setOnClickListener(v -> {
+			ConfirmImageLargeAdapter adapter = (ConfirmImageLargeAdapter)recyclerView.getAdapter();
+			processImages(getActivity().getApplicationContext(), adapter.getImagePaths());
 		});
 
 
+	}
+
+	private void setupRecyclerView(ArrayList<ImageData> images) {
+		recyclerView = getActivity().findViewById(R.id.confirmImagesRecyclerView);
+		ConfirmImageLargeAdapter adapter = new ConfirmImageLargeAdapter(getActivity().getApplicationContext(), images);
+		SnapHelper snapHelper = new PagerSnapHelper();
+		RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+		recyclerView.setLayoutManager(layoutManager);
+		snapHelper.attachToRecyclerView(recyclerView);
+		recyclerView.setItemAnimator(new DefaultItemAnimator());
+		recyclerView.setAdapter(adapter);
+//		viewPager.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
+//		viewPager.setClipToPadding(false);
+//		viewPager.setClipChildren(false);
+//		viewPager.setOffscreenPageLimit(3);
+
+		ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeToDeleteCallback(adapter));
+//		viewPager.addItemDecoration(itemTouchHelper);
+//		viewPager.setAdapter(adapter);
+		itemTouchHelper.attachToRecyclerView(recyclerView);
+	}
+
+	private void setupBackButton(@NonNull View view) {
+		NavController navController = Navigation.findNavController(view);
+		navController.addOnDestinationChangedListener(new NavController.OnDestinationChangedListener() {
+			@Override
+			public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
+//				if (destination.getId() == R.id.fragment)
+			}
+		});
 	}
 }

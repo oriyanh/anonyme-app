@@ -1,20 +1,19 @@
 package com.mashehu.anonyme.fragments.ui;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.mashehu.anonyme.R;
 
 import java.util.ArrayList;
 
-public class ConfirmImageLargeAdapter extends RecyclerView.Adapter<ConfirmImageViewHolder> {
+public class ConfirmImageLargeAdapter extends RecyclerView.Adapter<ConfirmImageLargeAdapter.ConfirmImageViewHolder> {
 	private ArrayList<ImageData> images;
 	private Context context;
 	private ImageData recentlyDeletedItem;
@@ -29,7 +28,8 @@ public class ConfirmImageLargeAdapter extends RecyclerView.Adapter<ConfirmImageV
 	@NonNull
 	@Override
 	public ConfirmImageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-		View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_confirm_image_large, parent, false);
+		View view = LayoutInflater.from(parent.getContext())
+				.inflate(R.layout.item_confirm_image_large, parent, false);
 		return new ConfirmImageViewHolder(view);
 	}
 
@@ -56,6 +56,7 @@ public class ConfirmImageLargeAdapter extends RecyclerView.Adapter<ConfirmImageV
 				.into(holder.img);
 	}
 
+	@NonNull
 	public ArrayList<String> getImagePaths() {
 		ArrayList<String> paths = new ArrayList<>(images.size());
 		for (ImageData img : images) {
@@ -78,5 +79,14 @@ public class ConfirmImageLargeAdapter extends RecyclerView.Adapter<ConfirmImageV
 	@Override
 	public int getItemCount() {
 		return images.size();
+	}
+
+	public static class ConfirmImageViewHolder extends RecyclerView.ViewHolder {
+		public ImageView img;
+
+		public ConfirmImageViewHolder(@NonNull View itemView) {
+			super(itemView);
+			img = itemView.findViewById(R.id.confirm_image_large_view);
+		}
 	}
 }

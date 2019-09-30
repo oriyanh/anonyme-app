@@ -23,19 +23,7 @@ import java.io.File;
 import java.util.ArrayList;
 
 import static android.os.Environment.DIRECTORY_DCIM;
-import static android.os.Environment.DIRECTORY_PICTURES;
-import static com.mashehu.anonyme.common.Constants.ASSETS_PATH;
-import static com.mashehu.anonyme.common.Constants.CACHE_PATH;
-import static com.mashehu.anonyme.common.Constants.CAMERA_ROLL_PATH;
-import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_ASSETS_PATH;
-import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_INPUT_PICS;
-import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_NUM_IMAGES;
-import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_OUT_DIR;
-import static com.mashehu.anonyme.common.Constants.INTENT_START_ENGINE;
-import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_DESC_PROGRESS;
-import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_ID_PROGRESS;
-import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_NAME_PROGRESS;
-import static com.mashehu.anonyme.common.Constants.SP_IS_PROCESSING_KEY;
+import static com.mashehu.anonyme.common.Constants.*;
 
 public class Utilities {
 	public static final String TAG = "anonyme.Utilities.";
@@ -105,7 +93,8 @@ public class Utilities {
 				context, EngineStartReceiver.class);
 
 		images.clear();
-		images.add("bill_gates_0001.png");
+		images.add(ASSETS_PATH.toString() + "/bill_gates_0001.png");
+		images.add(ASSETS_PATH.toString() + "/bill_gates_0001.png");
 
 		startEngineIntent.putExtra(EXTRA_ENGINE_ASSETS_PATH, ASSETS_PATH.toString());
 		startEngineIntent.putExtra(EXTRA_ENGINE_OUT_DIR, CAMERA_ROLL_PATH.toString());

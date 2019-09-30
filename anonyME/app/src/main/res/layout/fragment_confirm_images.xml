@@ -7,66 +7,29 @@
     android:layout_height="match_parent"
     tools:context=".fragments.ConfirmImagesFragment">
 
-
-    <LinearLayout
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/confirmImagesRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:weightSum="100">
+        android:layout_height="match_parent">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="20"
-            android:orientation="horizontal"
-            android:weightSum="100">
+    </androidx.recyclerview.widget.RecyclerView>
 
-            <ImageButton
-                android:id="@+id/imageButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_weight="5"
-                android:src="@android:drawable/ic_menu_add" />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabSendButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
+        android:clickable="true"
+        android:paddingRight="10dp"
+        android:paddingBottom="10dp"
+        android:src="@android:drawable/ic_menu_send"
+        app:borderWidth="2dp"
+        app:fabSize="mini"
+        app:layout_constraintBottom_toBottomOf="@+id/confirmImagesRecyclerView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintRight_toRightOf="@id/confirmImagesRecyclerView"
+        app:maxImageSize="36dp" />
 
-            <ImageButton
-                android:id="@+id/return_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="5"
-                android:contentDescription="@string/backStr"
-                android:src="@android:drawable/ic_menu_revert" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="70"
-            android:orientation="horizontal"
-            android:weightSum="100">
-
-            <androidx.viewpager2.widget.ViewPager2
-                android:id="@+id/confirmImagesviewPager"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="100" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="10"
-            android:orientation="horizontal">
-
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/fabSendButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:clickable="true"
-                android:src="@android:drawable/ic_menu_send" />
-        </LinearLayout>
-
-    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

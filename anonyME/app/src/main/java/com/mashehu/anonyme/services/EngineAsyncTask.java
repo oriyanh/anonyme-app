@@ -33,7 +33,6 @@ public class EngineAsyncTask extends AsyncTask<String, Void, String> {
 		Python py = Python.getInstance();
 		PyObject res = py.getModule(ENGINE_MODULE_NAME).
 				callAttr("main", this.in_dir, this.out_dir, strings[0]);
-
 		return res.toString();
 	}
 }
