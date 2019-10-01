@@ -3,11 +3,11 @@ package com.mashehu.anonyme.fragments;
 
 import android.os.Bundle;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.NavController;
-import androidx.navigation.NavDestination;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -38,9 +38,9 @@ import static com.mashehu.anonyme.common.Utilities.processImages;
  */
 public class ConfirmImagesFragment extends Fragment {
 	public static final String TAG = "anonyme.ConfirmImagesFragment";
-	//	ViewPager2 viewPager;
 	FloatingActionButton sendButton;
 	RecyclerView recyclerView;
+	AppViewModel viewModel;
 
 	public ConfirmImagesFragment() {
 		// Required empty public constructor
@@ -55,37 +55,28 @@ public class ConfirmImagesFragment extends Fragment {
 	}
 
 	@Override
-	public void onSaveInstanceState(@NonNull Bundle outState) {
-		if (recyclerView != null) {
-			ConfirmImageLargeAdapter adapter = (ConfirmImageLargeAdapter) recyclerView.getAdapter();
-			assert adapter != null;
-			ArrayList<String> images = adapter.getImagePaths();
-			outState.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, images);
-		}
-		super.onSaveInstanceState(outState);
-	}
-
-	@Override
 	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
+		assert getActivity() != null;
 
+		sendButton = view.findViewById(R.id.fabSendButton);
+		viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
+		Log.d(TAG, "tab in previous fragment: " + viewModel.getCurrentTab());
 		assert getView() != null;
 		assert getActivity() != null;
 		assert getArguments() != null;
 
-		ArrayList<String> imagePaths = getArguments().getStringArrayList(IMAGE_DIRS_ARGUMENT_KEY);
+		ArrayList<String> imagePaths = viewModel.getImagePaths();
+//		ArrayList<String> imagePaths = getArguments().getStringArrayList(IMAGE_DIRS_ARGUMENT_KEY);
 		ArrayList<ImageData> images = new ArrayList<>();
 		for (String img : imagePaths) {
 			ImageData imageData = new ImageData();
 			imageData.setImagePath(img);
 			images.add(imageData);
-//			images.add(imageData);
-//			images.add(imageData);
 		}
 
 
 		setupRecyclerView(images);
-		sendButton = view.findViewById(R.id.fabSendButton);
 
 
 		if (getArguments() != null) {
@@ -93,21 +84,18 @@ public class ConfirmImagesFragment extends Fragment {
 			if (imageDirs != null)
 				Log.d(TAG, String.format("Number of images: %s\nFirst image: %s", imageDirs.size(), imageDirs.get(0)));
 		}
-		setupListeners(view);
-
+		setupListeners();
+		requireActivity()
+				.getOnBackPressedDispatcher()
+				.addCallback(new OnBackPressedCallback(true) {
+					@Override
+					public void handleOnBackPressed() {
+						Navigation.findNavController(view).navigate(R.id.action_confirmImagesFragment_to_containerFragment);
+					}
+				});
 	}
 
-	private void setupListeners(@NonNull View view) {
-//		ImageButton returnButton = getView().findViewById(R.id.return_button);
-//		returnButton.setOnClickListener((v) -> {
-//			Bundle args = new Bundle();
-//			args.putBoolean("isBulkCapture", true);
-//			NavController navController = Navigation.findNavController(view);
-//
-//			Navigation.findNavController(view).navigate(
-//					R.id.action_confirmImagesFragment_to_cameraCaptureFragment, args);
-//		});
-
+	private void setupListeners() {
 		sendButton.setOnClickListener(v -> {
 			ConfirmImageLargeAdapter adapter = (ConfirmImageLargeAdapter) recyclerView.getAdapter();
 			processImages(getActivity().getApplicationContext(), adapter.getImagePaths());
@@ -125,25 +113,8 @@ public class ConfirmImagesFragment extends Fragment {
 		snapHelper.attachToRecyclerView(recyclerView);
 		recyclerView.setItemAnimator(new DefaultItemAnimator());
 		recyclerView.setAdapter(adapter);
-//		viewPager.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
-//		viewPager.setClipToPadding(false);
-//		viewPager.setClipChildren(false);
-//		viewPager.setOffscreenPageLimit(3);
-
 		ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeToDeleteCallback(adapter));
-//		viewPager.addItemDecoration(itemTouchHelper);
-//		viewPager.setAdapter(adapter);
 		itemTouchHelper.attachToRecyclerView(recyclerView);
-	}
-
-	private void setupBackButton(@NonNull View view) {
-		NavController navController = Navigation.findNavController(view);
-		navController.addOnDestinationChangedListener(new NavController.OnDestinationChangedListener() {
-			@Override
-			public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
-//				if (destination.getId() == R.id.fragment)
-			}
-		});
 	}
 
 }

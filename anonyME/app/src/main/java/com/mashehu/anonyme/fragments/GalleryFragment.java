@@ -5,6 +5,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,12 +32,7 @@ public class GalleryFragment extends Fragment implements GallerySelectionHandler
 	GridLayoutManager layoutManager;
 	boolean selectionMode;
 	Button sendImagesBtn;
-	private ArrayList<String> imagesToProcess;
-
-
-	public static GalleryFragment newInstance() {
-		return new GalleryFragment();
-	}
+	AppViewModel viewModel;
 
 	@Override
 	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -49,18 +45,11 @@ public class GalleryFragment extends Fragment implements GallerySelectionHandler
 		super.onActivityCreated(savedInstanceState);
 
 		assert getActivity() != null;
-		this.imagesToProcess = new ArrayList<>();
+		viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
 
 		sendImagesBtn = getActivity().findViewById(R.id.sendImageBtn);
 
-		sendImagesBtn.setOnClickListener(v -> {
-			if (imagesToProcess.size() > 0) {
-				startProcessing(v);
-			}
-			else {
-				Log.d(TAG, "No images to process!");
-			}
-		});
+		sendImagesBtn.setOnClickListener(this::startProcessing);
 
 		recyclerView = getActivity().findViewById(R.id.galleryRecyclerView);
 		layoutManager = new GridLayoutManager(getActivity().getApplicationContext(), 4);
@@ -75,7 +64,7 @@ public class GalleryFragment extends Fragment implements GallerySelectionHandler
 		if (isMultipleSelection == this.selectionMode) {
 			return;
 		}
-
+		viewModel.setMultipleSelectionMode(isMultipleSelection);
 		this.selectionMode = isMultipleSelection;
 	}
 
@@ -85,7 +74,7 @@ public class GalleryFragment extends Fragment implements GallerySelectionHandler
 
 	@Override
 	public void toggleCheckbox(ThumbnailViewHolder holder, String img) {
-		if (getSelectionMode()) {
+		if (viewModel.isMultipleSelectionMode()) {
 			if (holder.checkbox.getVisibility() == View.VISIBLE) {
 				holder.checkbox.setVisibility(View.INVISIBLE);
 				removeImage(img);
@@ -96,31 +85,29 @@ public class GalleryFragment extends Fragment implements GallerySelectionHandler
 			}
 		}
 		else {
-			imagesToProcess.clear();
-			imagesToProcess.add(img);
+			submitImage(img);
 		}
 	}
 
 	@Override
 	public void removeImage(String img) {
 		Log.d(TAG, "Removing image: " + img);
-		imagesToProcess.remove(img);
+		viewModel.removeImage(img);
 	}
 
 	@Override
 	public void submitImage(String img) {
 		Log.d(TAG, "Adding image: " + img);
-		if (!imagesToProcess.contains(img)) {
-			imagesToProcess.add(img);
-		}
-	}
-
-	@Override
-	public void clear() {
-		imagesToProcess.clear();
+		viewModel.addImage(img);
 	}
 
 	public void startProcessing(View v) {
+		ArrayList<String> imagesToProcess = viewModel.getImagePaths();
+		if (imagesToProcess.size() == 0) {
+			Log.d(TAG, "No images to process!");
+			return;
+		}
+
 		Bundle args = new Bundle();
 		args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, imagesToProcess);
 		Navigation.findNavController(v).navigate(

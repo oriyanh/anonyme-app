@@ -15,6 +15,7 @@ import androidx.camera.core.PreviewConfig;
 import androidx.camera.core.UseCase;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.Navigation;
 
 import android.os.Handler;
@@ -55,11 +56,12 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
     private CameraX.LensFacing lensFacing = CameraX.LensFacing.BACK;
     private ImageCapture.CaptureMode captureMode = ImageCapture.CaptureMode.MAX_QUALITY;
 //    private int zoomLevel = 1;
-    private static boolean isBulkCapture = false;
+//    private static boolean isBulkCapture = false;
     private String cameraId;
     private TextureView viewFinder;
 //    private ScaleGestureDetector detector;
     private static final String TAG = "anonyme.Capture";
+    private AppViewModel viewModel;
 
     public CameraCaptureFragment() {
         // Required empty public constructor
@@ -103,13 +105,14 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         // end section
 
         // Loads bulk capture mode flag from arguments
-        if (getArguments() != null)
-        {
-            isBulkCapture = getArguments().getBoolean(Constants.BULK_CAPTURE_KEY);
-        }
+//        if (getArguments() != null)
+//        {
+//            isBulkCapture = getArguments().getBoolean(Constants.BULK_CAPTURE_KEY);
+//        }
 
         assert getActivity() != null;
         assert getView() != null;
+        viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
 
         viewFinder = getView().findViewById(R.id.view_finder);
         while (!Utilities.checkPermissions(getContext(), PERMISSIONS))
@@ -279,7 +282,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         updateTransform();
     }
 
-    private void bindCameraUseCases()
+    private void bindCameraUseCases() //TODO amit: you can pass `view` as an argument here, you don't need to do `getView() inside this function or any of the other setup functions
     {
         CameraX.unbindAll();
         viewFinder.post(this::initializeCameraPreview);
@@ -428,22 +431,26 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         button.setOnClickListener((view) ->
                 {
                     final File imageFile = new File(CAMERA_ROLL_PATH,
-                            Calendar.getInstance().getTimeInMillis() + ".jpg");
+                            Calendar.getInstance().getTimeInMillis() + ".jpg"); // is this really a jpg?
                     imageCapture.takePicture(
                             imageFile,
                             new ImageCapture.OnImageSavedListener() {
                                 @Override
                                 public void onImageSaved(@NonNull File file) {
                                     Log.d(TAG, "Saved image to " + file);
-                                    if (!isBulkCapture)
+                                    if (!viewModel.isBulkCaptureMode())
                                     {
-                                        Bundle args = new Bundle();
-                                        ArrayList<String> imageDirs = new ArrayList<>();
-                                        imageDirs.add(imageFile.getAbsolutePath());
-                                        args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, imageDirs);
+//                                        Bundle args = new Bundle();
+//                                        ArrayList<String> imageDirs = new ArrayList<>();
+//                                        imageDirs.add(imageFile.getAbsolutePath());
+//                                        args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, imageDirs);
+//                                        Navigation.findNavController(view).navigate(
+//                                                R.id.action_global_confirmImagesFragment,
+//                                                args);
+                                        viewModel.addImage(imageFile.getAbsolutePath());
                                         Navigation.findNavController(view).navigate(
                                                 R.id.action_global_confirmImagesFragment,
-                                                args);
+                                                null);
                                     }
                                 }
 

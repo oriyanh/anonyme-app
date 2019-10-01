@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/cameraCaptureFragment">
+    app:startDestination="@id/containerFragment">
 
     <action
         android:id="@+id/action_global_confirmImagesFragment"
@@ -23,14 +23,6 @@
         android:name="com.mashehu.anonyme.fragments.ConfirmImagesFragment"
         android:label="fragment_confirm_images"
         tools:layout="@layout/fragment_confirm_images">
-        <action
-            android:id="@+id/action_confirmImagesFragment_to_cameraCaptureFragment"
-            app:destination="@id/cameraCaptureFragment"
-            app:popUpTo="@+id/cameraCaptureFragment">
-            <argument
-                android:name="isBulkCapture"
-                android:defaultValue="true" />
-        </action>
         <argument
             android:name="imageDirs"
             android:defaultValue="@null"
@@ -39,6 +31,18 @@
         <action
             android:id="@+id/action_confirmImagesFragment_to_loadingScreenFragment"
             app:destination="@id/loadingScreenFragment" />
+        <action
+            android:id="@+id/action_confirmImagesFragment_to_containerFragment"
+            app:destination="@id/containerFragment" />
+        <action
+            android:id="@+id/action_confirmImagesFragment_to_containerFragment2"
+            app:destination="@id/containerFragment" />
+        <action
+            android:id="@+id/action_confirmImagesFragment_to_cameraCaptureFragment"
+            app:destination="@id/cameraCaptureFragment" />
+        <action
+            android:id="@+id/action_confirmImagesFragment_to_galleryFragment"
+            app:destination="@id/galleryFragment" />
     </fragment>
     <fragment
         android:id="@+id/galleryFragment"
@@ -46,8 +50,14 @@
         android:label="gallery_fragment"
         tools:layout="@layout/gallery_fragment">
         <action
+            android:id="@+id/action_galleryFragment_to_containerFragment"
+            app:destination="@id/containerFragment" />
+        <action
             android:id="@+id/action_galleryFragment_to_cameraCaptureFragment"
             app:destination="@id/cameraCaptureFragment" />
+        <action
+            android:id="@+id/action_galleryFragment_to_confirmImagesFragment"
+            app:destination="@id/confirmImagesFragment" />
     </fragment>
     <fragment
         android:id="@+id/cameraCaptureFragment"
@@ -58,13 +68,43 @@
             android:name="isBulkCapture"
             android:defaultValue="false"
             app:argType="boolean" />
+        <action
+            android:id="@+id/action_cameraCaptureFragment_to_containerFragment"
+            app:destination="@id/containerFragment" />
+        <action
+            android:id="@+id/action_cameraCaptureFragment_to_galleryFragment"
+            app:destination="@id/galleryFragment" />
+        <action
+            android:id="@+id/action_cameraCaptureFragment_to_confirmImagesFragment"
+            app:destination="@id/confirmImagesFragment" />
+        <action
+            android:id="@+id/action_cameraCaptureFragment_to_confirmImagesFragment2"
+            app:destination="@id/confirmImagesFragment" />
     </fragment>
     <fragment
         android:id="@+id/loadingScreenFragment"
         android:name="com.mashehu.anonyme.fragments.LoadingScreenFragment"
         android:label="LoadingScreenFragment" >
         <action
-            android:id="@+id/action_loadingScreenFragment_to_galleryFragment"
+            android:id="@+id/action_loadingScreenFragment_to_containerFragment"
+            app:destination="@id/containerFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/containerFragment"
+        android:name="com.mashehu.anonyme.fragments.ContainerFragment"
+        android:label="fragment_container"
+        tools:layout="@layout/fragment_container" >
+        <action
+            android:id="@+id/action_containerFragment_to_confirmImagesFragment"
+            app:destination="@id/confirmImagesFragment" />
+        <action
+            android:id="@+id/action_containerFragment_to_galleryFragment"
             app:destination="@id/galleryFragment" />
+        <action
+            android:id="@+id/action_containerFragment_to_cameraCaptureFragment"
+            app:destination="@id/cameraCaptureFragment" />
+        <action
+            android:id="@+id/action_containerFragment_to_confirmImagesFragment2"
+            app:destination="@id/confirmImagesFragment" />
     </fragment>
 </navigation>
