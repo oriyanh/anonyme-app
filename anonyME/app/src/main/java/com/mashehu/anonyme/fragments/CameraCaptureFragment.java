@@ -1,6 +1,11 @@
 package com.mashehu.anonyme.fragments;
 
+import android.content.Context;
 import android.graphics.Matrix;
+import android.graphics.Rect;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -21,6 +26,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.Surface;
 import android.view.TextureView;
@@ -39,7 +45,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import static androidx.constraintlayout.widget.Constraints.TAG;
 import static com.mashehu.anonyme.common.Constants.ANONYME_PERMISSION_REQUEST_CODE;
 import static com.mashehu.anonyme.common.Constants.CAMERA_ROLL_PATH;
 import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
@@ -54,11 +59,11 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
     private ImageCapture imageCapture = null;
     private CameraX.LensFacing lensFacing = CameraX.LensFacing.BACK;
     private ImageCapture.CaptureMode captureMode = ImageCapture.CaptureMode.MAX_QUALITY;
-//    private int zoomLevel = 1;
+    private float zoomLevel = 1f;
     private static boolean isBulkCapture = false;
     private String cameraId;
     private TextureView viewFinder;
-//    private ScaleGestureDetector detector;
+    private ScaleGestureDetector detector;
     private static final String TAG = "anonyme.Capture";
 
     public CameraCaptureFragment() {
@@ -311,9 +316,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         }
 
         ImageButton flipCameraButton = getView().findViewById(R.id.flip_camera);
-        flipCameraButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        flipCameraButton.setOnClickListener((View v) -> {
                 if (lensFacing == CameraX.LensFacing.BACK)
                 {
                     lensFacing = CameraX.LensFacing.FRONT;
@@ -321,22 +324,18 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
                 else if (lensFacing == CameraX.LensFacing.FRONT)
                 {
                     lensFacing = CameraX.LensFacing.BACK;
-                }
-                bindCameraUseCases();
-            }
-        });
 
-//        if (detector == null)
-//        {
-//            ZoomListener zoomListener = new ZoomListener();
-//            detector = new ScaleGestureDetector(getContext(), zoomListener);
-//            viewFinder.setOnTouchListener(new View.OnTouchListener() {
-//                @Override
-//                public boolean onTouch(View v, MotionEvent event) {
-//                    return detector.onTouchEvent(event);
-//                }
-//            });
-//        }
+                }
+                zoomLevel = 1f;
+                bindCameraUseCases();
+            });
+
+        if (detector == null)
+        {
+            ZoomListener zoomListener = new ZoomListener();
+            detector = new ScaleGestureDetector(getContext(), zoomListener);
+            viewFinder.setOnTouchListener((View v, MotionEvent event) -> detector.onTouchEvent(event));
+        }
         updateTransform();
     }
 
@@ -405,7 +404,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         assert getActivity() != null;
         ImageButton button = getActivity().findViewById(R.id.take_picture);
 
-        // Keeping this so we can remember how to use access this directory in the future.
+        // Keeping this so we can remember how to access this directory in the future.
 //        final File dir = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES),
 //                getActivity().getString(R.string.app_name));
 
@@ -473,62 +472,71 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         refreshFlashButtonIcon();
     }
 
-//    private class ZoomListener extends ScaleGestureDetector.SimpleOnScaleGestureListener{
-//        @Override
-//        public boolean onScale(ScaleGestureDetector detector) {
-//
-//            // Fetches max digital zoom for phone's camera
-//            assert getActivity() != null;
-//            CameraManager cameraManager = (CameraManager)getActivity().getSystemService(
-//                    Context.CAMERA_SERVICE);
-//            CameraCharacteristics characteristics;
-//            float maxZoomLevel;
-//            Rect curCameraCrop;
-//            try {
-//                characteristics = cameraManager.getCameraCharacteristics(
-//                        cameraId);
-//                maxZoomLevel = characteristics.get(
-//                        CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) * 10;
-//                curCameraCrop = characteristics.get(
-//                        CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-//            }
-//            catch (CameraAccessException e)
-//            {
-//                Log.e(TAG, "Failed to fetch camera characteristics");
-//                return false;
-//            }
-//            catch (NullPointerException e)
-//            {
-//                Log.e(TAG, "Failed to fetch camera max zoom");
-//                return false;
-//            }
-//
-//            if ((detector.getCurrentSpan() > detector.getPreviousSpan()) &&
-//                    (maxZoomLevel > zoomLevel))
-//            {
-//                zoomLevel++;
-//            }
-//            else if ((detector.getCurrentSpan() < detector.getPreviousSpan()) && (zoomLevel > 1))
-//            {
-//                zoomLevel--;
-//            }
-//            assert curCameraCrop != null;
-//            int minWidth = (int) (curCameraCrop.width() / maxZoomLevel);
-//            int minHeight = (int) (curCameraCrop.height() / maxZoomLevel);
-//            int widthDiff = curCameraCrop.width() - minWidth;
-//            int heightDiff = curCameraCrop.height() - minHeight;
-//            int cropWidth = (widthDiff / 100 * zoomLevel) & 3;
-//            int cropHeight = (heightDiff / 100 * zoomLevel) & 3;
-//            Rect zoom = new Rect(cropWidth, cropHeight, curCameraCrop.width() - cropWidth,
-//                    curCameraCrop.height() - cropHeight);
-//
-//            preview.zoom(zoom);
-//            Matrix transformMatrix = viewFinder.getTransform(null);
-//            transformMatrix.setScale(detector.getScaleFactor(), detector.getScaleFactor(),
-//                    detector.getCurrentSpanX(), detector.getCurrentSpanY());
-//            viewFinder.setTransform(transformMatrix);
-//
-//            return super.onScale(detector);
-//        }
-//    }
+    private class ZoomListener extends ScaleGestureDetector.SimpleOnScaleGestureListener{
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+
+            // Fetches max digital zoom for phone's camera
+            assert getActivity() != null;
+            CameraManager cameraManager = (CameraManager)getActivity().getSystemService(
+                    Context.CAMERA_SERVICE);
+
+            CameraCharacteristics characteristics;
+            float maxZoomLevel;
+            Rect curCameraCrop;
+
+            try {
+
+                assert cameraManager != null;
+                characteristics = cameraManager.getCameraCharacteristics(
+                        cameraId);
+
+                maxZoomLevel = characteristics.get(
+                        CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
+
+                curCameraCrop = characteristics.get(
+                        CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+            }
+            catch (CameraAccessException e)
+            {
+                Log.e(TAG, "Failed to fetch camera characteristics");
+                return false;
+            }
+            catch (NullPointerException e)
+            {
+                Log.e(TAG, "Failed to fetch camera max zoom");
+                return false;
+            }
+
+            float delta = 0.05f;
+
+            if (detector.getCurrentSpan() > detector.getPreviousSpan())
+            {
+                if ((maxZoomLevel - zoomLevel) <= delta)
+                {
+                    delta = maxZoomLevel - zoomLevel;
+                }
+                zoomLevel += delta;
+            }
+            else if (detector.getCurrentSpan() < detector.getPreviousSpan())
+            {
+                if  ((zoomLevel - delta) < 1f)
+                {
+                    delta = zoomLevel - 1f;
+                }
+                zoomLevel = zoomLevel - delta;
+            }
+
+            assert curCameraCrop != null;
+            int cropWidth = curCameraCrop.width() - Math.round((float)curCameraCrop.width() / zoomLevel);
+            int cropHeight = curCameraCrop.height() - Math.round((float)curCameraCrop.height() / zoomLevel);
+            Rect zoom = new Rect(cropWidth / 2, cropHeight / 2,
+                    curCameraCrop.width() - cropWidth / 2,
+                    curCameraCrop.height() - cropHeight / 2);
+
+            preview.zoom(zoom);
+
+            return super.onScale(detector);
+        }
+    }
 }
