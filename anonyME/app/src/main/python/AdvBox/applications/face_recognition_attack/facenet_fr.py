@@ -32,8 +32,7 @@ from AdvBox.applications.face_recognition_attack.facenet.src import facenet
 
 def get_pic_from_png(pic_path):
 	img = misc.imread(os.path.expanduser(pic_path), mode='RGB')
-	temp_img = img[:160, :160, :3]
-	return regularize_pic(temp_img)
+	return regularize_pic(misc.imresize(img, (160, 160, 3)))
 
 
 def regularize_pic(img):
@@ -197,15 +196,11 @@ class FacenetFR():
 
 def main(assets_dir, out_dir, input_pic_name):
 	facenet_model_checkpoint = os.path.join(assets_dir, "fn_weights_20180402_114759.pb")
-	print("model: " + facenet_model_checkpoint)
 	print ("assets dir: " + assets_dir)
 	print ("out dir: " + out_dir)
 	print ("Input pic path: " + input_pic_name)
 	fr = FacenetFR(facenet_model_checkpoint)
-	input_pic_path = os.path.join(assets_dir, input_pic_name)
 	target_pic = os.path.join(assets_dir, "chaoren.png")
-	# target_pic = os.path.join(out_dir, "IMG_20190921_133905.jpg")
-	# print fr.compare(input_pic,target_pic)
 
 	return fr.generate_adv_whitebox(input_pic_name, target_pic, out_dir)  # returns path to new image
 

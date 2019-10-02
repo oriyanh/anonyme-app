@@ -91,8 +91,9 @@ public class Utilities {
 		File galleryDir = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_DCIM), "Camera");
 		File[] galleryFiles = galleryDir.listFiles();
 		if (galleryFiles != null) {
-			for (File f : galleryDir.listFiles()) {
-				if (f.isFile()) {  // To avoid adding inner directories. TODO add capability to show inner directories as well
+			for (File f : galleryFiles) {
+				String path = f.getAbsolutePath();
+				if (f.isFile() && (path.endsWith(".jpg") || path.endsWith(".png"))) {  // To avoid adding inner directories. TODO add capability to show inner directories as well
 					ImageData img = new ImageData();
 					img.setImagePath(f.getAbsolutePath());
 					images.add(img);
@@ -109,10 +110,6 @@ public class Utilities {
 		sp.edit().putBoolean(SP_IS_PROCESSING_KEY, true).apply();
 		Intent startEngineIntent = new Intent(INTENT_START_ENGINE, null,
 				context, EngineStartReceiver.class);
-
-//		images.clear();
-//		images.add(ASSETS_PATH.toString() + "/bill_gates_0001.png");
-//		images.add(ASSETS_PATH.toString() + "/bill_gates_0001.png");
 
 		startEngineIntent.putExtra(EXTRA_ENGINE_ASSETS_PATH, ASSETS_PATH.toString());
 		startEngineIntent.putExtra(EXTRA_ENGINE_OUT_DIR, CAMERA_ROLL_PATH.toString());

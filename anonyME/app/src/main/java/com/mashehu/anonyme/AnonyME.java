@@ -6,7 +6,7 @@ import android.util.Log;
 
 import com.chaquo.python.*;
 import com.chaquo.python.android.AndroidPlatform;
-import com.mashehu.anonyme.common.Constants;
+import static com.mashehu.anonyme.common.Constants.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -23,15 +23,15 @@ public class AnonyME extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Constants.ASSETS_PATH = getFilesDir();
-        Constants.CACHE_PATH = getCacheDir();
-        Constants.CAMERA_ROLL_PATH = new File(
+        ASSETS_PATH = getFilesDir();
+        CACHE_PATH = getExternalCacheDir();
+        Log.d(TAG, "cache path: " + CACHE_PATH);
+        CAMERA_ROLL_PATH = new File(
                 Environment.getExternalStoragePublicDirectory(DIRECTORY_DCIM), "Camera");
-
         if (COPY_ASSETS) {  // Copy resources from assets dir (in APK) to local storage
             Log.d(TAG + "onCreate", "Copying assets");
             try {
-                copyAssets(Constants.ASSETS_PATH.toString());
+                copyAssets(ASSETS_PATH.toString());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -47,8 +47,7 @@ public class AnonyME extends Application {
         String[] files = assetManager.list("");
         assert files != null;
         for (String f : files) {
-            if (f.endsWith(".png") || f.endsWith(".pb")) {
-                // Constants.ASSETS_PATH.toString()
+            if (f.endsWith(".png") || f.endsWith(".jpg") || f.endsWith(".pb")) {
                 OutputStream myOutput = new FileOutputStream(dest + "/" + f);
                 byte[] buffer = new byte[1024];
                 int length;

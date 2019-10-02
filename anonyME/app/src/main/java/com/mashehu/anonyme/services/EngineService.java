@@ -1,6 +1,5 @@
 package com.mashehu.anonyme.services;
 
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
@@ -18,7 +17,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.mashehu.anonyme.common.Constants.CAMERA_ROLL_PATH;
+import static com.mashehu.anonyme.common.Constants.CACHE_PATH;
 import static com.mashehu.anonyme.common.Constants.ENGINE_MODULE_NAME;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_ASSETS_PATH;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_INPUT_PICS;
@@ -135,6 +134,13 @@ public class EngineService extends Service {
 	@Override
 	public void onDestroy() {
 		singleThreadExecutor.shutdownNow();
+		File[] cache_files = CACHE_PATH.listFiles();
+		if (cache_files != null) {
+			for (File f : cache_files) {
+				Log.d("EngineService", "removing file " + f.getAbsolutePath());
+				f.deleteOnExit();
+			}
+		}
 		super.onDestroy();
 	}
 
