@@ -18,8 +18,6 @@ public interface GallerySelectionHandler {
 
 	public void submitImage(String img);
 
-	public void clear();
-
 	public void startProcessing(View v);
 
 }

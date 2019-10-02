@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.mashehu.anonyme.common.Constants.CAMERA_ROLL_PATH;
 import static com.mashehu.anonyme.common.Constants.ENGINE_MODULE_NAME;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_ASSETS_PATH;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_INPUT_PICS;
@@ -49,25 +48,42 @@ public class EngineService extends Service {
         {
             Log.d(TAG, "Called to stop service");
             stopForeground(true);
-			NotificationManagerCompat.from(this).notify(1, createNotification("Canceling...", null, getApplicationContext(), null, NOTIFICATION_CH_ID_PROGRESS));
+			NotificationManagerCompat.from(this).notify(1, createNotification(
+					getApplicationContext(), NOTIFICATION_CH_ID_PROGRESS,
+					"Canceling...", null, null, true));
             stopSelf();
             return START_NOT_STICKY;
         }
 	    else
 		{
+
+			int num_images = intent.getIntExtra(EXTRA_ENGINE_NUM_IMAGES, 1); // to be used for demonstrating progress?
+			String assetsDir = intent.getStringExtra(EXTRA_ENGINE_ASSETS_PATH);
+			String outputDir = intent.getStringExtra(EXTRA_ENGINE_OUT_DIR);
+
 			singleThreadExecutor = Executors.newSingleThreadExecutor();
 
 			Intent stopService = new Intent(this, EngineService.class);
 			stopService.setAction(ACTION_STOP);
 			PendingIntent pendingStopService = PendingIntent.getService(
 					this, 0, stopService, PendingIntent.FLAG_CANCEL_CURRENT);
-			startForeground(1, createNotification("Anonymization in progress...", "Tap to cancel", // TODO send meaningful notifications to demonstrate progress
-					getApplicationContext(), pendingStopService,
-					NOTIFICATION_CH_ID_PROGRESS));
 
-			int num_images = intent.getIntExtra(EXTRA_ENGINE_NUM_IMAGES, 1); // to be used for demonstrating progress?
-			String assetsDir = intent.getStringExtra(EXTRA_ENGINE_ASSETS_PATH);
-			String outputDir = intent.getStringExtra(EXTRA_ENGINE_OUT_DIR);
+			Notification initialNotification;
+			if (num_images == 1)
+			{
+				initialNotification = createNotification(
+						getApplicationContext(), NOTIFICATION_CH_ID_PROGRESS,
+						"Anonymization in progress...",null, // TODO send meaningful notifications to demonstrate progress
+						pendingStopService, true);
+			}
+			else
+			{
+				initialNotification = createNotification(
+						getApplicationContext(), NOTIFICATION_CH_ID_PROGRESS,
+						"Anonymization in progress...","Tap to cancel", // TODO send meaningful notifications to demonstrate progress
+						pendingStopService, true);
+			}
+			startForeground(1, initialNotification);
 
 			// TODO generate single string to represent list of images to process, or start different python process per image
 			// ArrayList containing list of images to process
@@ -112,7 +128,7 @@ public class EngineService extends Service {
 
 
 						PendingIntent pShowImages = PendingIntent.getActivity(getApplicationContext(), 0, showImages, PendingIntent.FLAG_ONE_SHOT);
-						NotificationManagerCompat.from(this).notify(1, createNotification("Anonymization complete", "Tap to view image", this, pShowImages, NOTIFICATION_CH_ID_PROGRESS));
+						NotificationManagerCompat.from(this).notify(1, createNotification(this, NOTIFICATION_CH_ID_PROGRESS, "Anonymization complete", "Tap to view image", pShowImages, ));
 					}
 					catch (InterruptedException e)
 					{

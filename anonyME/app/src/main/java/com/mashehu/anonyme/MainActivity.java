@@ -8,6 +8,7 @@ import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.drawable.IconCompat;
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.ViewModelProviders;
 
 import android.app.Activity;
 import android.content.Context;
@@ -17,6 +18,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import com.mashehu.anonyme.common.Utilities;
+import com.mashehu.anonyme.fragments.AppViewModel;
 
 import java.util.ArrayList;
 
@@ -30,6 +32,8 @@ public class MainActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        AppViewModel viewModel = ViewModelProviders.of(this).get(AppViewModel.class);
+        viewModel.setCurrentTab(1); // Makes sure app will start on camera capture mode
 
         // register receiver - uncomment if necessary
 //		engineStartReceiver = new EngineStartReceiver();

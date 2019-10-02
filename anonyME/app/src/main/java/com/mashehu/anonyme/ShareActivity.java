@@ -1,6 +1,7 @@
 package com.mashehu.anonyme;
 
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.ViewModelProviders;
 
 import android.content.Intent;
 import android.database.Cursor;
@@ -10,6 +11,7 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import com.mashehu.anonyme.fragments.AppViewModel;
 import com.mashehu.anonyme.fragments.ConfirmImagesFragment;
 
 import java.util.ArrayList;
@@ -47,41 +49,40 @@ public class ShareActivity extends FragmentActivity {
         for (Uri argument: arguments)
         {
             assert argument.getPath() != null;
-            String filePath = "";
-            String wholeID = DocumentsContract.getDocumentId(argument);
+            String filePath;
+//            String wholeID = DocumentsContract.getDocumentId(argument);
 
             // Split at colon, use second item in the array
-            String id = wholeID.split(":")[1];
+//            String id = wholeID.split(":")[1];
 
-            String[] column = { MediaStore.Images.Media.DATA };
+//            String[] column = { MediaStore.Images.Media.DATA };
 
             // where id is equal to
-            String sel = MediaStore.Images.Media._ID + "=?";
+//            String sel = MediaStore.Images.Media._ID + "=?";
 
-            Cursor cursor = this.getContentResolver().query(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    column, sel, new String[]{ id }, null);
-
-            try
+            Cursor cursor = this.getContentResolver().query(argument, null, null, null, null);
+            if (cursor == null)
             {
-                int columnIndex = cursor.getColumnIndex(column[0]);
-                if (cursor.moveToFirst()) {
-                    filePath = cursor.getString(columnIndex);
-                }
-                cursor.close();
-                files.add(filePath);
+                filePath = argument.getPath();
             }
-            catch (NullPointerException e)
+            else
             {
-                assert e.getMessage() != null;
-                Log.e(TAG, e.getMessage());
-                finish();
+                cursor.moveToFirst();
+                int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+                filePath = cursor.getString(idx);
             }
+            files.add(filePath);
         }
-        args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, files);
-        ConfirmImagesFragment confirmImagesFragment = new ConfirmImagesFragment();
-        confirmImagesFragment.setArguments(args);
-        getSupportFragmentManager().beginTransaction().replace(
-                R.id.share_container, confirmImagesFragment, "FTAG").commit();
+
+        AppViewModel viewModel = ViewModelProviders.of(this).get(AppViewModel.class);
+        for (String img: files)
+        {
+            viewModel.addImage(img);
+        }
+//        args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, files);
+//        ConfirmImagesFragment confirmImagesFragment = new ConfirmImagesFragment();
+//        confirmImagesFragment.setArguments(args);
+//        getSupportFragmentManager().beginTransaction().replace(
+//                R.id.share_container, confirmImagesFragment, "FTAG").commit();
     }
 }

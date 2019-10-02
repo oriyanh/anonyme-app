@@ -20,6 +20,7 @@ import androidx.camera.core.PreviewConfig;
 import androidx.camera.core.UseCase;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.Navigation;
 
 import android.os.Handler;
@@ -48,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import static com.mashehu.anonyme.common.Constants.ANONYME_PERMISSION_REQUEST_CODE;
+import static com.mashehu.anonyme.common.Constants.CACHE_PATH;
 import static com.mashehu.anonyme.common.Constants.CAMERA_ROLL_PATH;
 import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
 import static com.mashehu.anonyme.common.Constants.PERMISSIONS;
@@ -62,12 +64,12 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
     private CameraX.LensFacing lensFacing = CameraX.LensFacing.BACK;
     private ImageCapture.CaptureMode captureMode = ImageCapture.CaptureMode.MAX_QUALITY;
     private float zoomLevel = 1f;
-    private static boolean isBulkCapture = true; // Default value is false, true for debugging purposes
+    // private static boolean isBulkCapture = true; // Default value is false, true for debugging purposes
     private String cameraId;
     private TextureView viewFinder;
     private ScaleGestureDetector detector;
     private static final String TAG = "anonyme.Capture";
-    private ArrayList<String> capturedImages = new ArrayList<>();
+    private AppViewModel viewModel;
 
     public CameraCaptureFragment() {
         // Required empty public constructor
@@ -105,28 +107,14 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         // end section
 
         // Loads bulk capture mode flag from arguments
-        if (getArguments() != null)
-        {
-            isBulkCapture = getArguments().getBoolean(Constants.BULK_CAPTURE_KEY);
-        }
-
-        if (isBulkCapture)
-        {
-            assert getView() != null;
-            ImageView lastCapturePreview = getView().findViewById(R.id.last_capture_preview);
-            lastCapturePreview.setVisibility(View.VISIBLE);
-            lastCapturePreview.setOnClickListener((View v) -> {
-                // Navigate to confirm screen
-                Bundle args = new Bundle();
-                args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, capturedImages);
-                Navigation.findNavController(view).navigate(
-                        R.id.action_global_confirmImagesFragment,
-                        args);
-            });
-        }
+//        if (getArguments() != null)
+//        {
+//            isBulkCapture = getArguments().getBoolean(Constants.BULK_CAPTURE_KEY);
+//        }
 
         assert getActivity() != null;
         assert getView() != null;
+        viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
 
         viewFinder = getView().findViewById(R.id.view_finder);
         while (!Utilities.checkPermissions(getContext(), PERMISSIONS))
@@ -296,7 +284,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         updateTransform();
     }
 
-    private void bindCameraUseCases()
+    private void bindCameraUseCases() //TODO amit: you can pass `view` as an argument here, you don't need to do `getView() inside this function or any of the other setup functions
     {
         CameraX.unbindAll();
         viewFinder.post(this::initializeCameraPreview);
@@ -323,6 +311,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         viewFinder.addOnLayoutChangeListener(this);
 
         if (!tryBindToLifeCycle(preview)) {
+            Log.e(TAG, "Failed to bind camera preview to life cycle");
             preview = null;
             return;
         }
@@ -336,9 +325,8 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
                 else if (lensFacing == CameraX.LensFacing.FRONT)
                 {
                     lensFacing = CameraX.LensFacing.BACK;
-
                 }
-                zoomLevel = 1f;
+                zoomLevel = 1f; // Reset zoom level on flip camera
                 bindCameraUseCases();
             });
 
@@ -409,6 +397,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         imageCapture = new ImageCapture(config);
 
         if (!tryBindToLifeCycle(imageCapture)) {
+            Log.e(TAG, "Failed to bind camera capture to lifecycle");
             imageCapture = null;
             return;
         }
@@ -420,15 +409,15 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
 //        final File dir = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES),
 //                getActivity().getString(R.string.app_name));
 
-        if (!CAMERA_ROLL_PATH.exists())
+        if (!CACHE_PATH.exists())
         {
-            if (!CAMERA_ROLL_PATH.mkdirs())
+            if (!CACHE_PATH.mkdirs())
             {
                 Log.e(TAG, "Failed to create directory");
             }
             else
             {
-                Log.d(TAG, "Created directory" + CAMERA_ROLL_PATH.toString());
+                Log.d(TAG, "Created directory" + CACHE_PATH.toString());
             }
         }
         else
@@ -438,26 +427,20 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
 
         button.setOnClickListener((view) ->
                 {
-                    // TODO: Save to cache instead
-                    final File imageFile = new File(CAMERA_ROLL_PATH,
-                            Calendar.getInstance().getTimeInMillis() + ".jpg");
+                    final File imageFile = new File(CACHE_PATH,
+                            Calendar.getInstance().getTimeInMillis() + ".jpg"); // is this really a jpg?
                     imageCapture.takePicture(
                             imageFile,
                             new ImageCapture.OnImageSavedListener() {
                                 @Override
                                 public void onImageSaved(@NonNull File file) {
                                     Log.d(TAG, "Saved image to " + file);
-                                    capturedImages.add(imageFile.getAbsolutePath());
-                                    if (!isBulkCapture)
+                                    viewModel.addImage(imageFile.getAbsolutePath());
+                                    if (!viewModel.isBulkCaptureMode())
                                     {
-                                        // Navigate to confirm screen
-                                        Bundle args = new Bundle();
-                                        ArrayList<String> imageDirs = new ArrayList<>();
-                                        imageDirs.add(imageFile.getAbsolutePath());
-                                        args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, capturedImages);
                                         Navigation.findNavController(view).navigate(
                                                 R.id.action_global_confirmImagesFragment,
-                                                args);
+                                                null);
                                     }
                                     else
                                     {

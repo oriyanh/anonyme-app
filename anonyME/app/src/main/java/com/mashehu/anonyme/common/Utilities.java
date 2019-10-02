@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -20,14 +19,11 @@ import androidx.core.app.NotificationCompat;
 import com.mashehu.anonyme.R;
 import com.mashehu.anonyme.fragments.ui.ImageData;
 import com.mashehu.anonyme.services.EngineStartReceiver;
-import com.mashehu.anonyme.services.EngineStartReceiver;
 
 import java.io.File;
 import java.util.ArrayList;
 
 import static android.os.Environment.DIRECTORY_DCIM;
-import static com.mashehu.anonyme.common.Constants.*;
-import java.util.ArrayList;
 
 import static com.mashehu.anonyme.common.Constants.ASSETS_PATH;
 import static com.mashehu.anonyme.common.Constants.CAMERA_ROLL_PATH;
@@ -60,9 +56,8 @@ public class Utilities {
 	}
 
 
-	public static Notification createNotification(String title, String message,
-												  Context context, PendingIntent pendingIntent,
-												  String channel) {
+	public static Notification createNotification(Context context, String channel, String title, String message,
+												  PendingIntent pendingIntent, boolean ongoing) {
 		return new NotificationCompat.Builder(context, channel)
 				.setContentTitle(title)
 				.setContentText(message)
@@ -91,8 +86,9 @@ public class Utilities {
 		File galleryDir = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_DCIM), "Camera");
 		File[] galleryFiles = galleryDir.listFiles();
 		if (galleryFiles != null) {
-			for (File f : galleryDir.listFiles()) {
-				if (f.isFile()) {  // To avoid adding inner directories. TODO add capability to show inner directories as well
+			for (File f : galleryFiles) {
+				String path = f.getAbsolutePath();
+				if (f.isFile() && (path.endsWith(".jpg") || path.endsWith(".png"))) {  // To avoid adding inner directories. TODO add capability to show inner directories as well
 					ImageData img = new ImageData();
 					img.setImagePath(f.getAbsolutePath());
 					images.add(img);

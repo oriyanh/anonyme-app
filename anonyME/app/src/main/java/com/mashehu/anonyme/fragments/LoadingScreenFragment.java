@@ -44,7 +44,7 @@ public class LoadingScreenFragment extends Fragment {
 
 		if (!isProcessing) {
 			Navigation.findNavController(view).navigate(
-					R.id.action_loadingScreenFragment_to_galleryFragment,
+					R.id.action_loadingScreenFragment_to_containerFragment,
 					null);
 		}
 	}
