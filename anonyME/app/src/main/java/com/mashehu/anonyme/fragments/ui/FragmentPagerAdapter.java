@@ -5,16 +5,16 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 
-import com.mashehu.anonyme.fragments.CameraCaptureFragment;
-import com.mashehu.anonyme.fragments.GalleryFragment;
+import com.mashehu.anonyme.fragments.CameraCaptureContainerFragment;
+import com.mashehu.anonyme.fragments.GalleryContainerFragment;
 
 import java.util.ArrayList;
 
-public class ViewPagerFragmentAdapter extends FragmentStatePagerAdapter {
+public class FragmentPagerAdapter extends FragmentStatePagerAdapter {
 
 	public ArrayList<Fragment> fragments;
 
-	public ViewPagerFragmentAdapter(@NonNull FragmentManager fm, int behavior) {
+	public FragmentPagerAdapter(@NonNull FragmentManager fm, int behavior) {
 		super(fm, behavior);
 
 	}
@@ -23,9 +23,9 @@ public class ViewPagerFragmentAdapter extends FragmentStatePagerAdapter {
 	@Override
 	public Fragment getItem(int position) {
 		if (position == 1) {
-			return new CameraCaptureFragment();
+			return new CameraCaptureContainerFragment();
 		}
-		return new GalleryFragment();
+		return new GalleryContainerFragment();
 	}
 
 	@Override

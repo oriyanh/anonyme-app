@@ -7,8 +7,10 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.drawable.IconCompat;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.viewpager.widget.ViewPager;
 
 import android.app.Activity;
 import android.content.Context;
@@ -16,25 +18,69 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.mashehu.anonyme.common.Utilities;
 import com.mashehu.anonyme.fragments.AppViewModel;
+import com.mashehu.anonyme.fragments.CameraCaptureFragment;
+import com.mashehu.anonyme.fragments.GalleryFragment;
+import com.mashehu.anonyme.fragments.ui.FragmentPagerAdapter;
 
 import java.util.ArrayList;
 
+import static androidx.fragment.app.FragmentStatePagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT;
 import static com.mashehu.anonyme.common.Constants.*;
 
 public class MainActivity extends FragmentActivity {
     public static final String TAG = "anonyme.MainActivity.";
-
+    AppViewModel viewModel;
+    ArrayList<Fragment> fragments;
+    ViewPager fragmentViewPager;
+    FragmentPagerAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        AppViewModel viewModel = ViewModelProviders.of(this).get(AppViewModel.class);
+        viewModel = ViewModelProviders.of(this).get(AppViewModel.class);
         viewModel.setCurrentTab(1); // Makes sure app will start on camera capture mode
 
+
+        fragments = new ArrayList<>();
+        fragments.add(new CameraCaptureFragment());
+        fragments.add(new GalleryFragment());
+        fragmentViewPager = findViewById(R.id.fragmentViewPager);
+//        adapter = new ViewPagerFragmentAdapter(getSupportFragmentManager(), getLifecycle(), fragments);
+        adapter = new FragmentPagerAdapter(getSupportFragmentManager(),
+                BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+//        fragmentViewPager.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
+        fragmentViewPager.setAdapter(adapter);
+        Log.d("anonyme.ContainerFragment", "Previous tab position: " + viewModel.getCurrentTab());
+        if (viewModel.getCurrentTab() != -1) {
+            fragmentViewPager.setCurrentItem(viewModel.getCurrentTab());
+        }
+        else {
+            fragmentViewPager.setCurrentItem(1);
+            viewModel.setCurrentTab(1);
+        }
+
+        fragmentViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                Log.d("anonyme.ContainerFragment", "Current tab position: " + position);
+                viewModel.setCurrentTab(position);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
         // register receiver - uncomment if necessary
 //		engineStartReceiver = new EngineStartReceiver();
 //		IntentFilter filter = new IntentFilter();
