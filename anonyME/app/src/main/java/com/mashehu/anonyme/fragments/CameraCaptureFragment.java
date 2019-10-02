@@ -33,12 +33,14 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mashehu.anonyme.R;
 import com.mashehu.anonyme.common.Constants;
 import com.mashehu.anonyme.common.Utilities;
+import com.mashehu.anonyme.fragments.ui.GlideApp;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -60,11 +62,12 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
     private CameraX.LensFacing lensFacing = CameraX.LensFacing.BACK;
     private ImageCapture.CaptureMode captureMode = ImageCapture.CaptureMode.MAX_QUALITY;
     private float zoomLevel = 1f;
-    private static boolean isBulkCapture = false;
+    private static boolean isBulkCapture = true; // Default value is false, true for debugging purposes
     private String cameraId;
     private TextureView viewFinder;
     private ScaleGestureDetector detector;
     private static final String TAG = "anonyme.Capture";
+    private ArrayList<String> capturedImages = new ArrayList<>();
 
     public CameraCaptureFragment() {
         // Required empty public constructor
@@ -91,12 +94,6 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if (savedInstanceState != null) {
-            ArrayList<String> images = savedInstanceState.getStringArrayList(IMAGE_DIRS_ARGUMENT_KEY);
-            for (String img : images) {
-                Log.d(TAG, "img: " + img);
-            }
-        }
 
         // this section is only for debugging, bypassing camera
 //        Bundle args = new Bundle();
@@ -111,6 +108,21 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         if (getArguments() != null)
         {
             isBulkCapture = getArguments().getBoolean(Constants.BULK_CAPTURE_KEY);
+        }
+
+        if (isBulkCapture)
+        {
+            assert getView() != null;
+            ImageView lastCapturePreview = getView().findViewById(R.id.last_capture_preview);
+            lastCapturePreview.setVisibility(View.VISIBLE);
+            lastCapturePreview.setOnClickListener((View v) -> {
+                // Navigate to confirm screen
+                Bundle args = new Bundle();
+                args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, capturedImages);
+                Navigation.findNavController(view).navigate(
+                        R.id.action_global_confirmImagesFragment,
+                        args);
+            });
         }
 
         assert getActivity() != null;
@@ -426,6 +438,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
 
         button.setOnClickListener((view) ->
                 {
+                    // TODO: Save to cache instead
                     final File imageFile = new File(CAMERA_ROLL_PATH,
                             Calendar.getInstance().getTimeInMillis() + ".jpg");
                     imageCapture.takePicture(
@@ -434,15 +447,27 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
                                 @Override
                                 public void onImageSaved(@NonNull File file) {
                                     Log.d(TAG, "Saved image to " + file);
+                                    capturedImages.add(imageFile.getAbsolutePath());
                                     if (!isBulkCapture)
                                     {
+                                        // Navigate to confirm screen
                                         Bundle args = new Bundle();
                                         ArrayList<String> imageDirs = new ArrayList<>();
                                         imageDirs.add(imageFile.getAbsolutePath());
-                                        args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, imageDirs);
+                                        args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, capturedImages);
                                         Navigation.findNavController(view).navigate(
                                                 R.id.action_global_confirmImagesFragment,
                                                 args);
+                                    }
+                                    else
+                                    {
+                                        // Get preview view
+                                        assert getView() != null;
+                                        ImageView lastCapturePreview = getView().findViewById(R.id.last_capture_preview);
+
+                                        // Display image thumbnail in view
+                                        assert getContext() != null;
+                                        GlideApp.with(getContext()).load(imageFile).galleryThumbnail().into(lastCapturePreview);
                                     }
                                 }
 
@@ -461,12 +486,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
                     Handler shutterHandler = new Handler();
 
                     shutterView.setVisibility(View.VISIBLE);
-                    shutterHandler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            shutterView.setVisibility(View.GONE);
-                        }
-                    }, 50L);
+                    shutterHandler.postDelayed(()-> shutterView.setVisibility(View.GONE), 50L);
                 });
 
         refreshFlashButtonIcon();

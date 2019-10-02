@@ -43,6 +43,14 @@
             android:background="@drawable/rounded_button"
             android:contentDescription="TurnOnFlash" />
 
+        <ImageView
+            android:id="@+id/last_capture_preview"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:visibility="gone"
+            android:background="@drawable/rounded_button"
+            android:src="@android:color/background_dark" />
+
     </LinearLayout>
 
     <TextView
