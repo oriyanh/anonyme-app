@@ -137,6 +137,7 @@ public class EngineService extends Service {
 		File[] cache_files = CACHE_PATH.listFiles();
 		if (cache_files != null) {
 			for (File f : cache_files) {
+				Log.d("EngineService", "removing file " + f.getAbsolutePath());
 				f.deleteOnExit();
 			}
 		}

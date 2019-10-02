@@ -43,9 +43,9 @@ public class LoadingScreenFragment extends Fragment {
 		boolean isProcessing = sp.getBoolean(SP_IS_PROCESSING_KEY, false);
 
 		if (!isProcessing) {
-			Navigation.findNavController(view).navigate(
-					R.id.action_loadingScreenFragment_to_containerFragment,
-					null);
+//			Navigation.findNavController(view).navigate(
+//					R.id.action_loadingScreenFragment_to_containerFragment2,
+//					null);
 		}
 	}
 }

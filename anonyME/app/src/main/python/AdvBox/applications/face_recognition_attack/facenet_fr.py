@@ -196,7 +196,6 @@ class FacenetFR():
 
 def main(assets_dir, out_dir, input_pic_name):
 	facenet_model_checkpoint = os.path.join(assets_dir, "fn_weights_20180402_114759.pb")
-	print("model: " + facenet_model_checkpoint)
 	print ("assets dir: " + assets_dir)
 	print ("out dir: " + out_dir)
 	print ("Input pic path: " + input_pic_name)
