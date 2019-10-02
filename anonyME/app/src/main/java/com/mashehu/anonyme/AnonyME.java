@@ -24,10 +24,9 @@ public class AnonyME extends Application {
     public void onCreate() {
         super.onCreate();
         Constants.ASSETS_PATH = getFilesDir();
-        Constants.CACHE_PATH = getCacheDir();
+        Constants.CACHE_PATH = getExternalCacheDir();
         Constants.CAMERA_ROLL_PATH = new File(
                 Environment.getExternalStoragePublicDirectory(DIRECTORY_DCIM), "Camera");
-
         if (COPY_ASSETS) {  // Copy resources from assets dir (in APK) to local storage
             Log.d(TAG + "onCreate", "Copying assets");
             try {
@@ -47,8 +46,7 @@ public class AnonyME extends Application {
         String[] files = assetManager.list("");
         assert files != null;
         for (String f : files) {
-            if (f.endsWith(".png") || f.endsWith(".pb")) {
-                // Constants.ASSETS_PATH.toString()
+            if (f.endsWith(".png") || f.endsWith(".jpg")) {
                 OutputStream myOutput = new FileOutputStream(dest + "/" + f);
                 byte[] buffer = new byte[1024];
                 int length;

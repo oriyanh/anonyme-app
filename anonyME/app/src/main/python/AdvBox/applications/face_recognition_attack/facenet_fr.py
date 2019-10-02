@@ -201,10 +201,7 @@ def main(assets_dir, out_dir, input_pic_name):
 	print ("out dir: " + out_dir)
 	print ("Input pic path: " + input_pic_name)
 	fr = FacenetFR(facenet_model_checkpoint)
-	input_pic_path = os.path.join(assets_dir, input_pic_name)
 	target_pic = os.path.join(assets_dir, "chaoren.png")
-	# target_pic = os.path.join(out_dir, "IMG_20190921_133905.jpg")
-	# print fr.compare(input_pic,target_pic)
 
 	return fr.generate_adv_whitebox(input_pic_name, target_pic, out_dir)  # returns path to new image
 
