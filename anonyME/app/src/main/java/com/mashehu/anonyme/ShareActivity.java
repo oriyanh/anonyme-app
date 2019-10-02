@@ -1,6 +1,7 @@
 package com.mashehu.anonyme;
 
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.ViewModelProviders;
 
 import android.content.Intent;
 import android.database.Cursor;
@@ -10,11 +11,9 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 
-import com.mashehu.anonyme.fragments.ConfirmImagesFragment;
+import com.mashehu.anonyme.fragments.AppViewModel;
 
 import java.util.ArrayList;
-
-import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
 
 public class ShareActivity extends FragmentActivity {
 
@@ -26,7 +25,6 @@ public class ShareActivity extends FragmentActivity {
         setContentView(R.layout.activity_share);
 
         assert getIntent() != null;
-        Bundle args = new Bundle();
         ArrayList<Uri> arguments = new ArrayList<>();
         ArrayList<String> files = new ArrayList<>();
         if (Intent.ACTION_SEND_MULTIPLE.equals(getIntent().getAction()))
@@ -78,10 +76,10 @@ public class ShareActivity extends FragmentActivity {
                 finish();
             }
         }
-        args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, files);
-        ConfirmImagesFragment confirmImagesFragment = new ConfirmImagesFragment();
-        confirmImagesFragment.setArguments(args);
-        getSupportFragmentManager().beginTransaction().replace(
-                R.id.share_container, confirmImagesFragment, "FTAG").commit();
+
+        AppViewModel viewModel = ViewModelProviders.of(this).get(AppViewModel.class);
+        for (String img : files) {
+            viewModel.addImage(img);
+        }
     }
 }
