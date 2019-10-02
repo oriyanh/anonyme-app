@@ -90,7 +90,18 @@ public class ConfirmImagesFragment extends Fragment {
 				.addCallback(new OnBackPressedCallback(true) {
 					@Override
 					public void handleOnBackPressed() {
-						Navigation.findNavController(view).navigate(R.id.action_confirmImagesFragment_to_containerFragment);
+						switch (viewModel.currentTab) {
+							case 0:
+								Navigation.findNavController(view).navigate(R.id.action_confirmImagesFragment_to_galleryFragment);
+								break;
+							case 1:
+								Navigation.findNavController(view).navigate(R.id.action_confirmImagesFragment2_to_cameraCaptureFragment);
+								break;
+							default:
+								assert getActivity() != null;
+								getActivity().finish();
+
+						}
 					}
 				});
 	}
@@ -99,6 +110,7 @@ public class ConfirmImagesFragment extends Fragment {
 		sendButton.setOnClickListener(v -> {
 			ConfirmImageLargeAdapter adapter = (ConfirmImageLargeAdapter) recyclerView.getAdapter();
 			processImages(getActivity().getApplicationContext(), adapter.getImagePaths());
+			getActivity().finish();
 		});
 
 
