@@ -32,8 +32,7 @@ from AdvBox.applications.face_recognition_attack.facenet.src import facenet
 
 def get_pic_from_png(pic_path):
 	img = misc.imread(os.path.expanduser(pic_path), mode='RGB')
-	temp_img = img[:160, :160, :3]
-	return regularize_pic(temp_img)
+	return regularize_pic(misc.imresize(img, (160, 160, 3)))
 
 
 def regularize_pic(img):
