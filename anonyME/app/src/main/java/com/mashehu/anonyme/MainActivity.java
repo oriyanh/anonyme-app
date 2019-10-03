@@ -46,8 +46,8 @@ public class MainActivity extends FragmentActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-//		viewModel = ViewModelProviders.of(this).get(AppViewModel.class);
-//		viewModel.setCurrentTab(0); // Makes sure app will start on camera capture mode
+		viewModel = ViewModelProviders.of(this).get(AppViewModel.class);
+		viewModel.setCurrentTab(0); // Makes sure app will start on camera capture mode
 //
 //		fragmentViewPager = findViewById(R.id.fragmentViewPager);
 ////        adapter = new ViewPagerFragmentAdapter(getSupportFragmentManager(), getLifecycle(), fragments);

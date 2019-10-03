@@ -72,6 +72,6 @@ public class ShareActivity extends FragmentActivity {
         for (String img : files) {
             viewModel.addImage(img);
         }
-        viewModel.currentTab = -1;
+        viewModel.setCurrentTab(-1);
     }
 }

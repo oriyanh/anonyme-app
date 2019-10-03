@@ -50,7 +50,7 @@ public class MainContainerFragment extends Fragment {
 	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 
-		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
+		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
 //		sp.edit().putBoolean(SP_IS_PROCESSING_KEY, false).commit();
 
 		navigateIfNecessary(sp, view);
@@ -96,9 +96,9 @@ public class MainContainerFragment extends Fragment {
 
 			}
 		});
-
+		assert getActivity() != null;
 		fragmentViewPager.setPageTransformer(true, new CubeOutTransformer());
-		viewModel.getPagingEnabled().observe(this, aBoolean -> fragmentViewPager.setPagingEnabled(aBoolean));
+		viewModel.getPagingEnabled().observe(getActivity(), aBoolean -> fragmentViewPager.setPagingEnabled(aBoolean));
 
 	}
 

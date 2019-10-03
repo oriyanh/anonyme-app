@@ -2,10 +2,8 @@ package com.mashehu.anonyme.fragments.ui;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -19,7 +17,6 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.viewpager.widget.ViewPager;
 
 import com.mashehu.anonyme.R;
 import com.mashehu.anonyme.fragments.CameraCaptureContainerFragment;
@@ -35,12 +32,12 @@ import static android.view.View.VISIBLE;
 public class RecyclerUtils {
 
 	// adapters
-	public static class ConfirmImagesAdapter extends ListAdapter<ImageData, PreviewImageHolder> {
+	public static class PreviewImagesAdapter extends ListAdapter<ImageData, PreviewImageHolder> {
 		private ArrayList<ImageData> images;
 		private Context context;
 		public PreviewItemsCallback callback;
 
-		public ConfirmImagesAdapter(Context context, ArrayList<ImageData> images) {
+		public PreviewImagesAdapter(Context context, ArrayList<ImageData> images) {
 			super(new PreviewDiffCallback());
 			this.images = images;
 			this.context = context;
@@ -84,14 +81,16 @@ public class RecyclerUtils {
 
 		public void deleteItem(int position) {
 			if (callback != null) {
-				callback.removeItem(images.get(position));
+				ImageData image = images.get(position);
+				images.remove(position);
 				notifyItemRemoved(position);
+				callback.removeItem(image);
 			}
 		}
 
 		@Override
 		public void submitList(@Nullable List<ImageData> list) {
-			images = (ArrayList<ImageData>) list;
+//			images = (ArrayList<ImageData>) list;
 			super.submitList(list);
 		}
 
@@ -246,9 +245,9 @@ public class RecyclerUtils {
 
 	// interfaces and callbacks
 	public static class SwipeToDeleteCallback extends ItemTouchHelper.SimpleCallback {
-		private ConfirmImagesAdapter adapter;
+		private PreviewImagesAdapter adapter;
 
-		public SwipeToDeleteCallback(ConfirmImagesAdapter adapter) {
+		public SwipeToDeleteCallback(PreviewImagesAdapter adapter) {
 			super(0, ItemTouchHelper.UP);
 			this.adapter = adapter;
 			//		icon = ContextCompat.getDrawable(this.adapter.getContext(),
@@ -324,12 +323,12 @@ public class RecyclerUtils {
 	public static class PreviewDiffCallback extends DiffUtil.ItemCallback<ImageData> {
 		@Override
 		public boolean areItemsTheSame(@NonNull ImageData oldItem, @NonNull ImageData newItem) {
-			return oldItem == newItem;
+			return oldItem.getImagePath().equals(newItem.getImagePath());
 		}
 
 		@Override
 		public boolean areContentsTheSame(@NonNull ImageData oldItem, @NonNull ImageData newItem) {
-			return oldItem.getImagePath().equals(newItem.getImagePath());
+			return true;
 		}
 	}
 

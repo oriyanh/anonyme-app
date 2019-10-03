@@ -29,7 +29,6 @@ public class AppViewModel extends ViewModel {
 	public void setPagingEnabled(boolean isPagingEnabled) {
 		if (this.isPagingEnabled == null) {
 			this.isPagingEnabled = new MutableLiveData<>();
-			this.isPagingEnabled.setValue(true);
 		}
 
 		this.isPagingEnabled.setValue(isPagingEnabled);
@@ -65,7 +64,7 @@ public class AppViewModel extends ViewModel {
 
 	public void addImage(String image) {
 		ArrayList<String> paths = getImagePaths();
-		ArrayList<RecyclerUtils.ImageData> images = getImages().getValue() ;
+		ArrayList<RecyclerUtils.ImageData> images = getImages().getValue();
 		if (!paths.contains(image)) {
 			if (!isMultipleSelectionMode()) {
 				paths.clear();

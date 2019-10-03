@@ -2,6 +2,7 @@ package com.mashehu.anonyme.fragments.ui;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 
 import androidx.annotation.NonNull;
@@ -21,6 +22,7 @@ public class CustomViewPager extends ViewPager {
 
 	@Override
 	public boolean onInterceptTouchEvent(MotionEvent ev) {
+		Log.d("CustomViewPager", "paging enabled: "+ pagingEnabled);
 		if (isPagingEnabled()) {
 			return super.onInterceptTouchEvent(ev);
 		}
@@ -29,6 +31,7 @@ public class CustomViewPager extends ViewPager {
 
 	@Override
 	public boolean onTouchEvent(MotionEvent ev) {
+		Log.d("CustomViewPager", "paging enabled: "+ pagingEnabled);
 		if (isPagingEnabled()) {
 			return super.onTouchEvent(ev);
 		}

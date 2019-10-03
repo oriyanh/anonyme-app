@@ -48,7 +48,11 @@ public class EngineService extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-
+		PreferenceManager
+				.getDefaultSharedPreferences(getApplicationContext())
+				.edit()
+				.putBoolean(SP_IS_PROCESSING_KEY, true)
+				.commit();
 	    if (ACTION_STOP.equals(intent.getAction()))
         {
             Log.d(TAG, "Called to stop service");
@@ -58,12 +62,12 @@ public class EngineService extends Service {
 					getApplicationContext(), NOTIFICATION_CH_ID_PROGRESS,
 					"Canceling...", null, null, true,
 					false, false, 0, 0, true));
-            stopSelf();
 			PreferenceManager
 					.getDefaultSharedPreferences(getApplicationContext())
 					.edit()
 					.putBoolean(SP_IS_PROCESSING_KEY, false)
-					.apply();
+					.commit();
+			stopSelf();
             return START_NOT_STICKY;
         }
 
@@ -115,11 +119,6 @@ public class EngineService extends Service {
 				int progress = 1;
 				try
 				{
-					PreferenceManager
-							.getDefaultSharedPreferences(getApplicationContext())
-							.edit()
-							.putBoolean(SP_IS_PROCESSING_KEY, true)
-							.apply();
 					String res = null;
 					Python py = Python.getInstance();
 					for (String image: images)
@@ -201,7 +200,7 @@ public class EngineService extends Service {
 							.getDefaultSharedPreferences(getApplicationContext())
 							.edit()
 							.putBoolean(SP_IS_PROCESSING_KEY, false)
-							.apply();
+							.commit();
 				}
 			});
 

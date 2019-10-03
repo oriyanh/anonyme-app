@@ -35,11 +35,11 @@ import static com.mashehu.anonyme.common.Utilities.processImages;
  * A simple {@link Fragment} subclass.
  */
 public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewItemsCallback {
-	public static final String TAG = "anonyme.ConfirmImagesFragment";
+	public static final String TAG = "anonyme.PreviewFragment";
 	private FloatingActionButton sendButton;
 	private RecyclerView recyclerView;
 	private AppViewModel viewModel;
-	RecyclerUtils.ConfirmImagesAdapter adapter;
+	RecyclerUtils.PreviewImagesAdapter adapter;
 
 	public PreviewFragment() {
 		// Required empty public constructor
@@ -90,7 +90,7 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 				.addCallback(new OnBackPressedCallback(true) {
 					@Override
 					public void handleOnBackPressed() {
-						switch (viewModel.currentTab) {
+						switch (viewModel.getCurrentTab()) {
 							case 0:
 								Navigation.findNavController(view).navigate(R.id.action_confirmImagesFragment_to_galleryFragment);
 								break;
@@ -110,7 +110,7 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 
 	private void setupRecyclerView(ArrayList<RecyclerUtils.ImageData> images) {
 		recyclerView = getActivity().findViewById(R.id.confirmImagesRecyclerView);
-		adapter = new RecyclerUtils.ConfirmImagesAdapter(getActivity().getApplicationContext(), images);
+		adapter = new RecyclerUtils.PreviewImagesAdapter(getActivity().getApplicationContext(), images);
 		adapter.callback = this;
 		RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
 		recyclerView.setLayoutManager(layoutManager);
@@ -125,7 +125,6 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 	@Override
 	public void removeItem(RecyclerUtils.ImageData img) {
 		viewModel.removeImage(img.getImagePath());
-		adapter.submitList(viewModel.getImages().getValue());
 	}
 }
 
