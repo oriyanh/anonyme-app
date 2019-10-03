@@ -85,11 +85,11 @@ public class MainActivity extends FragmentActivity {
 //		fragmentViewPager.setPageTransformer(true, new CubeOutTransformer());
 //		viewModel.getPagingEnabled().observe(this, aBoolean -> fragmentViewPager.setPagingEnabled(aBoolean));
 
-		// TODO:: Implement full permissions here, not in fragment (Possibly in app)
-		if (!Utilities.checkPermissions(this, PERMISSIONS)) {
-			ActivityCompat.requestPermissions(this, PERMISSIONS,
-					ANONYME_PERMISSION_REQUEST_CODE);
-		}
+        // TODO:: Implement full permissions here, not in fragment (Possibly in app)
+        while (!Utilities.checkPermissions(this, PERMISSIONS)) {
+            ActivityCompat.requestPermissions(this, PERMISSIONS,
+                    ANONYME_PERMISSION_REQUEST_CODE);
+        }
 
 		addShareShortcut(this);
 	}
@@ -162,6 +162,5 @@ public class MainActivity extends FragmentActivity {
 
 		ShortcutManagerCompat.addDynamicShortcuts(context, shareShortcuts);
 	}
-
 }
 
