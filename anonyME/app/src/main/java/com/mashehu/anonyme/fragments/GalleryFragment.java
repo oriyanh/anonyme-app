@@ -56,7 +56,7 @@ public class GalleryFragment extends Fragment implements GallerySelectionHandler
 		layoutManager = new GridLayoutManager(getActivity().getApplicationContext(), 4);
 		recyclerView.setLayoutManager(layoutManager);
 
-		ArrayList<ImageData> images = Utilities.getGalleryContent();
+		ArrayList<ImageData> images = Utilities.getGalleryContent(getContext());
 		ThumbnailAdapter adapter = new ThumbnailAdapter(getActivity().getApplicationContext(), this, images);
 		recyclerView.setAdapter(adapter);
 		requireActivity().getOnBackPressedDispatcher().addCallback(new OnBackPressedCallback(true) {

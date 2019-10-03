@@ -88,7 +88,7 @@ public class MainActivity extends FragmentActivity {
 //		registerReceiver(engineStartReceiver, filter);
 
         // TODO:: Implement full permissions here, not in fragment (Possibly in app)
-        if (!Utilities.checkPermissions(this, PERMISSIONS)) {
+        while (!Utilities.checkPermissions(this, PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS,
                     ANONYME_PERMISSION_REQUEST_CODE);
         }

@@ -8,8 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.os.Environment;
-import android.preference.PreferenceManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -20,13 +18,8 @@ import androidx.core.app.NotificationCompat;
 import com.mashehu.anonyme.R;
 import com.mashehu.anonyme.fragments.ui.ImageData;
 import com.mashehu.anonyme.services.EngineStartReceiver;
-import com.mashehu.anonyme.services.EngineStartReceiver;
 
 import java.io.File;
-import java.util.ArrayList;
-
-import static android.os.Environment.DIRECTORY_DCIM;
-import static com.mashehu.anonyme.common.Constants.*;
 import java.util.ArrayList;
 
 import static com.mashehu.anonyme.common.Constants.ASSETS_PATH;
@@ -60,17 +53,36 @@ public class Utilities {
 	}
 
 
-	public static Notification createNotification(String title, String message,
-												  Context context, PendingIntent pendingIntent,
-												  String channel) {
-		return new NotificationCompat.Builder(context, channel)
-				.setContentTitle(title)
-				.setContentText(message)
-				.setSmallIcon(R.mipmap.ic_launcher)
+	public static Notification createNotification(Context context, String channel, String title,
+												  String message,
+												  PendingIntent pendingIntent, boolean ongoing,
+												  boolean autoCancel, boolean onlyAlertOnce, int progressMax,
+												  int progressCurrent, boolean indeterminate) {
+
+		NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(
+				context, channel)
+				.setSmallIcon(R.mipmap.ic_launcher_round)
 				.setPriority(NotificationCompat.PRIORITY_HIGH)
-				.setContentIntent(pendingIntent)
-				.setOngoing(true)
-				.build();
+				.setOngoing(ongoing)
+				.setAutoCancel(autoCancel)
+				.setOnlyAlertOnce(onlyAlertOnce)
+				.setProgress(progressMax, progressCurrent, indeterminate);
+		if (title != null)
+		{
+			notificationBuilder.setContentTitle(title);
+		}
+
+		if (message != null)
+		{
+			notificationBuilder.setContentText(message);
+		}
+
+		if (pendingIntent != null)
+		{
+			notificationBuilder.setContentIntent(pendingIntent);
+		}
+
+		return notificationBuilder.build();
 	}
 
 	public static boolean checkPermissions(Context context, String... permissions)
@@ -86,10 +98,9 @@ public class Utilities {
 		return true;
 	}
 
-	public static ArrayList<ImageData> getGalleryContent() {
+	public static ArrayList<ImageData> getGalleryContent(Context context) {
 		ArrayList<ImageData> images = new ArrayList<>();
-		File galleryDir = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_DCIM), "Camera");
-		File[] galleryFiles = galleryDir.listFiles();
+		File[] galleryFiles = CAMERA_ROLL_PATH.listFiles();
 		if (galleryFiles != null) {
 			for (File f : galleryFiles) {
 				String path = f.getAbsolutePath();

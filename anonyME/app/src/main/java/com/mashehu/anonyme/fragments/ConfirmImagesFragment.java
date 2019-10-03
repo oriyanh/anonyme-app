@@ -30,6 +30,8 @@ import com.mashehu.anonyme.fragments.ui.SwipeToDeleteCallback;
 import java.util.ArrayList;
 
 import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
+import static com.mashehu.anonyme.common.Constants.PERMISSIONS;
+import static com.mashehu.anonyme.common.Utilities.checkPermissions;
 import static com.mashehu.anonyme.common.Utilities.processImages;
 
 
@@ -75,9 +77,7 @@ public class ConfirmImagesFragment extends Fragment implements EmptyListCallback
 			images.add(imageData);
 		}
 
-
 		setupRecyclerView(images);
-
 
 		if (getArguments() != null) {
 			ArrayList<String> imageDirs = getArguments().getStringArrayList(IMAGE_DIRS_ARGUMENT_KEY);
@@ -117,6 +117,7 @@ public class ConfirmImagesFragment extends Fragment implements EmptyListCallback
 	}
 
 	private void setupRecyclerView(ArrayList<ImageData> images) {
+
 		recyclerView = getActivity().findViewById(R.id.confirmImagesRecyclerView);
 		ConfirmImageLargeAdapter adapter = new ConfirmImageLargeAdapter(getActivity().getApplicationContext(), images, this);
 		SnapHelper snapHelper = new PagerSnapHelper();
