@@ -10,18 +10,19 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mashehu.anonyme.R;
+import com.mashehu.anonyme.fragments.EmptyListCallback;
 
 import java.util.ArrayList;
 
 public class ConfirmImageLargeAdapter extends RecyclerView.Adapter<ConfirmImageLargeAdapter.ConfirmImageViewHolder> {
 	private ArrayList<ImageData> images;
 	private Context context;
-	private ImageData recentlyDeletedItem;
-	int recentlyDeletedItemPosition;
+	private EmptyListCallback callback;
 
-	public ConfirmImageLargeAdapter(Context context, ArrayList<ImageData> images) {
+	public ConfirmImageLargeAdapter(Context context, ArrayList<ImageData> images, EmptyListCallback callback) {
 		this.images = images;
 		this.context = context;
+		this.callback = callback;
 	}
 
 
@@ -70,10 +71,9 @@ public class ConfirmImageLargeAdapter extends RecyclerView.Adapter<ConfirmImageL
 	}
 
 	public void deleteItem(int position) {
-		recentlyDeletedItem = images.get(position);
-		recentlyDeletedItemPosition = position;
 		images.remove(position);
 		notifyItemRemoved(position);
+		callback.handleEmptyList();  // todo replace with LiveData observers, better practice
 	}
 
 	@Override

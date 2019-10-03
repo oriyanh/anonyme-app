@@ -7,16 +7,12 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 
 import com.mashehu.anonyme.fragments.AppViewModel;
-import com.mashehu.anonyme.fragments.ConfirmImagesFragment;
 
 import java.util.ArrayList;
-
-import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
 
 public class ShareActivity extends FragmentActivity {
 
@@ -28,7 +24,6 @@ public class ShareActivity extends FragmentActivity {
         setContentView(R.layout.activity_share);
 
         assert getIntent() != null;
-        Bundle args = new Bundle();
         ArrayList<Uri> arguments = new ArrayList<>();
         ArrayList<String> files = new ArrayList<>();
         if (Intent.ACTION_SEND_MULTIPLE.equals(getIntent().getAction()))

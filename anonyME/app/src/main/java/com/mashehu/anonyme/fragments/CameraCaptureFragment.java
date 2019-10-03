@@ -8,6 +8,7 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.os.Bundle;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.camera.core.CameraInfoUnavailableException;
@@ -39,7 +40,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mashehu.anonyme.R;
-import com.mashehu.anonyme.common.Constants;
 import com.mashehu.anonyme.common.Utilities;
 import com.mashehu.anonyme.fragments.ui.GlideApp;
 
@@ -51,7 +51,6 @@ import java.util.Calendar;
 import static com.mashehu.anonyme.common.Constants.ANONYME_PERMISSION_REQUEST_CODE;
 import static com.mashehu.anonyme.common.Constants.CACHE_PATH;
 import static com.mashehu.anonyme.common.Constants.CAMERA_ROLL_PATH;
-import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
 import static com.mashehu.anonyme.common.Constants.PERMISSIONS;
 
 /**
@@ -97,15 +96,6 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // this section is only for debugging, bypassing camera
-//        Bundle args = new Bundle();
-//        String[] imageDirs = {"bla", "bla2"};
-//        args.putStringArray("imageDirs", imageDirs);
-//        Navigation.findNavController(view).navigate(
-//                R.id.action_cameraCaptureFragment_to_confirmImagesFragment,
-//                args);
-        // end section
-
         // Loads bulk capture mode flag from arguments
 //        if (getArguments() != null)
 //        {
@@ -115,13 +105,13 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         assert getActivity() != null;
         assert getView() != null;
         viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
-
         viewFinder = getView().findViewById(R.id.view_finder);
-        while (!Utilities.checkPermissions(getContext(), PERMISSIONS))
-        {
-            ActivityCompat.requestPermissions(getActivity(), PERMISSIONS,
-                    ANONYME_PERMISSION_REQUEST_CODE);
-        }
+        requireActivity().getOnBackPressedDispatcher().addCallback(new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                getActivity().finish();
+            }
+        });
         bindCameraUseCases();
 
     }
@@ -439,7 +429,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
                                     if (!viewModel.isBulkCaptureMode())
                                     {
                                         Navigation.findNavController(view).navigate(
-                                                R.id.action_global_confirmImagesFragment,
+                                                R.id.action_cameraCaptureFragment_to_confirmImagesFragment2,
                                                 null);
                                     }
                                     else

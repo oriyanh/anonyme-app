@@ -30,13 +30,15 @@ import com.mashehu.anonyme.fragments.ui.SwipeToDeleteCallback;
 import java.util.ArrayList;
 
 import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
+import static com.mashehu.anonyme.common.Constants.PERMISSIONS;
+import static com.mashehu.anonyme.common.Utilities.checkPermissions;
 import static com.mashehu.anonyme.common.Utilities.processImages;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ConfirmImagesFragment extends Fragment {
+public class ConfirmImagesFragment extends Fragment implements EmptyListCallback {
 	public static final String TAG = "anonyme.ConfirmImagesFragment";
 	FloatingActionButton sendButton;
 	RecyclerView recyclerView;
@@ -75,9 +77,7 @@ public class ConfirmImagesFragment extends Fragment {
 			images.add(imageData);
 		}
 
-
 		setupRecyclerView(images);
-
 
 		if (getArguments() != null) {
 			ArrayList<String> imageDirs = getArguments().getStringArrayList(IMAGE_DIRS_ARGUMENT_KEY);
@@ -90,7 +90,18 @@ public class ConfirmImagesFragment extends Fragment {
 				.addCallback(new OnBackPressedCallback(true) {
 					@Override
 					public void handleOnBackPressed() {
-						Navigation.findNavController(view).navigate(R.id.action_confirmImagesFragment_to_containerFragment);
+						switch (viewModel.currentTab) {
+							case 0:
+								Navigation.findNavController(view).navigate(R.id.action_confirmImagesFragment_to_galleryFragment);
+								break;
+							case 1:
+								Navigation.findNavController(view).navigate(R.id.action_confirmImagesFragment2_to_cameraCaptureFragment);
+								break;
+							default:
+								assert getActivity() != null;
+								getActivity().finish();
+
+						}
 					}
 				});
 	}
@@ -99,14 +110,16 @@ public class ConfirmImagesFragment extends Fragment {
 		sendButton.setOnClickListener(v -> {
 			ConfirmImageLargeAdapter adapter = (ConfirmImageLargeAdapter) recyclerView.getAdapter();
 			processImages(getActivity().getApplicationContext(), adapter.getImagePaths());
+			getActivity().finish();
 		});
 
 
 	}
 
 	private void setupRecyclerView(ArrayList<ImageData> images) {
+
 		recyclerView = getActivity().findViewById(R.id.confirmImagesRecyclerView);
-		ConfirmImageLargeAdapter adapter = new ConfirmImageLargeAdapter(getActivity().getApplicationContext(), images);
+		ConfirmImageLargeAdapter adapter = new ConfirmImageLargeAdapter(getActivity().getApplicationContext(), images, this);
 		SnapHelper snapHelper = new PagerSnapHelper();
 		RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
 		recyclerView.setLayoutManager(layoutManager);
@@ -117,6 +130,9 @@ public class ConfirmImagesFragment extends Fragment {
 		itemTouchHelper.attachToRecyclerView(recyclerView);
 	}
 
+	@Override
+	public void handleEmptyList() {
+		requireActivity().getOnBackPressedDispatcher().onBackPressed();
+	}
 }
-
 

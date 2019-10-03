@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -22,8 +21,6 @@ import com.mashehu.anonyme.services.EngineStartReceiver;
 
 import java.io.File;
 import java.util.ArrayList;
-
-import static android.os.Environment.DIRECTORY_DCIM;
 
 import static com.mashehu.anonyme.common.Constants.ASSETS_PATH;
 import static com.mashehu.anonyme.common.Constants.CAMERA_ROLL_PATH;
@@ -56,16 +53,36 @@ public class Utilities {
 	}
 
 
-	public static Notification createNotification(Context context, String channel, String title, String message,
-												  PendingIntent pendingIntent, boolean ongoing) {
-		return new NotificationCompat.Builder(context, channel)
-				.setContentTitle(title)
-				.setContentText(message)
-				.setSmallIcon(R.mipmap.ic_launcher)
+	public static Notification createNotification(Context context, String channel, String title,
+												  String message,
+												  PendingIntent pendingIntent, boolean ongoing,
+												  boolean autoCancel, boolean onlyAlertOnce, int progressMax,
+												  int progressCurrent, boolean indeterminate) {
+
+		NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(
+				context, channel)
+				.setSmallIcon(R.mipmap.ic_launcher_round)
 				.setPriority(NotificationCompat.PRIORITY_HIGH)
-				.setContentIntent(pendingIntent)
-				.setOngoing(true)
-				.build();
+				.setOngoing(ongoing)
+				.setAutoCancel(autoCancel)
+				.setOnlyAlertOnce(onlyAlertOnce)
+				.setProgress(progressMax, progressCurrent, indeterminate);
+		if (title != null)
+		{
+			notificationBuilder.setContentTitle(title);
+		}
+
+		if (message != null)
+		{
+			notificationBuilder.setContentText(message);
+		}
+
+		if (pendingIntent != null)
+		{
+			notificationBuilder.setContentIntent(pendingIntent);
+		}
+
+		return notificationBuilder.build();
 	}
 
 	public static boolean checkPermissions(Context context, String... permissions)
@@ -81,10 +98,9 @@ public class Utilities {
 		return true;
 	}
 
-	public static ArrayList<ImageData> getGalleryContent() {
+	public static ArrayList<ImageData> getGalleryContent(Context context) {
 		ArrayList<ImageData> images = new ArrayList<>();
-		File galleryDir = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_DCIM), "Camera");
-		File[] galleryFiles = galleryDir.listFiles();
+		File[] galleryFiles = CAMERA_ROLL_PATH.listFiles();
 		if (galleryFiles != null) {
 			for (File f : galleryFiles) {
 				String path = f.getAbsolutePath();
@@ -105,10 +121,6 @@ public class Utilities {
 		sp.edit().putBoolean(SP_IS_PROCESSING_KEY, true).apply();
 		Intent startEngineIntent = new Intent(INTENT_START_ENGINE, null,
 				context, EngineStartReceiver.class);
-
-//		images.clear();
-//		images.add(ASSETS_PATH.toString() + "/bill_gates_0001.png");
-//		images.add(ASSETS_PATH.toString() + "/bill_gates_0001.png");
 
 		startEngineIntent.putExtra(EXTRA_ENGINE_ASSETS_PATH, ASSETS_PATH.toString());
 		startEngineIntent.putExtra(EXTRA_ENGINE_OUT_DIR, CAMERA_ROLL_PATH.toString());

@@ -9,4 +9,4 @@
         android:name="com.mashehu.anonyme.fragments.ConfirmImagesFragment"
         android:label="fragment_confirm_images"
         tools:layout="@layout/fragment_confirm_images" />
-</navigation> 
+</navigation>

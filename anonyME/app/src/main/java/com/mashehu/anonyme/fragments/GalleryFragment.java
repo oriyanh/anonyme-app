@@ -2,6 +2,7 @@ package com.mashehu.anonyme.fragments;
 
 import android.os.Bundle;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -37,7 +38,7 @@ public class GalleryFragment extends Fragment implements GallerySelectionHandler
 	@Override
 	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
 							 @Nullable Bundle savedInstanceState) {
-		return inflater.inflate(R.layout.gallery_fragment, container, false);
+		return inflater.inflate(R.layout.fragment_gallery, container, false);
 	}
 
 	@Override
@@ -55,9 +56,15 @@ public class GalleryFragment extends Fragment implements GallerySelectionHandler
 		layoutManager = new GridLayoutManager(getActivity().getApplicationContext(), 4);
 		recyclerView.setLayoutManager(layoutManager);
 
-		ArrayList<ImageData> images = Utilities.getGalleryContent();
+		ArrayList<ImageData> images = Utilities.getGalleryContent(getContext());
 		ThumbnailAdapter adapter = new ThumbnailAdapter(getActivity().getApplicationContext(), this, images);
 		recyclerView.setAdapter(adapter);
+		requireActivity().getOnBackPressedDispatcher().addCallback(new OnBackPressedCallback(true) {
+			@Override
+			public void handleOnBackPressed() {
+				getActivity().finish();
+			}
+		});
 	}
 
 	public void setSelectionMode(boolean isMultipleSelection) {
@@ -111,8 +118,8 @@ public class GalleryFragment extends Fragment implements GallerySelectionHandler
 		Bundle args = new Bundle();
 		args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, imagesToProcess);
 		Navigation.findNavController(v).navigate(
-				R.id.action_global_confirmImagesFragment,
-				args);
+				R.id.action_galleryFragment_to_confirmImagesFragment,
+				null);
 	}
 
 }

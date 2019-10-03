@@ -14,14 +14,17 @@ import androidx.core.content.FileProvider;
 import com.chaquo.python.Python;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static com.mashehu.anonyme.common.Constants.CACHE_PATH;
 import static com.mashehu.anonyme.common.Constants.ENGINE_MODULE_NAME;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_ASSETS_PATH;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_INPUT_PICS;
-import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_NUM_IMAGES;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_OUT_DIR;
 import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_ID_PROGRESS;
 import static com.mashehu.anonyme.common.Utilities.createNotification;
@@ -48,94 +51,140 @@ public class EngineService extends Service {
         {
             Log.d(TAG, "Called to stop service");
             stopForeground(true);
-			NotificationManagerCompat.from(this).notify(1, createNotification(
+            int notificationId = intent.getIntExtra("notificationId", 1);
+			NotificationManagerCompat.from(this).notify(notificationId, createNotification(
 					getApplicationContext(), NOTIFICATION_CH_ID_PROGRESS,
-					"Canceling...", null, null, true));
+					"Canceling...", null, null, true,
+					false, false, 0, 0, true));
             stopSelf();
             return START_NOT_STICKY;
         }
 	    else
 		{
 
-			int num_images = intent.getIntExtra(EXTRA_ENGINE_NUM_IMAGES, 1); // to be used for demonstrating progress?
+			Date now = new Date();
+			int notificationId  = Integer.parseInt(
+					new SimpleDateFormat("ddHHmmss", Locale.US).format(now));
+
+			// ArrayList containing list of images to process
+			ArrayList<String> images = intent.getStringArrayListExtra(EXTRA_ENGINE_INPUT_PICS);
 			String assetsDir = intent.getStringExtra(EXTRA_ENGINE_ASSETS_PATH);
 			String outputDir = intent.getStringExtra(EXTRA_ENGINE_OUT_DIR);
 
 			singleThreadExecutor = Executors.newSingleThreadExecutor();
 
+			Notification initialNotification;
+
 			Intent stopService = new Intent(this, EngineService.class);
+			stopService.putExtra("notificationId", notificationId);
 			stopService.setAction(ACTION_STOP);
 			PendingIntent pendingStopService = PendingIntent.getService(
 					this, 0, stopService, PendingIntent.FLAG_CANCEL_CURRENT);
 
-			Notification initialNotification;
-			if (num_images == 1)
+			assert images != null;
+			if (images.size() == 1)
 			{
 				initialNotification = createNotification(
 						getApplicationContext(), NOTIFICATION_CH_ID_PROGRESS,
 						"Anonymization in progress...",null, // TODO send meaningful notifications to demonstrate progress
-						pendingStopService, true);
+						null, true, false,
+						false, 0, 0, false);
 			}
 			else
 			{
+
 				initialNotification = createNotification(
 						getApplicationContext(), NOTIFICATION_CH_ID_PROGRESS,
 						"Anonymization in progress...","Tap to cancel", // TODO send meaningful notifications to demonstrate progress
-						pendingStopService, true);
+						pendingStopService, true, false, true,
+						images.size(), 0, false);
 			}
-			startForeground(1, initialNotification);
+			startForeground(notificationId, initialNotification);
 
-			// TODO generate single string to represent list of images to process, or start different python process per image
-			// ArrayList containing list of images to process
-			ArrayList<String> images = intent.getStringArrayListExtra(EXTRA_ENGINE_INPUT_PICS);
-			Log.d(TAG + "onStartCommand", "Processing " + num_images + " images");
-			int progress = 0;
+			Log.d(TAG + "onStartCommand", "Processing " + images.size() + " images");
 
 			singleThreadExecutor.execute(() -> {
-					try
+				int progress = 1;
+				try
+				{
+					String res = null;
+					Python py = Python.getInstance();
+					for (String image: images)
 					{
-						String res = null;
-						Python py = Python.getInstance();
-						for (String image: images)
+						if (Thread.interrupted())
 						{
-							if (Thread.interrupted())
+							throw new InterruptedException();
+						}
+
+						Log.d(TAG + "onStartCommand", "Processing image #" + progress + ": " + image);
+
+						res = py.getModule(ENGINE_MODULE_NAME).callAttr(
+								"main", assetsDir, outputDir, image).toString();
+						if (images.size() > 1)
+						{
+							Notification progressNotification;
+
+							if (progress == images.size())
 							{
-								throw new InterruptedException();
+								progressNotification = createNotification(
+										getApplicationContext(), NOTIFICATION_CH_ID_PROGRESS,
+										"Anonymization in progress...",
+										"Tap to cancel", // TODO send meaningful notifications to demonstrate progress
+										pendingStopService, true,
+										false, false,
+										images.size(), progress, false);
 							}
-
-							Log.d(TAG + "onStartCommand", "Processing image #" + progress + ": " + image);
-							res = py.getModule(ENGINE_MODULE_NAME).callAttr(
-									"main", assetsDir, outputDir, image).toString();
-							Log.d(TAG, "Finished processing - output located in " + res);
+							else
+							{
+								progressNotification = createNotification(
+										getApplicationContext(), NOTIFICATION_CH_ID_PROGRESS,
+										"Anonymization in progress...",
+										"Tap to cancel", // TODO send meaningful notifications to demonstrate progress
+										pendingStopService, true,
+										false, true,
+										images.size(), progress, false);
+							}
+							NotificationManagerCompat.from(this).notify(notificationId,
+									progressNotification);
 						}
 
-						Intent showImages;
-
-						if (images.size() == 1)
-						{
-							assert res != null;
-							File outputFile = new File(res);
-							Uri cameraRollUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", outputFile);
-							showImages = new Intent(Intent.ACTION_VIEW);
-							showImages.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-							showImages.setDataAndType(cameraRollUri, "image/*");
-							showImages.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-						}
-						else
-						{
-							showImages = new Intent(Intent.ACTION_VIEW, Uri.parse("content://media/internal/images/media"));
-						}
-
-
-						PendingIntent pShowImages = PendingIntent.getActivity(getApplicationContext(), 0, showImages, PendingIntent.FLAG_ONE_SHOT);
-						NotificationManagerCompat.from(this).notify(1, createNotification(this, NOTIFICATION_CH_ID_PROGRESS, "Anonymization complete", "Tap to view image", pShowImages, ));
+						Log.d(TAG, "Finished processing - output located in " + res);
+						progress += 1;
 					}
-					catch (InterruptedException e)
+
+					Intent showImages;
+
+					if (images.size() == 1)
 					{
-						Log.d(TAG, "Task cancelled");
-						NotificationManagerCompat.from(this).cancel(1);
+						assert res != null;
+						File outputFile = new File(res);
+						Uri cameraRollUri = FileProvider.getUriForFile(this,
+								getApplicationContext().getPackageName() + ".provider",
+								outputFile);
+						showImages = new Intent(Intent.ACTION_VIEW);
+						showImages.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+						showImages.setDataAndType(cameraRollUri, "image/*");
+						showImages.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 					}
-				});
+					else
+					{
+						showImages = new Intent(Intent.ACTION_VIEW, Uri.parse("content://media/internal/images/media"));
+					}
+
+					PendingIntent pShowImages = PendingIntent.getActivity(getApplicationContext(),
+							0, showImages, PendingIntent.FLAG_ONE_SHOT);
+					NotificationManagerCompat.from(this).notify(notificationId,
+							createNotification(this, NOTIFICATION_CH_ID_PROGRESS,
+									"Anonymization complete", "Tap to view results",
+									pShowImages, false, true, false, 0,
+									0, false));
+				}
+				catch (InterruptedException e)
+				{
+					Log.d(TAG, "Task cancelled");
+					NotificationManagerCompat.from(this).cancel(notificationId);
+				}
+			});
 
 //			ArrayList<AsyncTask<String, Void, String>> futures = new ArrayList<>(num_images);
 //			for (String img : images) {
@@ -151,63 +200,13 @@ public class EngineService extends Service {
 	@Override
 	public void onDestroy() {
 		singleThreadExecutor.shutdownNow();
+		File[] cache_files = CACHE_PATH.listFiles();
+		if (cache_files != null) {
+			for (File f : cache_files) {
+				Log.d("EngineService", "removing file " + f.getAbsolutePath());
+				f.deleteOnExit();
+			}
+		}
 		super.onDestroy();
 	}
-
-//	private class PythonAnonymizer implements Callable<String>
-//	{
-//
-//		private String inputDir;
-//		private String outputDir;
-//		private String imageFile;
-//
-//		PythonAnonymizer(String inputDir, String outputDir, String imageFile)
-//		{
-//			this.inputDir = inputDir;
-//			this.outputDir = outputDir;
-//			this.imageFile = imageFile;
-//		}
-//
-//		@Override
-//		public String call() {
-//
-//			try
-//			{
-//				Python py = Python.getInstance();
-//				return py.getModule(ENGINE_MODULE_NAME).callAttr(
-//						"main", inputDir, outputDir, imageFile).toString();
-//			}
-//			catch (InterruptedException e)
-//			{
-//				Log.d(TAG, "Task cancelled.");
-//			}
-//		}
-//	}
 }
-
-
-//	public AsyncTask<String, Void, String> processImage(String assets_dir, String out_dir, String img) {
-//		EngineAsyncTask task = new EngineAsyncTask(assets_dir, out_dir);
-//		task.delegate = this;
-//		task.execute(img);
-//
-//		Python py = Python.getInstance();
-//		PyObject res = py.getModule(ENGINE_MODULE_NAME).
-//				callAttr("main", assets_dir, out_dir, img);
-//
-//		return res.toString();
-//		return task;
-//	}
-//
-//	public void moveToGallery(String img) {
-//		Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(img));
-//		PendingIntent pendingIntent = PendingIntent.getActivity(
-//				this.getApplicationContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
-//		Notification viewImageNotification = createNotification(
-//				"Anonymization complete", "Tap to view result", this, pendingIntent, NOTIFICATION_CH_ID_PROGRESS);
-//
-//		Log.d(TAG + "moveToGallery", "result file path = " + img);
-//
-//		MoveToGalleryAsyncTask task = new MoveToGalleryAsyncTask();
-//		task.execute(img); //todo implement actual mechanism
-//	}
