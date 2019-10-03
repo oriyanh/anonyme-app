@@ -39,13 +39,22 @@ public class LoadingScreenFragment extends Fragment {
 	@Override
 	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
-		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
-		boolean isProcessing = sp.getBoolean(SP_IS_PROCESSING_KEY, false);
 
+		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
+		navigateIfNecessary(sp, view);
+
+		sp.registerOnSharedPreferenceChangeListener((sharedPreferences, key) -> {
+			if (key.equals(SP_IS_PROCESSING_KEY)) {
+				navigateIfNecessary(sharedPreferences, view);
+			}
+		});
+	}
+
+	public void navigateIfNecessary(SharedPreferences sp, View v) {
+		boolean isProcessing = sp.getBoolean(SP_IS_PROCESSING_KEY, false);
 		if (!isProcessing) {
-//			Navigation.findNavController(view).navigate(
-//					R.id.action_loadingScreenFragment_to_containerFragment2,
-//					null);
+			Navigation.findNavController(v).navigate(R.id.action_loadingScreenFragment_to_mainContainerFragment2);
 		}
 	}
 }
+

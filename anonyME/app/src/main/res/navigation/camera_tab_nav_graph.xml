@@ -16,25 +16,13 @@
     </fragment>
     <fragment
         android:id="@+id/confirmImagesFragment2"
-        android:name="com.mashehu.anonyme.fragments.ConfirmImagesFragment"
+        android:name="com.mashehu.anonyme.fragments.PreviewFragment"
         android:label="fragment_confirm_images"
-        tools:layout="@layout/fragment_confirm_images" >
-        <action
-            android:id="@+id/action_confirmImagesFragment2_to_loadingScreenFragment2"
-            app:destination="@id/loadingScreenFragment2" />
+        tools:layout="@layout/fragment_preview" >
         <action
             android:id="@+id/action_confirmImagesFragment2_to_cameraCaptureFragment"
             app:destination="@id/cameraCaptureFragment"
             app:popUpTo="@+id/camera_tab_nav_graph"
             app:popUpToInclusive="true" />
-    </fragment>
-    <fragment
-        android:id="@+id/loadingScreenFragment2"
-        android:name="com.mashehu.anonyme.fragments.LoadingScreenFragment"
-        android:label="fragment_loading_screen"
-        tools:layout="@layout/fragment_loading_screen" >
-        <action
-            android:id="@+id/action_loadingScreenFragment2_to_cameraCaptureFragment"
-            app:destination="@id/cameraCaptureFragment" />
     </fragment>
 </navigation>

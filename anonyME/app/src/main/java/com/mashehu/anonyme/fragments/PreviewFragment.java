@@ -7,6 +7,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.DefaultItemAnimator;
@@ -23,26 +24,24 @@ import android.view.ViewGroup;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mashehu.anonyme.R;
-import com.mashehu.anonyme.fragments.ui.ConfirmImageLargeAdapter;
-import com.mashehu.anonyme.fragments.ui.ImageData;
-import com.mashehu.anonyme.fragments.ui.SwipeToDeleteCallback;
+import com.mashehu.anonyme.fragments.ui.RecyclerUtils;
 
 import java.util.ArrayList;
 
-import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
 import static com.mashehu.anonyme.common.Utilities.processImages;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ConfirmImagesFragment extends Fragment implements EmptyListCallback {
+public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewItemsCallback {
 	public static final String TAG = "anonyme.ConfirmImagesFragment";
-	FloatingActionButton sendButton;
-	RecyclerView recyclerView;
-	AppViewModel viewModel;
+	private FloatingActionButton sendButton;
+	private RecyclerView recyclerView;
+	private AppViewModel viewModel;
+	RecyclerUtils.ConfirmImagesAdapter adapter;
 
-	public ConfirmImagesFragment() {
+	public PreviewFragment() {
 		// Required empty public constructor
 	}
 
@@ -51,7 +50,7 @@ public class ConfirmImagesFragment extends Fragment implements EmptyListCallback
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 							 Bundle savedInstanceState) {
 		// Inflate the layout for this fragment
-		return inflater.inflate(R.layout.fragment_confirm_images, container, false);
+		return inflater.inflate(R.layout.fragment_preview, container, false);
 	}
 
 	@Override
@@ -61,30 +60,31 @@ public class ConfirmImagesFragment extends Fragment implements EmptyListCallback
 
 		sendButton = view.findViewById(R.id.fabSendButton);
 		viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
+		viewModel.setPagingEnabled(false);
 		Log.d(TAG, "tab in previous fragment: " + viewModel.getCurrentTab());
 		assert getView() != null;
 		assert getActivity() != null;
 		assert getArguments() != null;
 
-		ArrayList<String> imagePaths = viewModel.getImagePaths();
-//		ArrayList<String> imagePaths = getArguments().getStringArrayList(IMAGE_DIRS_ARGUMENT_KEY);
-		ArrayList<ImageData> images = new ArrayList<>();
-		for (String img : imagePaths) {
-			ImageData imageData = new ImageData();
-			imageData.setImagePath(img);
-			images.add(imageData);
-		}
+		LiveData<ArrayList<RecyclerUtils.ImageData>> images = viewModel.getImages();
 
+		images.observe(this, imageData -> {
+			if (imageData.size() == 0) {
+				requireActivity().getOnBackPressedDispatcher().onBackPressed();
+			}
+		});
 
-		setupRecyclerView(images);
+		setupRecyclerView(images.getValue());
+		setupListeners(view);
 
+	}
 
-		if (getArguments() != null) {
-			ArrayList<String> imageDirs = getArguments().getStringArrayList(IMAGE_DIRS_ARGUMENT_KEY);
-			if (imageDirs != null)
-				Log.d(TAG, String.format("Number of images: %s\nFirst image: %s", imageDirs.size(), imageDirs.get(0)));
-		}
-		setupListeners();
+	private void setupListeners(View view) {
+		sendButton.setOnClickListener(v -> {
+			processImages(getActivity().getApplicationContext(), viewModel.getImagePaths());
+			getActivity().finish();
+		});
+
 		requireActivity()
 				.getOnBackPressedDispatcher()
 				.addCallback(new OnBackPressedCallback(true) {
@@ -104,34 +104,28 @@ public class ConfirmImagesFragment extends Fragment implements EmptyListCallback
 						}
 					}
 				});
-	}
-
-	private void setupListeners() {
-		sendButton.setOnClickListener(v -> {
-			ConfirmImageLargeAdapter adapter = (ConfirmImageLargeAdapter) recyclerView.getAdapter();
-			processImages(getActivity().getApplicationContext(), adapter.getImagePaths());
-			getActivity().finish();
-		});
 
 
 	}
 
-	private void setupRecyclerView(ArrayList<ImageData> images) {
+	private void setupRecyclerView(ArrayList<RecyclerUtils.ImageData> images) {
 		recyclerView = getActivity().findViewById(R.id.confirmImagesRecyclerView);
-		ConfirmImageLargeAdapter adapter = new ConfirmImageLargeAdapter(getActivity().getApplicationContext(), images, this);
-		SnapHelper snapHelper = new PagerSnapHelper();
+		adapter = new RecyclerUtils.ConfirmImagesAdapter(getActivity().getApplicationContext(), images);
+		adapter.callback = this;
 		RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
 		recyclerView.setLayoutManager(layoutManager);
+		SnapHelper snapHelper = new PagerSnapHelper();
 		snapHelper.attachToRecyclerView(recyclerView);
 		recyclerView.setItemAnimator(new DefaultItemAnimator());
 		recyclerView.setAdapter(adapter);
-		ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeToDeleteCallback(adapter));
+		ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new RecyclerUtils.SwipeToDeleteCallback(adapter));
 		itemTouchHelper.attachToRecyclerView(recyclerView);
 	}
 
 	@Override
-	public void handleEmptyList() {
-		requireActivity().getOnBackPressedDispatcher().onBackPressed();
+	public void removeItem(RecyclerUtils.ImageData img) {
+		viewModel.removeImage(img.getImagePath());
+		adapter.submitList(viewModel.getImages().getValue());
 	}
 }
 

@@ -95,6 +95,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
         assert getActivity() != null;
         assert getView() != null;
         viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
+        viewModel.setPagingEnabled(true);
         viewFinder = getView().findViewById(R.id.view_finder);
         requireActivity().getOnBackPressedDispatcher().addCallback(new OnBackPressedCallback(true) {
             @Override
@@ -431,7 +432,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
 //                                        ArrayList<String> imageDirs = new ArrayList<>();
 //                                        imageDirs.add(imageFile.getAbsolutePath());
 //                                        args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, imageDirs);
-//                                        Navigation.findNavController(view).navigate(
+//                                        Navigation.findNavController(view).navigateIfNecessary(
 //                                                R.id.action_global_confirmImagesFragment,
 //                                                args);
                                         viewModel.addImage(imageFile.getAbsolutePath());

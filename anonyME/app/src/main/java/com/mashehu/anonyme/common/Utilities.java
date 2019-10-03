@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -18,16 +17,13 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 
 import com.mashehu.anonyme.R;
-import com.mashehu.anonyme.fragments.ui.ImageData;
-import com.mashehu.anonyme.services.EngineStartReceiver;
+import com.mashehu.anonyme.fragments.ui.RecyclerUtils;
 import com.mashehu.anonyme.services.EngineStartReceiver;
 
 import java.io.File;
 import java.util.ArrayList;
 
 import static android.os.Environment.DIRECTORY_DCIM;
-import static com.mashehu.anonyme.common.Constants.*;
-import java.util.ArrayList;
 
 import static com.mashehu.anonyme.common.Constants.ASSETS_PATH;
 import static com.mashehu.anonyme.common.Constants.CAMERA_ROLL_PATH;
@@ -86,15 +82,15 @@ public class Utilities {
 		return true;
 	}
 
-	public static ArrayList<ImageData> getGalleryContent() {
-		ArrayList<ImageData> images = new ArrayList<>();
+	public static ArrayList<RecyclerUtils.ImageData> getGalleryContent() {
+		ArrayList<RecyclerUtils.ImageData> images = new ArrayList<>();
 		File galleryDir = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_DCIM), "Camera");
 		File[] galleryFiles = galleryDir.listFiles();
 		if (galleryFiles != null) {
 			for (File f : galleryFiles) {
 				String path = f.getAbsolutePath();
 				if (f.isFile() && (path.endsWith(".jpg") || path.endsWith(".png"))) {  // To avoid adding inner directories. TODO add capability to show inner directories as well
-					ImageData img = new ImageData();
+					RecyclerUtils.ImageData img = new RecyclerUtils.ImageData();
 					img.setImagePath(f.getAbsolutePath());
 					images.add(img);
 				}

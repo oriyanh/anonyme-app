@@ -12,6 +12,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 
 import com.mashehu.anonyme.fragments.AppViewModel;
+import com.mashehu.anonyme.fragments.PreviewFragment;
 
 import java.util.ArrayList;
 
@@ -81,5 +82,6 @@ public class ShareActivity extends FragmentActivity {
         for (String img : files) {
             viewModel.addImage(img);
         }
+        viewModel.currentTab = -1;
     }
 }

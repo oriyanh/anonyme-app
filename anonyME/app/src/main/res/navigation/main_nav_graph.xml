@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_nav_graph"
+    app:startDestination="@id/mainContainerFragment2">
+    <fragment
+        android:id="@+id/loadingScreenFragment"
+        android:name="com.mashehu.anonyme.fragments.LoadingScreenFragment"
+        android:label="fragment_loading_screen"
+        tools:layout="@layout/fragment_loading_screen" >
+        <action
+            android:id="@+id/action_loadingScreenFragment_to_mainContainerFragment2"
+            app:destination="@id/mainContainerFragment2" />
+    </fragment>
+    <fragment
+        android:id="@+id/mainContainerFragment2"
+        android:name="com.mashehu.anonyme.fragments.MainContainerFragment"
+        android:label="fragment_main_container"
+        tools:layout="@layout/fragment_main_container" >
+        <action
+            android:id="@+id/action_mainContainerFragment2_to_loadingScreenFragment"
+            app:destination="@id/loadingScreenFragment" />
+    </fragment>
+</navigation>

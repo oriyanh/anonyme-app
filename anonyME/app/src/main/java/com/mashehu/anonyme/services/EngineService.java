@@ -5,6 +5,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import androidx.core.app.NotificationManagerCompat;
@@ -24,6 +25,7 @@ import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_INPUT_PICS;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_NUM_IMAGES;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_OUT_DIR;
 import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_ID_PROGRESS;
+import static com.mashehu.anonyme.common.Constants.SP_IS_PROCESSING_KEY;
 import static com.mashehu.anonyme.common.Utilities.createNotification;
 
 public class EngineService extends Service {
@@ -72,8 +74,10 @@ public class EngineService extends Service {
 			// ArrayList containing list of images to process
 			ArrayList<String> images = intent.getStringArrayListExtra(EXTRA_ENGINE_INPUT_PICS);
 			Log.d(TAG + "onStartCommand", "Processing " + num_images + " images");
-			int progress = 0;
 
+			PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putBoolean(SP_IS_PROCESSING_KEY, true).apply();
+
+			int progress = 0;
 			singleThreadExecutor.execute(() -> {
 					try
 					{
@@ -118,13 +122,16 @@ public class EngineService extends Service {
 						Log.d(TAG, "Task cancelled");
 						NotificationManagerCompat.from(this).cancel(1);
 					}
+					finally {
+						PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putBoolean(SP_IS_PROCESSING_KEY, false).apply();
+					}
 				});
 
 //			ArrayList<AsyncTask<String, Void, String>> futures = new ArrayList<>(num_images);
-//			for (String img : images) {
+//			for (String imageView : images) {
 //				progress++;
 
-//				futures.add(processImage(assets_dir, out_dir, img));
+//				futures.add(processImage(assets_dir, out_dir, imageView));
 //			Log.d(TAG + "onStartCommand", "result file path = " + res);
 			super.onStartCommand(intent, flags, startId);
 			return START_NOT_STICKY;
@@ -141,6 +148,7 @@ public class EngineService extends Service {
 				f.deleteOnExit();
 			}
 		}
+		PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putBoolean(SP_IS_PROCESSING_KEY, false).apply();
 		super.onDestroy();
 	}
 
@@ -176,28 +184,28 @@ public class EngineService extends Service {
 }
 
 
-//	public AsyncTask<String, Void, String> processImage(String assets_dir, String out_dir, String img) {
+//	public AsyncTask<String, Void, String> processImage(String assets_dir, String out_dir, String imageView) {
 //		EngineAsyncTask task = new EngineAsyncTask(assets_dir, out_dir);
 //		task.delegate = this;
-//		task.execute(img);
+//		task.execute(imageView);
 //
 //		Python py = Python.getInstance();
 //		PyObject res = py.getModule(ENGINE_MODULE_NAME).
-//				callAttr("main", assets_dir, out_dir, img);
+//				callAttr("main", assets_dir, out_dir, imageView);
 //
 //		return res.toString();
 //		return task;
 //	}
 //
-//	public void moveToGallery(String img) {
-//		Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(img));
+//	public void moveToGallery(String imageView) {
+//		Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(imageView));
 //		PendingIntent pendingIntent = PendingIntent.getActivity(
 //				this.getApplicationContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
 //		Notification viewImageNotification = createNotification(
 //				"Anonymization complete", "Tap to view result", this, pendingIntent, NOTIFICATION_CH_ID_PROGRESS);
 //
-//		Log.d(TAG + "moveToGallery", "result file path = " + img);
+//		Log.d(TAG + "moveToGallery", "result file path = " + imageView);
 //
 //		MoveToGalleryAsyncTask task = new MoveToGalleryAsyncTask();
-//		task.execute(img); //todo implement actual mechanism
+//		task.execute(imageView); //todo implement actual mechanism
 //	}
