@@ -12,3 +12,4 @@
 /captures
 .externalNativeBuild
 *__pycache__
+*.pyc
