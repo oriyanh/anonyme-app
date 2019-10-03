@@ -11,15 +11,19 @@ import android.os.Bundle;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.camera.core.CameraControl;
 import androidx.camera.core.CameraInfoUnavailableException;
 import androidx.camera.core.CameraX;
 import androidx.camera.core.FlashMode;
+import androidx.camera.core.FocusMeteringAction;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureConfig;
+import androidx.camera.core.MeteringPoint;
+import androidx.camera.core.MeteringPointFactory;
 import androidx.camera.core.Preview;
 import androidx.camera.core.PreviewConfig;
+import androidx.camera.core.SensorOrientedMeteringPointFactory;
 import androidx.camera.core.UseCase;
-import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.Navigation;
@@ -27,6 +31,7 @@ import androidx.navigation.Navigation;
 import android.os.Handler;
 import android.util.Log;
 import android.util.Size;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -40,18 +45,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mashehu.anonyme.R;
-import com.mashehu.anonyme.common.Utilities;
 import com.mashehu.anonyme.fragments.ui.GlideApp;
 
 import java.io.File;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
-import static com.mashehu.anonyme.common.Constants.ANONYME_PERMISSION_REQUEST_CODE;
+import static androidx.camera.core.CameraX.getCameraControl;
 import static com.mashehu.anonyme.common.Constants.CACHE_PATH;
-import static com.mashehu.anonyme.common.Constants.CAMERA_ROLL_PATH;
-import static com.mashehu.anonyme.common.Constants.PERMISSIONS;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -66,7 +68,8 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
     // private static boolean isBulkCapture = true; // Default value is false, true for debugging purposes
     private String cameraId;
     private TextureView viewFinder;
-    private ScaleGestureDetector detector;
+    private ScaleGestureDetector zoomGestureDetector;
+    private GestureDetector focusGestureDetector;
     private static final String TAG = "anonyme.Capture";
     private AppViewModel viewModel;
 
@@ -96,12 +99,6 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Loads bulk capture mode flag from arguments
-//        if (getArguments() != null)
-//        {
-//            isBulkCapture = getArguments().getBoolean(Constants.BULK_CAPTURE_KEY);
-//        }
-
         assert getActivity() != null;
         assert getView() != null;
         viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
@@ -113,7 +110,6 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
             }
         });
         bindCameraUseCases();
-
     }
 
     /**
@@ -320,11 +316,25 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
                 bindCameraUseCases();
             });
 
-        if (detector == null)
+        if ((zoomGestureDetector == null) || (focusGestureDetector == null))
         {
             ZoomListener zoomListener = new ZoomListener();
-            detector = new ScaleGestureDetector(getContext(), zoomListener);
-            viewFinder.setOnTouchListener((View v, MotionEvent event) -> detector.onTouchEvent(event));
+            zoomGestureDetector = new ScaleGestureDetector(getContext(), zoomListener);
+
+            FocusListener focusListener = new FocusListener();
+            focusGestureDetector = new GestureDetector(getContext(), focusListener);
+
+            viewFinder.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    zoomGestureDetector.onTouchEvent(event);
+                    if (!zoomGestureDetector.isInProgress())
+                    {
+                        focusGestureDetector.onTouchEvent(event);
+                    }
+                    return true;
+                }
+            });
         }
         updateTransform();
     }
@@ -463,6 +473,70 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
                 });
 
         refreshFlashButtonIcon();
+    }
+
+    private class FocusListener extends GestureDetector.SimpleOnGestureListener {
+
+        @Override
+        public boolean onDown(MotionEvent e) {
+            CameraControl cameraControl;
+            try {
+                cameraControl = CameraX.getCameraControl(lensFacing);
+            }
+            catch (CameraInfoUnavailableException exception)
+            {
+                Log.e(TAG, "Failed to get camera control " + exception);
+                return false;
+            }
+
+            // Fetches max digital zoom for phone's camera
+            assert getActivity() != null;
+            CameraManager cameraManager = (CameraManager)getActivity().getSystemService(
+                    Context.CAMERA_SERVICE);
+
+            CameraCharacteristics characteristics;
+            Rect curCameraCrop;
+
+            try {
+                assert cameraManager != null;
+                characteristics = cameraManager.getCameraCharacteristics(
+                        cameraId);
+
+                curCameraCrop = characteristics.get(
+                        CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+            }
+            catch (CameraAccessException accessException)
+            {
+                Log.e(TAG, "Failed to fetch camera characteristics");
+                return false;
+            }
+
+            MeteringPointFactory factory = new SensorOrientedMeteringPointFactory(
+                    curCameraCrop.width(), curCameraCrop.height());
+            MeteringPoint point = factory.createPoint(e.getX(), e.getY());
+            FocusMeteringAction action = FocusMeteringAction.Builder
+                    .from(point, FocusMeteringAction.MeteringMode.AF_ONLY)
+                    .setAutoFocusCallback(new FocusMeteringAction.OnAutoFocusListener() {
+                        @Override
+                        public void onFocusCompleted(boolean isFocusLocked) {
+                            Toast toast;
+                            if (isFocusLocked)
+                            {
+                                toast = Toast.makeText(getContext(), "Focus succeeded", Toast.LENGTH_SHORT);
+                            }
+                            else
+                            {
+                                toast = Toast.makeText(getContext(), "Focus failed", Toast.LENGTH_SHORT);
+                            }
+                            toast.show();
+                        }
+                    })
+                    .setAutoCancelDuration(5, TimeUnit.SECONDS)
+                    .build();
+
+            cameraControl.startFocusAndMetering(action);
+            return super.onSingleTapConfirmed(e);
+        }
     }
 
     private class ZoomListener extends ScaleGestureDetector.SimpleOnScaleGestureListener{
