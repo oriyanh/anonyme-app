@@ -3,10 +3,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/confirmImagesFragment3">
+    app:startDestination="@id/shareContainerFragment">
     <fragment
         android:id="@+id/confirmImagesFragment3"
         android:name="com.mashehu.anonyme.fragments.PreviewFragment"
         android:label="fragment_confirm_images"
         tools:layout="@layout/fragment_preview" />
+    <fragment
+        android:id="@+id/shareContainerFragment"
+        android:name="com.mashehu.anonyme.fragments.ShareContainerFragment"
+        android:label="fragment_share_container"
+        tools:layout="@layout/fragment_share_container" >
+        <action
+            android:id="@+id/action_shareContainerFragment_to_confirmImagesFragment3"
+            app:destination="@id/confirmImagesFragment3" />
+        <action
+            android:id="@+id/action_shareContainerFragment_to_loadingScreenFragment2"
+            app:destination="@id/loadingScreenFragment2" />
+    </fragment>
+    <fragment
+        android:id="@+id/loadingScreenFragment2"
+        android:name="com.mashehu.anonyme.fragments.LoadingScreenFragment"
+        android:label="fragment_loading_screen"
+        tools:layout="@layout/fragment_loading_screen" />
 </navigation>
