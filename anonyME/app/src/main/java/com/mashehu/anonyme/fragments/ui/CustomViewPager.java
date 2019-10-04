@@ -7,10 +7,11 @@ import android.view.MotionEvent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.LiveData;
 import androidx.viewpager.widget.ViewPager;
 
 public class CustomViewPager extends ViewPager {
-	private boolean pagingEnabled;
+	private LiveData<Boolean> pagingEnabled;
 
 	public CustomViewPager(@NonNull Context context) {
 		super(context);
@@ -29,20 +30,11 @@ public class CustomViewPager extends ViewPager {
 		return false;
 	}
 
-	@Override
-	public boolean onTouchEvent(MotionEvent ev) {
-		Log.d("CustomViewPager", "paging enabled: "+ pagingEnabled);
-		if (isPagingEnabled()) {
-			return super.onTouchEvent(ev);
-		}
-		return false;
-	}
-
 	public boolean isPagingEnabled() {
-		return pagingEnabled;
+		return pagingEnabled.getValue();
 	}
 
-	public void setPagingEnabled(boolean pagingEnabled) {
+	public void setPagingEnabled(LiveData<Boolean> pagingEnabled) {
 		this.pagingEnabled = pagingEnabled;
 	}
 }

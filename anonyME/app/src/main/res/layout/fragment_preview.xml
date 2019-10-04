@@ -41,7 +41,7 @@
             android:gravity="center"
             android:inputType="textPersonName"
             android:textAlignment="center"
-            android:textSize="18sp"
+            android:textSize="14sp"
             android:visibility="invisible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toRightOf="@id/cancelButton"

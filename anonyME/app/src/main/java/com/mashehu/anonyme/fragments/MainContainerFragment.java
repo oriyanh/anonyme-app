@@ -61,8 +61,9 @@ public class MainContainerFragment extends Fragment {
 			}
 		});
 
+		assert getActivity() != null;
 		viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
-//		viewModel.setCurrentTab(0); // Makes sure app will start on camera capture mode
+		viewModel.setCurrentTab(0); // Makes sure app will start on camera capture mode
 
 		fragmentViewPager = view.findViewById(R.id.fragmentViewPager);
 		adapter = new RecyclerUtils.FragmentPagerAdapter(getChildFragmentManager(),
@@ -96,8 +97,7 @@ public class MainContainerFragment extends Fragment {
 		});
 		assert getActivity() != null;
 		fragmentViewPager.setPageTransformer(true, new CubeOutTransformer());
-		viewModel.getPagingEnabled().observe(getActivity(), aBoolean -> fragmentViewPager.setPagingEnabled(aBoolean));
-
+		fragmentViewPager.setPagingEnabled(viewModel.getPagingEnabled());
 	}
 
 	public void navigateIfNecessary(SharedPreferences sp, View v) {
