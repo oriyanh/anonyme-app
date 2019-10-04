@@ -24,6 +24,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mashehu.anonyme.R;
@@ -42,6 +43,7 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 	private ImageView sendButton;
 	private ImageView cancelButton;
 	private ImageView addButton;
+	TextView numberPhotosIndicator;
 	private RecyclerView recyclerView;
 	private AppViewModel viewModel;
 	RecyclerUtils.PreviewImagesAdapter adapter;
@@ -66,7 +68,7 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 		sendButton = view.findViewById(R.id.sendButton);
 		cancelButton = view.findViewById(R.id.cancelButton);
 		addButton = view.findViewById(R.id.addMorePhotosButton);
-
+		numberPhotosIndicator = view.findViewById(R.id.numberPhotosIndicatorView);
 
 		viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
 		viewModel.setPagingEnabled(false);
@@ -79,9 +81,14 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 
 		images.observe(getActivity(), imageData -> {
 			if (imageData.size() == 0) {
+				numberPhotosIndicator.setVisibility(View.INVISIBLE);
 				viewModel.setBulkCaptureMode(false);
 				viewModel.setMultipleSelectionMode(false);
 				navigateBack();
+			}
+			else {
+				numberPhotosIndicator.setVisibility(View.VISIBLE);
+				numberPhotosIndicator.setText(String.format("%d IMAGES SELECTED", imageData.size()));
 			}
 		});
 
