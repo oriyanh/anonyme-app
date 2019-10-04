@@ -48,11 +48,6 @@ public class EngineService extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		PreferenceManager
-				.getDefaultSharedPreferences(getApplicationContext())
-				.edit()
-				.putBoolean(SP_IS_PROCESSING_KEY, true)
-				.commit();
 	    if (ACTION_STOP.equals(intent.getAction()))
         {
             Log.d(TAG, "Called to stop service");
@@ -62,17 +57,18 @@ public class EngineService extends Service {
 					getApplicationContext(), NOTIFICATION_CH_ID_PROGRESS,
 					"Canceling...", null, null, true,
 					false, false, 0, 0, true));
-			PreferenceManager
-					.getDefaultSharedPreferences(getApplicationContext())
-					.edit()
-					.putBoolean(SP_IS_PROCESSING_KEY, false)
-					.commit();
 			stopSelf();
             return START_NOT_STICKY;
         }
 
 	    else
 		{
+
+			PreferenceManager
+					.getDefaultSharedPreferences(getApplicationContext())
+					.edit()
+					.putBoolean(SP_IS_PROCESSING_KEY, true)
+					.commit();
 
 			Date now = new Date();
 			int notificationId  = Integer.parseInt(
@@ -204,12 +200,6 @@ public class EngineService extends Service {
 				}
 			});
 
-//			ArrayList<AsyncTask<String, Void, String>> futures = new ArrayList<>(num_images);
-//			for (String img : images) {
-//				progress++;
-
-//				futures.add(processImage(assets_dir, out_dir, img));
-//			Log.d(TAG + "onStartCommand", "result file path = " + res);
 			super.onStartCommand(intent, flags, startId);
 			return START_NOT_STICKY;
 		}

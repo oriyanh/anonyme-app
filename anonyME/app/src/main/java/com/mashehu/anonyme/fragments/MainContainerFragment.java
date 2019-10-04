@@ -100,9 +100,6 @@ public class MainContainerFragment extends Fragment {
 		assert getActivity() != null;
 		fragmentViewPager.setPageTransformer(true, new CubeOutTransformer());
 		fragmentViewPager.setPagingEnabled(viewModel.getPagingEnabled());
-
-//		viewModel.getPagingEnabled().observe(getViewLifecycleOwner(),
-//				aBoolean -> fragmentViewPager.setPagingEnabled(aBoolean));
 	}
 
 	public void navigateIfNecessary(SharedPreferences sp, View v) {

@@ -6,51 +6,83 @@
     android:layout_height="match_parent"
     tools:context=".fragments.CameraCaptureFragment">
 
-    <LinearLayout
+    <androidx.cardview.widget.CardView
+        android:id="@+id/last_capture_thumbnail"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        app:cardCornerRadius="250dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="@color/cardview_shadow_start_color">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            app:cardCornerRadius="250dp"
+            android:layout_gravity="center">
+
+            <ImageView
+                android:id="@+id/last_capture_preview"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@android:color/background_dark"
+                android:scaleType="centerCrop"/>
+
+        </androidx.cardview.widget.CardView>
+
+    </androidx.cardview.widget.CardView>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/linearLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="40dp"
+        android:paddingBottom="16dp"
+        android:paddingTop="16dp"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <ImageButton
-            android:id="@+id/take_picture"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_gravity="center_horizontal"
-
-            android:background="@drawable/rounded_button"
-            android:contentDescription="TakePictureButton"
-            android:src="@mipmap/ic_camera" />
+        android:background="@android:color/background_dark"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <ImageButton
             android:id="@+id/torch_toggle"
             android:layout_width="64dp"
             android:layout_height="64dp"
-            android:layout_gravity="center_horizontal"
+            android:layout_marginStart="48dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:contentDescription="ToggleFlash"
+            android:background="@null"/>
 
+        <ImageButton
+            android:id="@+id/take_picture"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            app:layout_constraintStart_toEndOf="@id/torch_toggle"
+            app:layout_constraintEnd_toStartOf="@id/flip_camera"
+            app:layout_constraintBottom_toBottomOf="parent"
             android:background="@drawable/rounded_button"
-            android:contentDescription="TurnOnFlash" />
+            android:contentDescription="TakePictureButton" />
 
         <ImageButton
             android:id="@+id/flip_camera"
             android:layout_width="64dp"
             android:layout_height="64dp"
-            android:layout_gravity="center_horizontal"
+            android:layout_marginEnd="48dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:contentDescription="ToggleLensFacing"
+            android:background="@null"
+            android:src="@drawable/ic_flip_camera" />
 
-            android:background="@drawable/rounded_button"
-            android:contentDescription="TurnOnFlash" />
-
-        <ImageView
-            android:id="@+id/last_capture_preview"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:visibility="gone"
-            android:background="@drawable/rounded_button"
-            android:src="@android:color/background_dark" />
-
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView
         android:id="@+id/shutter_view"
