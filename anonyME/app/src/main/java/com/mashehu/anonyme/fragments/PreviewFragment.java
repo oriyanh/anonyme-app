@@ -3,6 +3,7 @@ package com.mashehu.anonyme.fragments;
 
 import android.os.Bundle;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -96,9 +97,10 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 			viewModel.setBulkCaptureMode(false);
 			viewModel.setMultipleSelectionMode(false);
 			viewModel.clearImages();
-			NavController navController = Navigation.findNavController(getView());
-			navController.navigate(R.id.action_confirmImagesFragment_to_galleryFragment);
+//			NavController navController = Navigation.findNavController(getView());
+//			navController.navigate(R.id.action_confirmImagesFragment_to_galleryFragment);
 //			requireActivity().getOnBackPressedDispatcher().onBackPressed();
+			navigateBack();
 		});
 
 		addButton.setOnClickListener(v -> {
@@ -106,29 +108,33 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 			viewModel.setMultipleSelectionMode(true);
 			Navigation.findNavController(view).navigateUp();
 //			requireActivity().getOnBackPressedDispatcher().onBackPressed();
+			navigateBack();
 		});
 
-//		requireActivity()
-//				.getOnBackPressedDispatcher()
-//				.addCallback(new OnBackPressedCallback(true) {
-//					@Override
-//					public void handleOnBackPressed() {
-//						switch (viewModel.getCurrentTab()) {
-//							case 0:
-////								Navigation.findNavController(getActivity(), view.getId()).navigate(R.id.action_confirmImagesFragment_to_galleryFragment);
-//								Navigation.findNavController(getActivity(), view.getId()).navigateUp();
-//								break;
-//							case 1:
-//								Navigation.findNavController(view).navigate(R.id.action_confirmImagesFragment2_to_cameraCaptureFragment);
-//								break;
-//							default:
-//								assert getActivity() != null;
-//								getActivity().finish();
-//						}
-//					}
-//				});
+		requireActivity()
+				.getOnBackPressedDispatcher()
+				.addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
+					@Override
+					public void handleOnBackPressed() {
+						if (viewModel.getCurrentTab() == -1) {
+							requireActivity().finish();
+						}
+					}
+				});
 
 
+	}
+
+	public void navigateBack() {
+		if (viewModel.getCurrentTab() == 0) {
+			Navigation.findNavController(requireActivity(), R.id.navHostGalleryFragment).navigate(R.id.action_confirmImagesFragment_to_galleryFragment);
+		}
+		else if (viewModel.getCurrentTab() == 1) {
+			Navigation.findNavController(requireActivity(), R.id.navHostCameraContainer).navigate(R.id.action_confirmImagesFragment2_to_cameraCaptureFragment);
+		}
+		else {
+			requireActivity().finish();
+		}
 	}
 
 	private void setupRecyclerView(ArrayList<RecyclerUtils.ImageData> images) {

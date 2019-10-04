@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/gallery_tab_nav_graph"
-    app:startDestination="@id/galleryFragment">
+    app:startDestination="@+id/galleryFragment">
 
     <fragment
         android:id="@+id/galleryFragment"
@@ -13,7 +13,6 @@
         <action
             android:id="@+id/action_galleryFragment_to_confirmImagesFragment"
             app:destination="@id/confirmImagesFragment"
-            app:popUpTo="@+id/gallery_tab_nav_graph"
             app:popUpToInclusive="false" />
     </fragment>
     <fragment
