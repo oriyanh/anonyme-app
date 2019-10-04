@@ -19,10 +19,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
 
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.mashehu.anonyme.R;
 import com.mashehu.anonyme.fragments.ui.RecyclerUtils;
@@ -75,19 +77,21 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 
 		LiveData<ArrayList<RecyclerUtils.ImageData>> images = viewModel.getImages();
 
-		images.observe(this, imageData -> {
+		images.observe(getActivity(), imageData -> {
 			if (imageData.size() == 0) {
-				requireActivity().getOnBackPressedDispatcher().onBackPressed();
+				viewModel.setBulkCaptureMode(false);
+				viewModel.setMultipleSelectionMode(false);
+				navigateBack();
 			}
 		});
 
 		cancelButton.setOnClickListener(v -> viewModel.clearImages());
 		setupRecyclerView(images.getValue());
-		setupListeners(view);
+		setupListeners();
 
 	}
 
-	private void setupListeners(View view) {
+	private void setupListeners() {
 		sendButton.setOnClickListener(v -> {
 			processImages(getActivity().getApplicationContext(), viewModel.getImagePaths());
 			getActivity().finish();
@@ -97,17 +101,12 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 			viewModel.setBulkCaptureMode(false);
 			viewModel.setMultipleSelectionMode(false);
 			viewModel.clearImages();
-//			NavController navController = Navigation.findNavController(getView());
-//			navController.navigate(R.id.action_confirmImagesFragment_to_galleryFragment);
-//			requireActivity().getOnBackPressedDispatcher().onBackPressed();
 			navigateBack();
 		});
 
 		addButton.setOnClickListener(v -> {
 			viewModel.setBulkCaptureMode(true);
 			viewModel.setMultipleSelectionMode(true);
-			Navigation.findNavController(view).navigateUp();
-//			requireActivity().getOnBackPressedDispatcher().onBackPressed();
 			navigateBack();
 		});
 
@@ -126,11 +125,18 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 	}
 
 	public void navigateBack() {
+		NavController navController;
 		if (viewModel.getCurrentTab() == 0) {
-			Navigation.findNavController(requireActivity(), R.id.navHostGalleryFragment).navigate(R.id.action_confirmImagesFragment_to_galleryFragment);
+			navController = Navigation.findNavController(requireActivity(), R.id.navHostGalleryFragment);
+			if (navController.getCurrentDestination().getId() == R.id.confirmImagesFragment) {
+				navController.navigate(R.id.action_confirmImagesFragment_to_galleryFragment);
+			}
 		}
 		else if (viewModel.getCurrentTab() == 1) {
-			Navigation.findNavController(requireActivity(), R.id.navHostCameraContainer).navigate(R.id.action_confirmImagesFragment2_to_cameraCaptureFragment);
+			navController =Navigation.findNavController(requireActivity(), R.id.navHostCameraContainer);
+			if (navController.getCurrentDestination().getId() == R.id.confirmImagesFragment) {
+				navController.navigate(R.id.action_confirmImagesFragment2_to_cameraCaptureFragment);
+			}
 		}
 		else {
 			requireActivity().finish();
@@ -154,6 +160,9 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 	@Override
 	public void removeItem(RecyclerUtils.ImageData img) {
 		viewModel.removeImage(img.getImagePath());
+		Toast deletedToast = Toast.makeText(getContext(), "REMOVED", Toast.LENGTH_SHORT);
+		deletedToast.setGravity(Gravity.BOTTOM, 0, 10);
+		deletedToast.show();
 	}
 }
 

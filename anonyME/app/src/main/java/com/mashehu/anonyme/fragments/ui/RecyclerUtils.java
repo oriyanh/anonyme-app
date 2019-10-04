@@ -39,7 +39,7 @@ public class RecyclerUtils {
 
 		public PreviewImagesAdapter(Context context, ArrayList<ImageData> images) {
 			super(new PreviewDiffCallback());
-			this.images = images;
+			this.images = new ArrayList<>(images);
 			this.context = context;
 		}
 

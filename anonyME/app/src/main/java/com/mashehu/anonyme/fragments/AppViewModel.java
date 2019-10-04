@@ -69,7 +69,7 @@ public class AppViewModel extends ViewModel {
 		ArrayList<RecyclerUtils.ImageData> images = getImages().getValue();
 		if (!paths.contains(image)) {
 			if (!isMultipleSelectionMode()) {
-				paths.clear();
+				images.clear();
 			}
 			RecyclerUtils.ImageData imageData = new RecyclerUtils.ImageData();
 			imageData.setImagePath(image);
