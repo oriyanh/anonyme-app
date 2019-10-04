@@ -1,7 +1,7 @@
 ♪ README README README a man of the midnight! ♪<br>
 Amit Segal<br>
 Oriyan Hermoni<br>
-<br><b>anonyME Android Application</b><br>
+<br><b>anonyME<sup>©</sup> Android Application</b><br>
 This app's purpose is anonymizing facial images so that they are unrecognizable to face recognition ML algorithms (as part of our Hebrew University Comp. Eng. final engineering project MVP alpha). Currently the app runs AdvBox (using the Chaquopy library) behind the scenes to create adversarial attacks of 160x160, but in the future this should change.<br>
 Currently our app runs on Android API levels 28 (Android Pie) and 29 (Android 10).<br><br><br>
 <b>Examples:</b><br>
