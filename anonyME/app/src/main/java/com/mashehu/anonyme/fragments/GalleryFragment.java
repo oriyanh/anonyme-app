@@ -19,21 +19,17 @@ import android.widget.Button;
 
 import com.mashehu.anonyme.R;
 import com.mashehu.anonyme.common.Utilities;
-import com.mashehu.anonyme.fragments.ui.ImageData;
-import com.mashehu.anonyme.fragments.ui.ThumbnailAdapter;
-import com.mashehu.anonyme.fragments.ui.ThumbnailViewHolder;
+import com.mashehu.anonyme.fragments.ui.RecyclerUtils;
 
 import java.util.ArrayList;
 
 import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
 
-public class GalleryFragment extends Fragment implements GallerySelectionHandler {
+public class GalleryFragment extends Fragment implements RecyclerUtils.ThumbnailCallback {
 	public static final String TAG = "anonyme.GalleryFragment";
-	RecyclerView recyclerView;
-	GridLayoutManager layoutManager;
-	boolean selectionMode;
-	Button sendImagesBtn;
-	AppViewModel viewModel;
+	private RecyclerView galleryRecyclerView;
+	private Button sendImagesBtn;
+	private AppViewModel viewModel;
 
 	@Override
 	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -47,18 +43,18 @@ public class GalleryFragment extends Fragment implements GallerySelectionHandler
 
 		assert getActivity() != null;
 		viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
-
+		viewModel.setPagingEnabled(true);
 		sendImagesBtn = getActivity().findViewById(R.id.sendImageBtn);
 
 		sendImagesBtn.setOnClickListener(this::startProcessing);
 
-		recyclerView = getActivity().findViewById(R.id.galleryRecyclerView);
-		layoutManager = new GridLayoutManager(getActivity().getApplicationContext(), 4);
-		recyclerView.setLayoutManager(layoutManager);
+		galleryRecyclerView = getActivity().findViewById(R.id.galleryRecyclerView);
+		GridLayoutManager layoutManager = new GridLayoutManager(getActivity().getApplicationContext(), 4);
+		galleryRecyclerView.setLayoutManager(layoutManager);
 
-		ArrayList<ImageData> images = Utilities.getGalleryContent(getContext());
-		ThumbnailAdapter adapter = new ThumbnailAdapter(getActivity().getApplicationContext(), this, images);
-		recyclerView.setAdapter(adapter);
+		ArrayList<RecyclerUtils.ImageData> images = Utilities.getGalleryContent();
+		RecyclerUtils.ThumbnailAdapter adapter = new RecyclerUtils.ThumbnailAdapter(getActivity().getApplicationContext(), this, images);
+		galleryRecyclerView.setAdapter(adapter);
 		requireActivity().getOnBackPressedDispatcher().addCallback(new OnBackPressedCallback(true) {
 			@Override
 			public void handleOnBackPressed() {
@@ -67,45 +63,17 @@ public class GalleryFragment extends Fragment implements GallerySelectionHandler
 		});
 	}
 
-	public void setSelectionMode(boolean isMultipleSelection) {
-		if (isMultipleSelection == this.selectionMode) {
-			return;
-		}
-		viewModel.setMultipleSelectionMode(isMultipleSelection);
-		this.selectionMode = isMultipleSelection;
+	@Override
+	public void removeImage(RecyclerUtils.ImageData img) {
+		Log.d(TAG, "Removing image: " + img.getImagePath());
+		viewModel.removeImage(img.getImagePath());
 	}
 
-	public boolean getSelectionMode() {
-		return selectionMode;
-	}
 
 	@Override
-	public void toggleCheckbox(ThumbnailViewHolder holder, String img) {
-		if (viewModel.isMultipleSelectionMode()) {
-			if (holder.checkbox.getVisibility() == View.VISIBLE) {
-				holder.checkbox.setVisibility(View.INVISIBLE);
-				removeImage(img);
-			}
-			else {
-				holder.checkbox.setVisibility(View.VISIBLE);
-				submitImage(img);
-			}
-		}
-		else {
-			submitImage(img);
-		}
-	}
-
-	@Override
-	public void removeImage(String img) {
-		Log.d(TAG, "Removing image: " + img);
-		viewModel.removeImage(img);
-	}
-
-	@Override
-	public void submitImage(String img) {
-		Log.d(TAG, "Adding image: " + img);
-		viewModel.addImage(img);
+	public void addImage(RecyclerUtils.ImageData img) {
+		Log.d(TAG, "Adding image: " + img.getImagePath());
+		viewModel.addImage(img.getImagePath());
 	}
 
 	public void startProcessing(View v) {
@@ -120,6 +88,16 @@ public class GalleryFragment extends Fragment implements GallerySelectionHandler
 		Navigation.findNavController(v).navigate(
 				R.id.action_galleryFragment_to_confirmImagesFragment,
 				null);
+	}
+
+	@Override
+	public boolean isMultipleSelection() {
+		return viewModel.isMultipleSelectionMode();
+	}
+
+	@Override
+	public void setMultipleSelection(boolean isMultipleSelection) {
+		viewModel.setMultipleSelectionMode(isMultipleSelection);
 	}
 
 }

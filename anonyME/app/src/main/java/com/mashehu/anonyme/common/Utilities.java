@@ -16,22 +16,13 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 
 import com.mashehu.anonyme.R;
-import com.mashehu.anonyme.fragments.ui.ImageData;
+import com.mashehu.anonyme.fragments.ui.RecyclerUtils;
 import com.mashehu.anonyme.services.EngineStartReceiver;
 
 import java.io.File;
 import java.util.ArrayList;
 
-import static com.mashehu.anonyme.common.Constants.ASSETS_PATH;
-import static com.mashehu.anonyme.common.Constants.CAMERA_ROLL_PATH;
-import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_ASSETS_PATH;
-import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_INPUT_PICS;
-import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_OUT_DIR;
-import static com.mashehu.anonyme.common.Constants.INTENT_START_ENGINE;
-import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_DESC_PROGRESS;
-import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_ID_PROGRESS;
-import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_NAME_PROGRESS;
-import static com.mashehu.anonyme.common.Constants.SP_IS_PROCESSING_KEY;
+import static com.mashehu.anonyme.common.Constants.*;
 
 public class Utilities {
 	public static final String TAG = "anonyme.Utilities.";
@@ -98,14 +89,14 @@ public class Utilities {
 		return true;
 	}
 
-	public static ArrayList<ImageData> getGalleryContent(Context context) {
-		ArrayList<ImageData> images = new ArrayList<>();
+	public static ArrayList<RecyclerUtils.ImageData> getGalleryContent() {
+		ArrayList<RecyclerUtils.ImageData> images = new ArrayList<>();
 		File[] galleryFiles = CAMERA_ROLL_PATH.listFiles();
 		if (galleryFiles != null) {
 			for (File f : galleryFiles) {
 				String path = f.getAbsolutePath();
 				if (f.isFile() && (path.endsWith(".jpg") || path.endsWith(".png"))) {  // To avoid adding inner directories. TODO add capability to show inner directories as well
-					ImageData img = new ImageData();
+					RecyclerUtils.ImageData img = new RecyclerUtils.ImageData();
 					img.setImagePath(f.getAbsolutePath());
 					images.add(img);
 				}

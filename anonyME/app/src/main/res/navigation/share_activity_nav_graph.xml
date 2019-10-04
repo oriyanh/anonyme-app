@@ -6,7 +6,7 @@
     app:startDestination="@id/confirmImagesFragment3">
     <fragment
         android:id="@+id/confirmImagesFragment3"
-        android:name="com.mashehu.anonyme.fragments.ConfirmImagesFragment"
+        android:name="com.mashehu.anonyme.fragments.PreviewFragment"
         android:label="fragment_confirm_images"
-        tools:layout="@layout/fragment_confirm_images" />
+        tools:layout="@layout/fragment_preview" />
 </navigation>
