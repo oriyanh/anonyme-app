@@ -13,9 +13,17 @@ public class AppViewModel extends ViewModel {
 
 	private MutableLiveData<ArrayList<RecyclerUtils.ImageData>> imagesToProcess;
 	private ArrayList<RecyclerUtils.ImageData> imagePaths;
-	private boolean multipleSelectionMode = false;
+	private MutableLiveData<Boolean> multipleSelectionMode;
 	private boolean bulkCaptureMode = false;
-	public int currentTab = -1;
+	private int currentTab = -1;
+
+	public AppViewModel() {
+		imagePaths = new ArrayList<>();
+		imagesToProcess = new MutableLiveData<>(imagePaths);
+		imagesToProcess.observeForever(imageData -> imagePaths = imageData);
+		multipleSelectionMode = new MutableLiveData<>(false);
+	}
+
 	private MutableLiveData<Boolean> isPagingEnabled;
 
 	public LiveData<Boolean> getPagingEnabled() {
@@ -40,12 +48,6 @@ public class AppViewModel extends ViewModel {
 
 	public int getCurrentTab() {
 		return currentTab;
-	}
-
-	public AppViewModel() {
-		imagePaths = new ArrayList<>();
-		imagesToProcess = new MutableLiveData<>(imagePaths);
-		imagesToProcess.observeForever(imageData -> imagePaths = imageData);
 	}
 
 	@NonNull
@@ -92,12 +94,27 @@ public class AppViewModel extends ViewModel {
 		}
 	}
 
+
 	public boolean isMultipleSelectionMode() {
+		try {
+			return getMultipleSelectionMode().getValue();
+		}
+		catch (NullPointerException e) {
+			return false;
+		}
+	}
+
+	@NonNull
+	public LiveData<Boolean> getMultipleSelectionMode() {
+		if (this.multipleSelectionMode == null) {
+			this.multipleSelectionMode = new MutableLiveData<>();
+		}
+
 		return multipleSelectionMode;
 	}
 
 	public void setMultipleSelectionMode(boolean isMultipleSelection) {
-		this.multipleSelectionMode = isMultipleSelection;
+		this.multipleSelectionMode.setValue(isMultipleSelection);
 	}
 
 	public boolean isBulkCaptureMode() {
@@ -106,5 +123,9 @@ public class AppViewModel extends ViewModel {
 
 	public void setBulkCaptureMode(boolean isBulkCapture) {
 		this.bulkCaptureMode = isBulkCapture;
+	}
+
+	public void clearImages() {
+		imagesToProcess.setValue(new ArrayList<>());
 	}
 }

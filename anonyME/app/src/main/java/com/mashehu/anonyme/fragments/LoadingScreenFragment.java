@@ -40,7 +40,7 @@ public class LoadingScreenFragment extends Fragment {
 	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 
-		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
+		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
 		navigateIfNecessary(sp, view);
 
 		sp.registerOnSharedPreferenceChangeListener((sharedPreferences, key) -> {

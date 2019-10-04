@@ -130,7 +130,7 @@ public class RecyclerUtils {
 				Log.d(TAG, "Normal click on image");
 				if (callback.isMultipleSelection()) {
 					holder.toggleCheckbox();
-					if (holder.checkbox.getVisibility() == INVISIBLE) {
+					if (!holder.checkbox.isShown()) {
 						callback.removeImage(img); // means after toggling, image is no longer selected
 					}
 
@@ -141,7 +141,7 @@ public class RecyclerUtils {
 
 				else {
 					callback.addImage(img);
-					callback.startProcessing(v);
+					callback.showPreviewFragment(v);
 				}
 			});
 
@@ -150,7 +150,7 @@ public class RecyclerUtils {
 
 				callback.setMultipleSelection(true);
 				holder.toggleCheckbox();
-				if (holder.checkbox.getVisibility() == INVISIBLE) {
+				if (!holder.checkbox.isShown()) {
 					callback.removeImage(img); // means after toggling, image is no longer selected
 				}
 
@@ -342,7 +342,7 @@ public class RecyclerUtils {
 
 		public void removeImage(ImageData imageData);
 
-		public void startProcessing(View v);
+		public void showPreviewFragment(View v);
 
 		public boolean isMultipleSelection();
 

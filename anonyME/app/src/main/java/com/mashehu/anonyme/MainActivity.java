@@ -38,8 +38,6 @@ import static com.mashehu.anonyme.common.Constants.*;
 public class MainActivity extends FragmentActivity {
 	public static final String TAG = "anonyme.MainActivity.";
 	AppViewModel viewModel;
-	CustomViewPager fragmentViewPager;
-	RecyclerUtils.FragmentPagerAdapter adapter;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +45,7 @@ public class MainActivity extends FragmentActivity {
 		setContentView(R.layout.activity_main);
 
 		viewModel = ViewModelProviders.of(this).get(AppViewModel.class);
-		viewModel.setCurrentTab(0); // Makes sure app will start on camera capture mode
+//		viewModel.setCurrentTab(0); // Makes sure app will start on camera capture mode
 //
 //		fragmentViewPager = findViewById(R.id.fragmentViewPager);
 ////        adapter = new ViewPagerFragmentAdapter(getSupportFragmentManager(), getLifecycle(), fragments);

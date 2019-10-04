@@ -3,12 +3,12 @@ package com.mashehu.anonyme.fragments;
 
 import android.os.Bundle;
 
-import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -21,8 +21,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mashehu.anonyme.R;
 import com.mashehu.anonyme.fragments.ui.RecyclerUtils;
 
@@ -36,7 +36,9 @@ import static com.mashehu.anonyme.common.Utilities.processImages;
  */
 public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewItemsCallback {
 	public static final String TAG = "anonyme.PreviewFragment";
-	private FloatingActionButton sendButton;
+	private ImageView sendButton;
+	private ImageView cancelButton;
+	private ImageView addButton;
 	private RecyclerView recyclerView;
 	private AppViewModel viewModel;
 	RecyclerUtils.PreviewImagesAdapter adapter;
@@ -58,7 +60,11 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 		super.onViewCreated(view, savedInstanceState);
 		assert getActivity() != null;
 
-		sendButton = view.findViewById(R.id.fabSendButton);
+		sendButton = view.findViewById(R.id.sendButton);
+		cancelButton = view.findViewById(R.id.cancelButton);
+		addButton = view.findViewById(R.id.addMorePhotosButton);
+
+
 		viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
 		viewModel.setPagingEnabled(false);
 		Log.d(TAG, "tab in previous fragment: " + viewModel.getCurrentTab());
@@ -74,6 +80,7 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 			}
 		});
 
+		cancelButton.setOnClickListener(v -> viewModel.clearImages());
 		setupRecyclerView(images.getValue());
 		setupListeners(view);
 
@@ -85,25 +92,41 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 			getActivity().finish();
 		});
 
-		requireActivity()
-				.getOnBackPressedDispatcher()
-				.addCallback(new OnBackPressedCallback(true) {
-					@Override
-					public void handleOnBackPressed() {
-						switch (viewModel.getCurrentTab()) {
-							case 0:
-								Navigation.findNavController(view).navigate(R.id.action_confirmImagesFragment_to_galleryFragment);
-								break;
-							case 1:
-								Navigation.findNavController(view).navigate(R.id.action_confirmImagesFragment2_to_cameraCaptureFragment);
-								break;
-							default:
-								assert getActivity() != null;
-								getActivity().finish();
+		cancelButton.setOnClickListener(v -> {
+			viewModel.setBulkCaptureMode(false);
+			viewModel.setMultipleSelectionMode(false);
+			viewModel.clearImages();
+			NavController navController = Navigation.findNavController(getView());
+			navController.navigate(R.id.action_confirmImagesFragment_to_galleryFragment);
+//			requireActivity().getOnBackPressedDispatcher().onBackPressed();
+		});
 
-						}
-					}
-				});
+		addButton.setOnClickListener(v -> {
+			viewModel.setBulkCaptureMode(true);
+			viewModel.setMultipleSelectionMode(true);
+			Navigation.findNavController(view).navigateUp();
+//			requireActivity().getOnBackPressedDispatcher().onBackPressed();
+		});
+
+//		requireActivity()
+//				.getOnBackPressedDispatcher()
+//				.addCallback(new OnBackPressedCallback(true) {
+//					@Override
+//					public void handleOnBackPressed() {
+//						switch (viewModel.getCurrentTab()) {
+//							case 0:
+////								Navigation.findNavController(getActivity(), view.getId()).navigate(R.id.action_confirmImagesFragment_to_galleryFragment);
+//								Navigation.findNavController(getActivity(), view.getId()).navigateUp();
+//								break;
+//							case 1:
+//								Navigation.findNavController(view).navigate(R.id.action_confirmImagesFragment2_to_cameraCaptureFragment);
+//								break;
+//							default:
+//								assert getActivity() != null;
+//								getActivity().finish();
+//						}
+//					}
+//				});
 
 
 	}
