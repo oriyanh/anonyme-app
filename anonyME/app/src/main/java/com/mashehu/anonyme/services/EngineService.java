@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import androidx.core.app.NotificationManagerCompat;
@@ -27,6 +28,7 @@ import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_ASSETS_PATH;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_INPUT_PICS;
 import static com.mashehu.anonyme.common.Constants.EXTRA_ENGINE_OUT_DIR;
 import static com.mashehu.anonyme.common.Constants.NOTIFICATION_CH_ID_PROGRESS;
+import static com.mashehu.anonyme.common.Constants.SP_IS_PROCESSING_KEY;
 import static com.mashehu.anonyme.common.Utilities.createNotification;
 
 public class EngineService extends Service {
@@ -46,7 +48,11 @@ public class EngineService extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-
+		PreferenceManager
+				.getDefaultSharedPreferences(getApplicationContext())
+				.edit()
+				.putBoolean(SP_IS_PROCESSING_KEY, true)
+				.commit();
 	    if (ACTION_STOP.equals(intent.getAction()))
         {
             Log.d(TAG, "Called to stop service");
@@ -56,9 +62,15 @@ public class EngineService extends Service {
 					getApplicationContext(), NOTIFICATION_CH_ID_PROGRESS,
 					"Canceling...", null, null, true,
 					false, false, 0, 0, true));
-            stopSelf();
+			PreferenceManager
+					.getDefaultSharedPreferences(getApplicationContext())
+					.edit()
+					.putBoolean(SP_IS_PROCESSING_KEY, false)
+					.commit();
+			stopSelf();
             return START_NOT_STICKY;
         }
+
 	    else
 		{
 
@@ -156,7 +168,6 @@ public class EngineService extends Service {
 
 					if (images.size() == 1)
 					{
-						assert res != null;
 						File outputFile = new File(res);
 						Uri cameraRollUri = FileProvider.getUriForFile(this,
 								getApplicationContext().getPackageName() + ".provider",
@@ -184,6 +195,13 @@ public class EngineService extends Service {
 					Log.d(TAG, "Task cancelled");
 					NotificationManagerCompat.from(this).cancel(notificationId);
 				}
+				finally {
+					PreferenceManager
+							.getDefaultSharedPreferences(getApplicationContext())
+							.edit()
+							.putBoolean(SP_IS_PROCESSING_KEY, false)
+							.commit();
+				}
 			});
 
 //			ArrayList<AsyncTask<String, Void, String>> futures = new ArrayList<>(num_images);
@@ -207,6 +225,12 @@ public class EngineService extends Service {
 				f.deleteOnExit();
 			}
 		}
+		PreferenceManager
+				.getDefaultSharedPreferences(getApplicationContext())
+				.edit()
+				.putBoolean(SP_IS_PROCESSING_KEY, false)
+				.apply();
+
 		super.onDestroy();
 	}
 }

@@ -24,11 +24,11 @@ android {
         productFlavors {
             arm {
                 dimension "abi"
-                ndk { abiFilters "armeabi-v7a" }
+                ndk { abiFilters "x86" }
             }
         }
         python {
-            buildPython "C:\\Users\\Segal\\Documents\\School\\Final Project\\venv\\Scripts\\python.exe"
+            buildPython "C:\\Users\\oriyan\\WPy-3670\\python-3.6.7.amd64\\python.exe"
             pip {
                 install "tensorflow"
                 install "scipy"
@@ -71,6 +71,8 @@ dependencies {
     implementation 'com.android.support:recyclerview-v7:29.0.0'
     implementation 'androidx.viewpager2:viewpager2:1.0.0-beta04'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.10.0'
+    implementation 'com.ToxicBakery.viewpager.transforms:view-pager-transforms:2.0.24'
+    implementation 'com.github.ybq:Android-SpinKit:1.4.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'

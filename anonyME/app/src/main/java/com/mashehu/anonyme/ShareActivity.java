@@ -8,7 +8,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 
 import com.mashehu.anonyme.fragments.AppViewModel;
 
@@ -70,14 +69,9 @@ public class ShareActivity extends FragmentActivity {
         }
 
         AppViewModel viewModel = ViewModelProviders.of(this).get(AppViewModel.class);
-        for (String img: files)
-        {
+        for (String img : files) {
             viewModel.addImage(img);
         }
-//        args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, files);
-//        ConfirmImagesFragment confirmImagesFragment = new ConfirmImagesFragment();
-//        confirmImagesFragment.setArguments(args);
-//        getSupportFragmentManager().beginTransaction().replace(
-//                R.id.share_container, confirmImagesFragment, "FTAG").commit();
+        viewModel.setCurrentTab(-1);
     }
 }

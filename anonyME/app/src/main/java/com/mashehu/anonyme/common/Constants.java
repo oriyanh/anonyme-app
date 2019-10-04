@@ -8,7 +8,7 @@ final public class Constants {
 	public static final String BULK_CAPTURE_KEY = "isBulkCapture";
 	public static int ANONYME_PERMISSION_REQUEST_CODE = 1993;
 	public static String ANYNOME_SHARE_SHORTCUT_ID = "1993";
-	public static String[] PERMISSIONS = {Manifest.permission.CAMERA,
+	public static final String[] PERMISSIONS = {Manifest.permission.CAMERA,
 			Manifest.permission.WRITE_EXTERNAL_STORAGE};
 	public static File CACHE_PATH;
 	public static File ASSETS_PATH;
