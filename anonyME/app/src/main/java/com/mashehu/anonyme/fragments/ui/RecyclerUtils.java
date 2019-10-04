@@ -1,6 +1,8 @@
 package com.mashehu.anonyme.fragments.ui;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -160,11 +162,17 @@ public class RecyclerUtils {
 
 				return true;
 			});
-
-			GlideApp.with(context)
-					.load(img.getImagePath())
-					.galleryThumbnail()
-					.into(holder.imageView);
+			Bitmap img_bitmap = BitmapFactory.decodeFile(img.getImagePath());
+//			Bitmap checkmark_bitmap =
+//			img_bitmap.
+//			GlideApp.with(context).asBitmap().load(img.getImagePath()).into(img_bitmap);
+//			holder.imageView.getDrawable();
+//			GlideApp.with(context).
+//			GlideApp.with(context)
+//					.load(img.getImagePath())
+//					.galleryThumbnail()
+//					.into(holder.imageView);
+			holder.imageView.setImageBitmap(img_bitmap);
 		}
 
 		@Override

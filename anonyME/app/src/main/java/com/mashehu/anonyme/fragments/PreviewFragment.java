@@ -70,6 +70,7 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 		addButton = view.findViewById(R.id.addMorePhotosButton);
 		numberPhotosIndicator = view.findViewById(R.id.numberPhotosIndicatorView);
 
+
 		viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
 		viewModel.setPagingEnabled(false);
 		Log.d(TAG, "tab in previous fragment: " + viewModel.getCurrentTab());
@@ -82,8 +83,8 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 		images.observe(getActivity(), imageData -> {
 			if (imageData.size() == 0) {
 				numberPhotosIndicator.setVisibility(View.INVISIBLE);
-				viewModel.setBulkCaptureMode(false);
-				viewModel.setMultipleSelectionMode(false);
+//				viewModel.setBulkCaptureMode(false);
+//				viewModel.setMultipleSelectionMode(false);
 				navigateBack();
 			}
 			else {
@@ -94,11 +95,12 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 
 		cancelButton.setOnClickListener(v -> viewModel.clearImages());
 		setupRecyclerView(images.getValue());
-		setupListeners();
+		setupListeners(view);
 
 	}
 
-	private void setupListeners() {
+
+	private void setupListeners(View view) {
 		sendButton.setOnClickListener(v -> {
 			processImages(getActivity().getApplicationContext(), viewModel.getImagePaths());
 			getActivity().finish();
