@@ -51,7 +51,7 @@ public class MainContainerFragment extends Fragment {
 		super.onViewCreated(view, savedInstanceState);
 
 		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
-//		sp.edit().putBoolean(SP_IS_PROCESSING_KEY, false).commit();
+		sp.edit().putBoolean(SP_IS_PROCESSING_KEY, false).commit();
 
 		navigateIfNecessary(sp, view);
 
@@ -61,8 +61,9 @@ public class MainContainerFragment extends Fragment {
 			}
 		});
 
-		viewModel = ViewModelProviders.of(this).get(AppViewModel.class);
-		viewModel.setCurrentTab(0); // Makes sure app will start on camera capture mode
+		assert getActivity() != null;
+		viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
+		viewModel.setCurrentTab(1); // Makes sure app will start on camera capture mode
 
 		fragmentViewPager = view.findViewById(R.id.fragmentViewPager);
 //        adapter = new ViewPagerFragmentAdapter(getSupportFragmentManager(), getLifecycle(), fragments);
@@ -98,8 +99,10 @@ public class MainContainerFragment extends Fragment {
 		});
 		assert getActivity() != null;
 		fragmentViewPager.setPageTransformer(true, new CubeOutTransformer());
-		viewModel.getPagingEnabled().observe(getActivity(), aBoolean -> fragmentViewPager.setPagingEnabled(aBoolean));
+		fragmentViewPager.setPagingEnabled(viewModel.getPagingEnabled());
 
+//		viewModel.getPagingEnabled().observe(getViewLifecycleOwner(),
+//				aBoolean -> fragmentViewPager.setPagingEnabled(aBoolean));
 	}
 
 	public void navigateIfNecessary(SharedPreferences sp, View v) {
