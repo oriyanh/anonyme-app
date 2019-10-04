@@ -13,6 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# 2019 modified this file to work with the anonyME app, made several changes.
+
 import math
 import tensorflow as tf
 import numpy as np
