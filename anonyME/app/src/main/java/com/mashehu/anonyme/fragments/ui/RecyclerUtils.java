@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
@@ -162,17 +163,17 @@ public class RecyclerUtils {
 
 				return true;
 			});
-			Bitmap img_bitmap = BitmapFactory.decodeFile(img.getImagePath());
+//			Bitmap img_bitmap = BitmapFactory.decodeFile(img.getImagePath());
 //			Bitmap checkmark_bitmap =
 //			img_bitmap.
 //			GlideApp.with(context).asBitmap().load(img.getImagePath()).into(img_bitmap);
 //			holder.imageView.getDrawable();
 //			GlideApp.with(context).
-//			GlideApp.with(context)
-//					.load(img.getImagePath())
-//					.galleryThumbnail()
-//					.into(holder.imageView);
-			holder.imageView.setImageBitmap(img_bitmap);
+			GlideApp.with(context)
+					.load(img.getImagePath())
+					.galleryThumbnail()
+					.into(holder.imageView);
+//			holder.imageView.setImageBitmap(img_bitmap);
 		}
 
 		@Override
@@ -220,23 +221,23 @@ public class RecyclerUtils {
 
 	public static class ThumbnailViewHolder extends RecyclerView.ViewHolder {
 		public ImageView imageView;
-		public ImageView checkbox;
+		public CheckBox checkbox;
 
 		public ThumbnailViewHolder(@NonNull View itemView) {
 			super(itemView);
 			imageView = itemView.findViewById(R.id.thumbnailView);
 			checkbox = itemView.findViewById(R.id.thumbnailCheckbox);
-			checkbox.setVisibility(INVISIBLE);
+			checkbox.setVisibility(GONE);
 		}
 
 		public void toggleCheckbox() {
 			switch (checkbox.getVisibility()) {
 				case VISIBLE:
-					checkbox.setVisibility(INVISIBLE);
+					checkbox.setVisibility(GONE);
 					break;
-				case INVISIBLE:
-					checkbox.setVisibility(VISIBLE);
 				case GONE:
+					checkbox.setVisibility(VISIBLE);
+				case INVISIBLE:
 				default: // do nothing
 			}
 		}

@@ -16,14 +16,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
+    <CheckBox
         android:id="@+id/thumbnailCheckbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:src="@android:drawable/checkbox_on_background"
         android:visibility="visible"
-        app:layout_constraintRight_toRightOf="@+id/thumbnailView"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:checked="true"
+        android:clickable="false"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/thumbnailView"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

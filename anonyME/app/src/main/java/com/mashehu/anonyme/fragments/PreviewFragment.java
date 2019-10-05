@@ -103,6 +103,9 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 	private void setupListeners(View view) {
 		sendButton.setOnClickListener(v -> {
 			processImages(getActivity().getApplicationContext(), viewModel.getImagePaths());
+			viewModel.clearImages();
+			viewModel.setBulkCaptureMode(false);
+			viewModel.setMultipleSelectionMode(false);
 			getActivity().finish();
 		});
 

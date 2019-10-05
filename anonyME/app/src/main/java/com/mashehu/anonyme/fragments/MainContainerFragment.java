@@ -1,7 +1,6 @@
 package com.mashehu.anonyme.fragments;
 
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -11,7 +10,6 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.Navigation;
 import androidx.viewpager.widget.ViewPager;
 
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,7 +21,7 @@ import com.mashehu.anonyme.fragments.ui.CustomViewPager;
 import com.mashehu.anonyme.fragments.ui.RecyclerUtils;
 
 import static androidx.fragment.app.FragmentStatePagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT;
-import static com.mashehu.anonyme.common.Constants.SP_IS_PROCESSING_KEY;
+import static com.mashehu.anonyme.common.Utilities.isProcessing;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -49,21 +47,11 @@ public class MainContainerFragment extends Fragment {
 	@Override
 	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
-
-		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
-//		sp.edit().putBoolean(SP_IS_PROCESSING_KEY, false).commit();
-
-		navigateIfNecessary(sp, view);
-
-		sp.registerOnSharedPreferenceChangeListener((sharedPreferences, key) -> {
-			if (key.equals(SP_IS_PROCESSING_KEY)) {
-				navigateIfNecessary(sharedPreferences, view);
-			}
-		});
+		navigateIfNecessary(view);
 
 		assert getActivity() != null;
 		viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
-		viewModel.setCurrentTab(0); // Makes sure app will start on camera capture mode
+		viewModel.setCurrentTab(1); // Makes sure app will start on camera capture mode
 
 		fragmentViewPager = view.findViewById(R.id.fragmentViewPager);
 		adapter = new RecyclerUtils.FragmentPagerAdapter(getChildFragmentManager(),
@@ -74,8 +62,8 @@ public class MainContainerFragment extends Fragment {
 			fragmentViewPager.setCurrentItem(viewModel.getCurrentTab());
 		}
 		else {
-			fragmentViewPager.setCurrentItem(0);
-			viewModel.setCurrentTab(0);
+			fragmentViewPager.setCurrentItem(1);
+			viewModel.setCurrentTab(1);
 		}
 
 		fragmentViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -100,10 +88,11 @@ public class MainContainerFragment extends Fragment {
 		fragmentViewPager.setPagingEnabled(viewModel.getPagingEnabled());
 	}
 
-	public void navigateIfNecessary(SharedPreferences sp, View v) {
-		boolean isProcessing = sp.getBoolean(SP_IS_PROCESSING_KEY, false);
-		if (isProcessing) {
-			Navigation.findNavController(v).navigate(R.id.action_mainContainerFragment2_to_loadingScreenFragment);
+	public void navigateIfNecessary(View v) {
+//		boolean isProcessing = sp.getBoolean(SP_IS_PROCESSING_KEY, false);
+		if (isProcessing(getContext().getApplicationContext())) {
+			Navigation.findNavController(v).navigate(
+					R.id.action_mainContainerFragment2_to_loadingScreenFragment);
 		}
 	}
 }

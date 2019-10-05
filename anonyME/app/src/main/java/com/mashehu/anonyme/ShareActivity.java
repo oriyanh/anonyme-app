@@ -2,6 +2,7 @@ package com.mashehu.anonyme;
 
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.navigation.Navigation;
 
 import android.content.Intent;
 import android.database.Cursor;
@@ -12,6 +13,8 @@ import android.provider.MediaStore;
 import com.mashehu.anonyme.fragments.AppViewModel;
 
 import java.util.ArrayList;
+
+import static com.mashehu.anonyme.common.Utilities.isProcessing;
 
 public class ShareActivity extends FragmentActivity {
 

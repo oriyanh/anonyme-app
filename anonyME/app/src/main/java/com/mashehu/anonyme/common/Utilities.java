@@ -1,12 +1,12 @@
 package com.mashehu.anonyme.common;
 
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -21,11 +21,29 @@ import com.mashehu.anonyme.services.EngineStartReceiver;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
+import static android.content.Context.ACTIVITY_SERVICE;
 import static com.mashehu.anonyme.common.Constants.*;
 
 public class Utilities {
 	public static final String TAG = "anonyme.Utilities.";
+
+	public static boolean isProcessing(Context context)
+	{
+		ActivityManager am = (ActivityManager) context.getSystemService(ACTIVITY_SERVICE);
+		List<ActivityManager.RunningServiceInfo> l = am.getRunningServices(50);
+		for (ActivityManager.RunningServiceInfo runningServiceInfo: l)
+		{
+			if ((runningServiceInfo.service.getClassName().equals(
+					"com.mashehu.anonyme.services.EngineService")) &&
+					(runningServiceInfo.foreground))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * Creates notification channels for app if they don't already exist
@@ -108,8 +126,8 @@ public class Utilities {
 
 
 	public static void processImages(Context context, @NonNull ArrayList<String> images) {
-		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-		sp.edit().putBoolean(SP_IS_PROCESSING_KEY, true).apply();
+//		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+//		sp.edit().putBoolean(SP_IS_PROCESSING_KEY, true).apply();
 		Intent startEngineIntent = new Intent(INTENT_START_ENGINE, null,
 				context, EngineStartReceiver.class);
 
