@@ -1,3 +1,5 @@
 *.pb
-/.idea
+.idea
 /venv
+__pycache__
+*.pyc
