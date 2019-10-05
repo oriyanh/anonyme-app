@@ -47,11 +47,11 @@ public class MainContainerFragment extends Fragment {
 	@Override
 	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
-		navigateIfNecessary(view);
 
 		assert getActivity() != null;
 		viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
-		viewModel.setCurrentTab(1); // Makes sure app will start on camera capture mode
+		viewModel.setCurrentTab(1); // TODO remove in production
+		navigateIfNecessary(view);
 
 		fragmentViewPager = view.findViewById(R.id.fragmentViewPager);
 		adapter = new RecyclerUtils.FragmentPagerAdapter(getChildFragmentManager(),
@@ -62,6 +62,7 @@ public class MainContainerFragment extends Fragment {
 			fragmentViewPager.setCurrentItem(viewModel.getCurrentTab());
 		}
 		else {
+			// Makes sure app will start on camera capture mode
 			fragmentViewPager.setCurrentItem(1);
 			viewModel.setCurrentTab(1);
 		}
@@ -89,10 +90,12 @@ public class MainContainerFragment extends Fragment {
 	}
 
 	public void navigateIfNecessary(View v) {
-//		boolean isProcessing = sp.getBoolean(SP_IS_PROCESSING_KEY, false);
 		if (isProcessing(getContext().getApplicationContext())) {
 			Navigation.findNavController(v).navigate(
 					R.id.action_mainContainerFragment2_to_loadingScreenFragment);
+		}
+		else if (!viewModel.galleryReady().getValue()) {
+			Navigation.findNavController(v).navigate(R.id.action_mainContainerFragment2_to_splashScreenFragment);
 		}
 	}
 }

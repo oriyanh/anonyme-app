@@ -18,7 +18,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.mashehu.anonyme.R;
-import com.mashehu.anonyme.common.Utilities;
 import com.mashehu.anonyme.fragments.ui.AutoSpanGridLayoutManager;
 import com.mashehu.anonyme.fragments.ui.RecyclerUtils;
 
@@ -79,7 +78,7 @@ public class GalleryFragment extends Fragment implements RecyclerUtils.Thumbnail
 		AutoSpanGridLayoutManager layoutManager = new AutoSpanGridLayoutManager(getActivity().getApplicationContext(), 250);
 		galleryRecyclerView.setLayoutManager(layoutManager);
 
-		ArrayList<RecyclerUtils.ImageData> images = Utilities.getGalleryContent();
+		ArrayList<RecyclerUtils.ImageData> images = viewModel.getGalleryImages();
 		RecyclerUtils.ThumbnailAdapter adapter = new RecyclerUtils.ThumbnailAdapter(getActivity().getApplicationContext(), this, images);
 		galleryRecyclerView.setAdapter(adapter);
 		requireActivity().getOnBackPressedDispatcher().addCallback(new OnBackPressedCallback(true) {
