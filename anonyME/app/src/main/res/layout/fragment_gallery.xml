@@ -18,35 +18,58 @@
             android:layout_height="wrap_content"
             android:layout_weight="10"
             android:orientation="horizontal"
+            android:paddingVertical="5dp"
             android:weightSum="100">
 
-            <ImageButton
-                android:id="@+id/imageButton"
+            <ImageView
+                android:id="@+id/cancelSelectionButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:layout_weight="10"
-                android:src="@android:drawable/ic_menu_add" />
+                android:contentDescription="@string/cancel"
+                android:gravity="center"
+                android:src="@android:drawable/ic_menu_close_clear_cancel" />
 
-            <Button
-                android:id="@+id/button"
+            <TextView
+                android:id="@+id/multipleSelectionButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="10"
-                android:text="Unselect all" />
+                android:layout_gravity="center"
+                android:layout_weight="20"
+                android:contentDescription="@string/add_photos"
+                android:gravity="center"
+                android:text="@string/select" />
 
-            <Button
-                android:id="@+id/button2"
+
+            <TextView
+                android:id="@+id/unselectAllButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="10"
-                android:text="Select all" />
+                android:layout_gravity="center"
+                android:layout_weight="20"
+                android:gravity="center"
+                android:text="@string/unselect_all" />
 
-            <Button
+            <TextView
+                android:id="@+id/selectAllBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="20"
+                android:gravity="center"
+                android:text="@string/select_all" />
+
+            <TextView
                 android:id="@+id/sendImageBtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="10"
-                android:text="send" />
+                android:layout_gravity="center"
+                android:layout_weight="30"
+                android:contentDescription="@string/next"
+                android:gravity="center"
+                android:text="@string/next"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
@@ -61,7 +84,9 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintVertical_bias="0.0" >
+
+        </androidx.recyclerview.widget.RecyclerView>
 
     </LinearLayout>
 

@@ -62,12 +62,6 @@ public class EngineService extends Service {
 	    else
 		{
 
-//			PreferenceManager
-//					.getDefaultSharedPreferences(getApplicationContext())
-//					.edit()
-//					.putBoolean(SP_IS_PROCESSING_KEY, true)
-//					.commit();
-
 			Date now = new Date();
 			int notificationId  = Integer.parseInt(
 					new SimpleDateFormat("ddHHmmss", Locale.US).format(now));

@@ -54,12 +54,10 @@ public class MainContainerFragment extends Fragment {
 		viewModel.setCurrentTab(1); // Makes sure app will start on camera capture mode
 
 		fragmentViewPager = view.findViewById(R.id.fragmentViewPager);
-//        adapter = new ViewPagerFragmentAdapter(getSupportFragmentManager(), getLifecycle(), fragments);
 		adapter = new RecyclerUtils.FragmentPagerAdapter(getChildFragmentManager(),
 				BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
-//        fragmentViewPager.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
 		fragmentViewPager.setAdapter(adapter);
-		Log.d("anonyme.ContainerFragment", "Previous tab position: " + viewModel.getCurrentTab());
+		Log.d("anonyme.MainContainerFragment", "Previous tab position: " + viewModel.getCurrentTab());
 		if (viewModel.getCurrentTab() != -1) {
 			fragmentViewPager.setCurrentItem(viewModel.getCurrentTab());
 		}

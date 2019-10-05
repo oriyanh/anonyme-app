@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/gallery_tab_nav_graph"
-    app:startDestination="@id/galleryFragment">
+    app:startDestination="@+id/galleryFragment">
 
     <fragment
         android:id="@+id/galleryFragment"
@@ -12,7 +12,8 @@
         tools:layout="@layout/fragment_gallery">
         <action
             android:id="@+id/action_galleryFragment_to_confirmImagesFragment"
-            app:destination="@id/confirmImagesFragment" />
+            app:destination="@id/confirmImagesFragment"
+            app:popUpToInclusive="false" />
     </fragment>
     <fragment
         android:id="@+id/confirmImagesFragment"
@@ -22,7 +23,6 @@
         <action
             android:id="@+id/action_confirmImagesFragment_to_galleryFragment"
             app:destination="@+id/galleryFragment"
-            app:popUpTo="@+id/gallery_tab_nav_graph"
-            app:popUpToInclusive="true" />
+            app:popUpToInclusive="false" />
     </fragment>
 </navigation>
