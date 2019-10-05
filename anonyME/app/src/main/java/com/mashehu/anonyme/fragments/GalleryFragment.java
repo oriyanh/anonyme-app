@@ -8,18 +8,20 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.Navigation;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.mashehu.anonyme.R;
 import com.mashehu.anonyme.common.Utilities;
+import com.mashehu.anonyme.fragments.ui.AutoSpanGridLayoutManager;
 import com.mashehu.anonyme.fragments.ui.RecyclerUtils;
+
 
 import java.util.ArrayList;
 
@@ -28,7 +30,11 @@ import static com.mashehu.anonyme.common.Constants.IMAGE_DIRS_ARGUMENT_KEY;
 public class GalleryFragment extends Fragment implements RecyclerUtils.ThumbnailCallback {
 	public static final String TAG = "anonyme.GalleryFragment";
 	private RecyclerView galleryRecyclerView;
-	private Button sendImagesBtn;
+	private ImageView cancelBtn;
+	private TextView sendImagesBtn;
+	private TextView multipleSelectionBtn;
+	private TextView selectAllBtn;
+	private TextView unselectAllBtn;
 	private AppViewModel viewModel;
 
 	@Override
@@ -40,16 +46,37 @@ public class GalleryFragment extends Fragment implements RecyclerUtils.Thumbnail
 	@Override
 	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
-
 		assert getActivity() != null;
 		viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
 		viewModel.setPagingEnabled(true);
-		sendImagesBtn = getActivity().findViewById(R.id.sendImageBtn);
+		sendImagesBtn = view.findViewById(R.id.sendImageBtn);
+		cancelBtn = view.findViewById(R.id.cancelSelectionButton);
+		multipleSelectionBtn = view.findViewById(R.id.multipleSelectionButton);
+		selectAllBtn = view.findViewById(R.id.selectAllBtn);
+		unselectAllBtn = view.findViewById(R.id.unselectAllButton);
+		viewModel.getMultipleSelectionMode().observe(getActivity(), this::toggleSelectionMode);
+		viewModel.getImages().observe(getActivity(), imageData -> {
+			if (imageData.size() > 0 && viewModel.isMultipleSelectionMode()) {
+				sendImagesBtn.setVisibility(View.VISIBLE);
+			}
+			else {
+				sendImagesBtn.setVisibility(View.INVISIBLE);
+			}
+		});
 
-		sendImagesBtn.setOnClickListener(this::startProcessing);
+		if (viewModel.getImagePaths().size() > 0) {
+			sendImagesBtn.setVisibility(View.VISIBLE);
+		}
+		else {
+			sendImagesBtn.setVisibility(View.INVISIBLE);
+		}
+		sendImagesBtn.setOnClickListener(this::showPreviewFragment);
+		cancelBtn.setOnClickListener(v -> viewModel.setMultipleSelectionMode(false));
+		multipleSelectionBtn.setOnClickListener(v -> viewModel.setMultipleSelectionMode(true));
+		// todo add select/unselect all on click observers
 
 		galleryRecyclerView = getActivity().findViewById(R.id.galleryRecyclerView);
-		GridLayoutManager layoutManager = new GridLayoutManager(getActivity().getApplicationContext(), 4);
+		AutoSpanGridLayoutManager layoutManager = new AutoSpanGridLayoutManager(getActivity().getApplicationContext(), 250);
 		galleryRecyclerView.setLayoutManager(layoutManager);
 
 		ArrayList<RecyclerUtils.ImageData> images = Utilities.getGalleryContent();
@@ -61,6 +88,23 @@ public class GalleryFragment extends Fragment implements RecyclerUtils.Thumbnail
 				getActivity().finish();
 			}
 		});
+	}
+
+	public void toggleSelectionMode(boolean isMultipleSelection) {
+		if (isMultipleSelection) {
+			cancelBtn.setVisibility(View.VISIBLE);
+			selectAllBtn.setVisibility(View.VISIBLE);
+			unselectAllBtn.setVisibility(View.VISIBLE);
+			multipleSelectionBtn.setVisibility(View.INVISIBLE);
+		}
+		else {
+			viewModel.clearImages();
+			//todo make sure checkmark is not shown anymore
+			cancelBtn.setVisibility(View.INVISIBLE);
+			selectAllBtn.setVisibility(View.INVISIBLE);
+			unselectAllBtn.setVisibility(View.INVISIBLE);
+			multipleSelectionBtn.setVisibility(View.VISIBLE);
+		}
 	}
 
 	@Override
@@ -76,7 +120,7 @@ public class GalleryFragment extends Fragment implements RecyclerUtils.Thumbnail
 		viewModel.addImage(img.getImagePath());
 	}
 
-	public void startProcessing(View v) {
+	public void showPreviewFragment(View v) {
 		ArrayList<String> imagesToProcess = viewModel.getImagePaths();
 		if (imagesToProcess.size() == 0) {
 			Log.d(TAG, "No images to process!");
@@ -85,7 +129,7 @@ public class GalleryFragment extends Fragment implements RecyclerUtils.Thumbnail
 
 		Bundle args = new Bundle();
 		args.putStringArrayList(IMAGE_DIRS_ARGUMENT_KEY, imagesToProcess);
-		Navigation.findNavController(v).navigate(
+		Navigation.findNavController(getView()).navigate(
 				R.id.action_galleryFragment_to_confirmImagesFragment,
 				null);
 	}

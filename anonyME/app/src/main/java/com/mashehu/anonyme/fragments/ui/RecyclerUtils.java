@@ -1,6 +1,8 @@
 package com.mashehu.anonyme.fragments.ui;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -39,7 +41,7 @@ public class RecyclerUtils {
 
 		public PreviewImagesAdapter(Context context, ArrayList<ImageData> images) {
 			super(new PreviewDiffCallback());
-			this.images = images;
+			this.images = new ArrayList<>(images);
 			this.context = context;
 		}
 
@@ -130,7 +132,7 @@ public class RecyclerUtils {
 				Log.d(TAG, "Normal click on image");
 				if (callback.isMultipleSelection()) {
 					holder.toggleCheckbox();
-					if (holder.checkbox.getVisibility() == INVISIBLE) {
+					if (!holder.checkbox.isShown()) {
 						callback.removeImage(img); // means after toggling, image is no longer selected
 					}
 
@@ -141,7 +143,7 @@ public class RecyclerUtils {
 
 				else {
 					callback.addImage(img);
-					callback.startProcessing(v);
+					callback.showPreviewFragment(v);
 				}
 			});
 
@@ -150,7 +152,7 @@ public class RecyclerUtils {
 
 				callback.setMultipleSelection(true);
 				holder.toggleCheckbox();
-				if (holder.checkbox.getVisibility() == INVISIBLE) {
+				if (!holder.checkbox.isShown()) {
 					callback.removeImage(img); // means after toggling, image is no longer selected
 				}
 
@@ -160,11 +162,17 @@ public class RecyclerUtils {
 
 				return true;
 			});
-
-			GlideApp.with(context)
-					.load(img.getImagePath())
-					.galleryThumbnail()
-					.into(holder.imageView);
+			Bitmap img_bitmap = BitmapFactory.decodeFile(img.getImagePath());
+//			Bitmap checkmark_bitmap =
+//			img_bitmap.
+//			GlideApp.with(context).asBitmap().load(img.getImagePath()).into(img_bitmap);
+//			holder.imageView.getDrawable();
+//			GlideApp.with(context).
+//			GlideApp.with(context)
+//					.load(img.getImagePath())
+//					.galleryThumbnail()
+//					.into(holder.imageView);
+			holder.imageView.setImageBitmap(img_bitmap);
 		}
 
 		@Override
@@ -342,7 +350,7 @@ public class RecyclerUtils {
 
 		public void removeImage(ImageData imageData);
 
-		public void startProcessing(View v);
+		public void showPreviewFragment(View v);
 
 		public boolean isMultipleSelection();
 
