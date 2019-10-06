@@ -70,9 +70,8 @@ public class GalleryFragment extends Fragment implements RecyclerUtils.Thumbnail
 			sendImagesBtn.setVisibility(View.INVISIBLE);
 		}
 		sendImagesBtn.setOnClickListener(this::showPreviewFragment);
-		cancelBtn.setOnClickListener(v -> viewModel.setMultipleSelectionMode(false));
 		multipleSelectionBtn.setOnClickListener(v -> viewModel.setMultipleSelectionMode(true));
-		// todo add select/unselect all on click observers
+
 
 		galleryRecyclerView = getActivity().findViewById(R.id.galleryRecyclerView);
 		AutoSpanGridLayoutManager layoutManager = new AutoSpanGridLayoutManager(getActivity().getApplicationContext(), 250);
@@ -80,6 +79,13 @@ public class GalleryFragment extends Fragment implements RecyclerUtils.Thumbnail
 
 		ArrayList<RecyclerUtils.ImageData> images = viewModel.getGalleryImages();
 		RecyclerUtils.ThumbnailAdapter adapter = new RecyclerUtils.ThumbnailAdapter(getActivity().getApplicationContext(), this, images);
+		selectAllBtn.setOnClickListener(v -> adapter.selectAll());
+		cancelBtn.setOnClickListener(v -> {
+			adapter.unselectAll();
+			viewModel.setMultipleSelectionMode(false);
+		});
+		unselectAllBtn.setOnClickListener(v -> adapter.unselectAll());
+
 		galleryRecyclerView.setAdapter(adapter);
 		requireActivity().getOnBackPressedDispatcher().addCallback(new OnBackPressedCallback(true) {
 			@Override
@@ -97,7 +103,8 @@ public class GalleryFragment extends Fragment implements RecyclerUtils.Thumbnail
 			multipleSelectionBtn.setVisibility(View.INVISIBLE);
 		}
 		else {
-			viewModel.clearImages();
+//			((RecyclerUtils.ThumbnailAdapter)galleryRecyclerView.getAdapter()).unselectAll();
+//			viewModel.clearImages();
 			//todo make sure checkmark is not shown anymore
 			cancelBtn.setVisibility(View.INVISIBLE);
 			selectAllBtn.setVisibility(View.INVISIBLE);
