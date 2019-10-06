@@ -20,12 +20,14 @@
         android:id="@+id/thumbnailCheckbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="visible"
         android:checked="true"
         android:clickable="false"
-        app:layout_constraintStart_toStartOf="parent"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/thumbnailView"
+        app:layout_constraintHorizontal_bias="0.9"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintVertical_bias="0.1" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
