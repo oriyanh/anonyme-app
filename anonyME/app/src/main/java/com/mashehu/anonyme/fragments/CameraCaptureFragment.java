@@ -114,7 +114,7 @@ public class CameraCaptureFragment extends Fragment implements View.OnLayoutChan
             CardView lastCaptureThumbnail = getView().findViewById(R.id.last_capture_thumbnail);
             lastCaptureThumbnail.setVisibility(View.VISIBLE);
             lastCaptureThumbnail.setOnClickListener((View v) ->
-                    Navigation.findNavController(view).navigate(
+                    Navigation.findNavController(requireActivity(), R.id.navHostCameraContainer).navigate(
                             R.id.action_cameraCaptureFragment_to_confirmImagesFragment2));
 
             ArrayList<String> imagePaths = viewModel.getImagePaths();

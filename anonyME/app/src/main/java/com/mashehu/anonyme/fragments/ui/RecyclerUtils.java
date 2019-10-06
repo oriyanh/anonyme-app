@@ -85,6 +85,7 @@ public class RecyclerUtils {
 		public void deleteItem(int position) {
 			if (callback != null) {
 				ImageData image = images.get(position);
+				image.setCheckboxShown(false);
 				images.remove(position);
 				notifyItemRemoved(position);
 				callback.removeItem(image);
@@ -150,6 +151,7 @@ public class RecyclerUtils {
 				}
 
 				else {
+					imageList.get(position).setCheckboxShown(true);
 					callback.addImage(img);
 					callback.showPreviewFragment(v);
 				}
@@ -365,6 +367,7 @@ public class RecyclerUtils {
 			int position = viewHolder.getAdapterPosition();
 			Log.d("anonyme.SwipeToDeleteCallback", "Swipe");
 			adapter.deleteItem(position);
+			adapter.notifyDataSetChanged();
 		}
 	}
 

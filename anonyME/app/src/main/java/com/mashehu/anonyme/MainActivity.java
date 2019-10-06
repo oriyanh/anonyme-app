@@ -33,7 +33,7 @@ public class MainActivity extends FragmentActivity {
 		setContentView(R.layout.activity_main);
 
 		viewModel = ViewModelProviders.of(this).get(AppViewModel.class);
-		viewModel.setCurrentTab(0); // Makes sure app will start on camera capture mode
+//		viewModel.setCurrentTab(0); // Makes sure app will start on camera capture mode
 
         if (!Utilities.checkPermissions(this, PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS,

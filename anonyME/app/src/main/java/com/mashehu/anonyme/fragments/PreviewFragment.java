@@ -139,14 +139,14 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 	public void navigateBack() {
 		NavController navController;
 		if (viewModel.getCurrentTab() == 0) {
-			navController = Navigation.findNavController(requireActivity(), R.id.navHostGalleryFragment);
+			navController = Navigation.findNavController(requireActivity(), R.id.navHostGalleryContainer);
 			if (navController.getCurrentDestination().getId() == R.id.confirmImagesFragment) {
 				navController.navigate(R.id.action_confirmImagesFragment_to_galleryFragment);
 			}
 		}
 		else if (viewModel.getCurrentTab() == 1) {
-			navController =Navigation.findNavController(requireActivity(), R.id.navHostCameraContainer);
-			if (navController.getCurrentDestination().getId() == R.id.confirmImagesFragment) {
+			navController = Navigation.findNavController(requireActivity(), R.id.navHostCameraContainer);
+			if (navController.getCurrentDestination().getId() == R.id.confirmImagesFragment2) {
 				navController.navigate(R.id.action_confirmImagesFragment2_to_cameraCaptureFragment);
 			}
 		}

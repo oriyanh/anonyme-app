@@ -50,7 +50,7 @@ public class MainContainerFragment extends Fragment {
 
 		assert getActivity() != null;
 		viewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
-		viewModel.setCurrentTab(1); // TODO remove in production
+//		viewModel.setCurrentTab(1); // TODO remove in production
 		navigateIfNecessary(view);
 
 		fragmentViewPager = view.findViewById(R.id.fragmentViewPager);

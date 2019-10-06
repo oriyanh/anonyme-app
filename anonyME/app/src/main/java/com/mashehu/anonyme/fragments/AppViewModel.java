@@ -158,6 +158,7 @@ public class AppViewModel extends ViewModel {
 			for (String path : paths) {
 				RecyclerUtils.ImageData imageData = new RecyclerUtils.ImageData();
 				imageData.setImagePath(path);
+				imageData.setCheckboxShown(false);
 				images.add(imageData);
 			}
 			imagesToProcess.setValue(images);
@@ -195,6 +196,9 @@ public class AppViewModel extends ViewModel {
 	}
 
 	public void clearImages() {
+		for (RecyclerUtils.ImageData img: galleryImages) {
+			img.setCheckboxShown(false);
+		}
 		imagesToProcess.setValue(new ArrayList<>());
 	}
 }
