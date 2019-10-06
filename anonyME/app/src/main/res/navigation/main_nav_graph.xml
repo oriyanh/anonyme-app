@@ -21,5 +21,17 @@
         <action
             android:id="@+id/action_mainContainerFragment2_to_loadingScreenFragment"
             app:destination="@id/loadingScreenFragment" />
+        <action
+            android:id="@+id/action_mainContainerFragment2_to_splashScreenFragment"
+            app:destination="@id/splashScreenFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/splashScreenFragment"
+        android:name="com.mashehu.anonyme.fragments.SplashScreenFragment"
+        android:label="fragment_splash_screen"
+        tools:layout="@layout/fragment_splash_screen" >
+        <action
+            android:id="@+id/action_splashScreenFragment_to_mainContainerFragment2"
+            app:destination="@id/mainContainerFragment2" />
     </fragment>
 </navigation>

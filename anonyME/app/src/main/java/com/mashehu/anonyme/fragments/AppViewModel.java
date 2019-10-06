@@ -1,19 +1,35 @@
 package com.mashehu.anonyme.fragments;
 
+import android.content.Context;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.mashehu.anonyme.common.Utilities;
 import com.mashehu.anonyme.fragments.ui.RecyclerUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static com.mashehu.anonyme.common.Constants.ASSETS_PATH;
 
 public class AppViewModel extends ViewModel {
 
 	private MutableLiveData<ArrayList<RecyclerUtils.ImageData>> imagesToProcess;
+
+
+	private ArrayList<RecyclerUtils.ImageData> galleryImages;
+
 	private ArrayList<RecyclerUtils.ImageData> imagePaths;
 	private MutableLiveData<Boolean> multipleSelectionMode;
+	private MutableLiveData<Boolean> finishedLoading;
+	private boolean loadedGallery;
+	private boolean loadedAssets;
 	private boolean bulkCaptureMode = false;
 	private int currentTab = -1;
 
@@ -22,6 +38,60 @@ public class AppViewModel extends ViewModel {
 		imagesToProcess = new MutableLiveData<>(imagePaths);
 		imagesToProcess.observeForever(imageData -> imagePaths = imageData);
 		multipleSelectionMode = new MutableLiveData<>(false);
+	}
+
+	public ArrayList<RecyclerUtils.ImageData> getGalleryImages() {
+		if (galleryImages == null) {
+			galleryImages = new ArrayList<>();
+		}
+		return galleryImages;
+	}
+
+	public void loadGallery() {
+		if (finishedLoading == null) {
+			finishedLoading = new MutableLiveData<>();
+		}
+		ExecutorService executorService = Executors.newSingleThreadExecutor();
+		executorService.submit(() -> {
+			galleryImages = Utilities.getGalleryContent();
+			loadedGallery = true;
+			if (loadedAssets) {
+				finishedLoading.postValue(true);
+			}
+		});
+	}
+
+	private boolean COPY_ASSETS = false; //TODO remove this when in production
+
+	public void loadAssets(Context context) {
+
+		if (finishedLoading == null) {
+			finishedLoading = new MutableLiveData<>();
+		}
+
+		ExecutorService executorService = Executors.newSingleThreadExecutor();
+		executorService.submit(() -> {
+			if (COPY_ASSETS) {  // Copy resources from assets dir (in APK) to local storage
+				Log.d("ViewModel", "Copying assets");
+				try {
+					Utilities.copyAssets(context, ASSETS_PATH.toString());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			loadedAssets = true;
+			if (loadedGallery) {
+				finishedLoading.postValue(true);
+			}
+		});
+	}
+
+	@NonNull
+	public LiveData<Boolean> galleryReady() {
+		if (finishedLoading == null) {
+			finishedLoading = new MutableLiveData<>(false);
+		}
+		return finishedLoading;
 	}
 
 	private MutableLiveData<Boolean> isPagingEnabled;
@@ -98,8 +168,7 @@ public class AppViewModel extends ViewModel {
 	public boolean isMultipleSelectionMode() {
 		try {
 			return getMultipleSelectionMode().getValue();
-		}
-		catch (NullPointerException e) {
+		} catch (NullPointerException e) {
 			return false;
 		}
 	}

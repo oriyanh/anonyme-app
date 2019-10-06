@@ -128,16 +128,23 @@ public class RecyclerUtils {
 		@Override
 		public void onBindViewHolder(@NonNull ThumbnailViewHolder holder, int position) {
 			ImageData img = imageList.get(position);
+			if (img.isCheckboxShown()) {
+				holder.toggleCheckbox(true);
+			}
+			else {
+				holder.toggleCheckbox(false);
+			}
 
 			holder.imageView.setOnClickListener(v -> {
-				Log.d(TAG, "Normal click on image");
 				if (callback.isMultipleSelection()) {
 					holder.toggleCheckbox();
 					if (!holder.checkbox.isShown()) {
+						imageList.get(position).setCheckboxShown(false);
 						callback.removeImage(img); // means after toggling, image is no longer selected
 					}
 
 					else {
+						imageList.get(position).setCheckboxShown(true);
 						callback.addImage(img);
 					}
 				}
@@ -149,8 +156,6 @@ public class RecyclerUtils {
 			});
 
 			holder.imageView.setOnLongClickListener(v -> {
-				Log.d(TAG, "Long click on image");
-
 				callback.setMultipleSelection(true);
 				holder.toggleCheckbox();
 				if (!holder.checkbox.isShown()) {
@@ -163,23 +168,37 @@ public class RecyclerUtils {
 
 				return true;
 			});
-//			Bitmap img_bitmap = BitmapFactory.decodeFile(img.getImagePath());
-//			Bitmap checkmark_bitmap =
-//			img_bitmap.
-//			GlideApp.with(context).asBitmap().load(img.getImagePath()).into(img_bitmap);
-//			holder.imageView.getDrawable();
-//			GlideApp.with(context).
 			GlideApp.with(context)
 					.load(img.getImagePath())
 					.galleryThumbnail()
 					.into(holder.imageView);
-//			holder.imageView.setImageBitmap(img_bitmap);
 		}
 
 		@Override
 		public int getItemCount() {
 			return imageList.size();
 		}
+
+		public void selectAll() {
+			for (ImageData imageData : imageList) {
+				if (!imageData.isCheckboxShown()) {
+					imageData.setCheckboxShown(true);
+					callback.addImage(imageData);
+				}
+			}
+			notifyDataSetChanged();
+		}
+
+		public void unselectAll() {
+			for (ImageData imageData : imageList) {
+				if (imageData.isCheckboxShown()) {
+					imageData.setCheckboxShown(false);
+					callback.removeImage(imageData);
+				}
+			}
+			notifyDataSetChanged();
+		}
+
 
 	}
 
@@ -210,6 +229,16 @@ public class RecyclerUtils {
 	public static class ImageData {
 		private String imagePath;
 
+		public boolean isCheckboxShown() {
+			return checkboxShown;
+		}
+
+		public void setCheckboxShown(boolean checkboxShown) {
+			this.checkboxShown = checkboxShown;
+		}
+
+		private boolean checkboxShown;
+
 		public String getImagePath() {
 			return imagePath;
 		}
@@ -230,6 +259,15 @@ public class RecyclerUtils {
 			checkbox.setVisibility(GONE);
 		}
 
+		public void toggleCheckbox(boolean visible) {
+			if (visible) {
+				checkbox.setVisibility(VISIBLE);
+			}
+			else {
+				checkbox.setVisibility(GONE);
+			}
+		}
+
 		public void toggleCheckbox() {
 			switch (checkbox.getVisibility()) {
 				case VISIBLE:
@@ -241,6 +279,7 @@ public class RecyclerUtils {
 				default: // do nothing
 			}
 		}
+
 	}
 
 	public static class PreviewImageHolder extends RecyclerView.ViewHolder {

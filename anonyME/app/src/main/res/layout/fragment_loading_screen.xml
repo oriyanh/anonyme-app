@@ -20,7 +20,7 @@
         android:textSize="18sp" />
 
     <com.github.ybq.android.spinkit.SpinKitView
-        android:id="@+id/spin_kit"
+        android:id="@+id/loading_spin_kit"
         style="@style/SpinKitView.Large.CubeGrid"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

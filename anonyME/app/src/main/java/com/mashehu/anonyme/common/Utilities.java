@@ -8,7 +8,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.preference.PreferenceManager;
+import android.content.res.AssetManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -20,6 +20,10 @@ import com.mashehu.anonyme.fragments.ui.RecyclerUtils;
 import com.mashehu.anonyme.services.EngineStartReceiver;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,16 +33,13 @@ import static com.mashehu.anonyme.common.Constants.*;
 public class Utilities {
 	public static final String TAG = "anonyme.Utilities.";
 
-	public static boolean isProcessing(Context context)
-	{
+	public static boolean isProcessing(Context context) {
 		ActivityManager am = (ActivityManager) context.getSystemService(ACTIVITY_SERVICE);
 		List<ActivityManager.RunningServiceInfo> l = am.getRunningServices(50);
-		for (ActivityManager.RunningServiceInfo runningServiceInfo: l)
-		{
+		for (ActivityManager.RunningServiceInfo runningServiceInfo : l) {
 			if ((runningServiceInfo.service.getClassName().equals(
 					"com.mashehu.anonyme.services.EngineService")) &&
-					(runningServiceInfo.foreground))
-			{
+					(runningServiceInfo.foreground)) {
 				return true;
 			}
 		}
@@ -76,31 +77,25 @@ public class Utilities {
 				.setAutoCancel(autoCancel)
 				.setOnlyAlertOnce(onlyAlertOnce)
 				.setProgress(progressMax, progressCurrent, indeterminate);
-		if (title != null)
-		{
+		if (title != null) {
 			notificationBuilder.setContentTitle(title);
 		}
 
-		if (message != null)
-		{
+		if (message != null) {
 			notificationBuilder.setContentText(message);
 		}
 
-		if (pendingIntent != null)
-		{
+		if (pendingIntent != null) {
 			notificationBuilder.setContentIntent(pendingIntent);
 		}
 
 		return notificationBuilder.build();
 	}
 
-	public static boolean checkPermissions(Context context, String... permissions)
-	{
-		for (String permission: permissions)
-		{
+	public static boolean checkPermissions(Context context, String... permissions) {
+		for (String permission : permissions) {
 			if (ActivityCompat.checkSelfPermission(context, permission) !=
-					PackageManager.PERMISSION_GRANTED)
-			{
+					PackageManager.PERMISSION_GRANTED) {
 				return false;
 			}
 		}
@@ -126,8 +121,6 @@ public class Utilities {
 
 
 	public static void processImages(Context context, @NonNull ArrayList<String> images) {
-//		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-//		sp.edit().putBoolean(SP_IS_PROCESSING_KEY, true).apply();
 		Intent startEngineIntent = new Intent(INTENT_START_ENGINE, null,
 				context, EngineStartReceiver.class);
 
@@ -135,5 +128,26 @@ public class Utilities {
 		startEngineIntent.putExtra(EXTRA_ENGINE_OUT_DIR, CAMERA_ROLL_PATH.toString());
 		startEngineIntent.putStringArrayListExtra(EXTRA_ENGINE_INPUT_PICS, images);
 		context.sendBroadcast(startEngineIntent);
+	}
+
+
+	public static void copyAssets(Context context, String dest) throws IOException {
+		AssetManager assetManager = context.getAssets();
+		String[] files = assetManager.list("");
+		assert files != null;
+		for (String f : files) {
+			if (f.endsWith(".png") || f.endsWith(".jpg") || f.endsWith(".pb")) {
+				OutputStream myOutput = new FileOutputStream(dest + "/" + f);
+				byte[] buffer = new byte[1024];
+				int length;
+				InputStream myInput = assetManager.open(f);
+				while ((length = myInput.read(buffer)) > 0) {
+					myOutput.write(buffer, 0, length);
+				}
+				myInput.close();
+				myOutput.flush();
+				myOutput.close();
+			}
+		}
 	}
 }
