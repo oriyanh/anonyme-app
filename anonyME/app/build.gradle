@@ -1,13 +1,19 @@
 apply plugin: 'com.android.application'
-apply plugin: "com.chaquo.python"
+//apply plugin: "com.chaquo.python"
 
 android {
-
-
-    // TODO:: Remove this when done with google example
-    lintOptions {
-        disable 'RestrictedApi'
+    signingConfigs {
+        release {
+            storeFile file('C:\\Users\\Segal\\Documents\\School\\Final Project\\anonyME\\app\\build\\keystores\\upload-keystore.jks')
+            storePassword 'Navu100%babvtjrfl'
+            keyAlias = 'upload'
+            keyPassword 'MashehuAnonyme'
+        }
     }
+
+//    lintOptions {
+//        disable 'RestrictedApi'
+//    }
 
     compileSdkVersion 29
     defaultConfig {
@@ -17,37 +23,38 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        flavorDimensions "abi"
+        signingConfig signingConfigs.release
+//        flavorDimensions "abi"
 //        ndk {
 //            abiFilters "x86"
 //        }
-        productFlavors {
-            arm {
-                dimension "abi"
-                ndk { abiFilters "arm64-v8a" }
-            }
-        }
-        python {
-            buildPython "C:\\Users\\Segal\\Documents\\School\\Final Project\\venv\\Scripts\\python.exe"
-            pip {
-                install "tensorflow"
-                install "scipy"
-                install "scikit-learn"
-                install "opencv-python"
-                install "h5py"
-                install "Pillow"
-                install "requests"
-                install "psutil"
-                install "numpy"
-                extractPackages "AdvBox"
-            }
-        }
+//        productFlavors {
+//            arm {
+//                dimension "abi"
+//                ndk { abiFilters "arm64-v8a" }
+//            }
+//        }
+//        python {
+//            buildPython "C:\\Users\\Segal\\Documents\\School\\Final Project\\venv\\Scripts\\python.exe"
+//            pip {
+//                install "tensorflow"
+//                install "scipy"
+//                install "scikit-learn"
+//                install "opencv-python"
+//                install "h5py"
+//                install "Pillow"
+//                install "requests"
+//                install "psutil"
+//                install "numpy"
+//                extractPackages "AdvBox"
+//            }
+//        }
     }
     buildTypes {
         release {
-            ndk {
-                abiFilters "armeabi-v7a"
-            }
+//            ndk {
+//                abiFilters "armeabi-v7a"
+//            }
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -57,7 +64,8 @@ android {
         targetCompatibility = 1.8
     }
     buildToolsVersion = '28.0.3'
-    flavorDimensions 'abi'
+//    buildToolsVersion = '28.0.3'
+//    flavorDimensions 'abi'
 }
 
 dependencies {
