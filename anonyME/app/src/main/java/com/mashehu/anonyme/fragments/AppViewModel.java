@@ -28,8 +28,8 @@ public class AppViewModel extends ViewModel {
 	private ArrayList<RecyclerUtils.ImageData> imagePaths;
 	private MutableLiveData<Boolean> multipleSelectionMode;
 	private MutableLiveData<Boolean> finishedLoading;
-	private boolean loadedGallery;
-	private boolean loadedAssets;
+//	private boolean loadedGallery;
+//	private boolean loadedAssets;
 	private boolean bulkCaptureMode = false;
 	private int currentTab = -1;
 
@@ -54,37 +54,38 @@ public class AppViewModel extends ViewModel {
 		ExecutorService executorService = Executors.newSingleThreadExecutor();
 		executorService.submit(() -> {
 			galleryImages = Utilities.getGalleryContent();
-			loadedGallery = true;
-			if (loadedAssets) {
-				finishedLoading.postValue(true);
-			}
+//			loadedGallery = true;
+//			if (loadedAssets) {
+//				finishedLoading.postValue(true);
+//			}
+			finishedLoading.postValue(true);
 		});
 	}
 
-	private boolean COPY_ASSETS = true; //TODO remove this when in production
-
-	public void loadAssets(Context context) {
-
-		if (finishedLoading == null) {
-			finishedLoading = new MutableLiveData<>();
-		}
-
-		ExecutorService executorService = Executors.newSingleThreadExecutor();
-		executorService.submit(() -> {
-			if (COPY_ASSETS) {  // Copy resources from assets dir (in APK) to local storage
-				Log.d("ViewModel", "Copying assets");
-				try {
-					Utilities.copyAssets(context, ASSETS_PATH.toString());
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			loadedAssets = true;
-			if (loadedGallery) {
-				finishedLoading.postValue(true);
-			}
-		});
-	}
+//	private boolean COPY_ASSETS = true; //TODO remove this when in production
+//
+//	public void loadAssets(Context context) {
+//
+//		if (finishedLoading == null) {
+//			finishedLoading = new MutableLiveData<>();
+//		}
+//
+//		ExecutorService executorService = Executors.newSingleThreadExecutor();
+//		executorService.submit(() -> {
+//			if (COPY_ASSETS) {  // Copy resources from assets dir (in APK) to local storage
+//				Log.d("ViewModel", "Copying assets");
+//				try {
+//					Utilities.copyAssets(context, ASSETS_PATH.toString());
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
+//			}
+//			loadedAssets = true;
+//			if (loadedGallery) {
+//				finishedLoading.postValue(true);
+//			}
+//		});
+//	}
 
 	@NonNull
 	public LiveData<Boolean> galleryReady() {

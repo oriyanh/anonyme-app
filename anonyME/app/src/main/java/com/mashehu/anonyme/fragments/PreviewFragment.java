@@ -106,7 +106,8 @@ public class PreviewFragment extends Fragment implements RecyclerUtils.PreviewIt
 			viewModel.clearImages();
 			viewModel.setBulkCaptureMode(false);
 			viewModel.setMultipleSelectionMode(false);
-			getActivity().finish();
+//			getActivity().finish();
+			navigateBack();
 		});
 
 		cancelButton.setOnClickListener(v -> {

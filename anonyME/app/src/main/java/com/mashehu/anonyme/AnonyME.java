@@ -4,8 +4,8 @@ import android.app.Application;
 import android.os.Environment;
 import android.util.Log;
 
-import com.chaquo.python.*;
-import com.chaquo.python.android.AndroidPlatform;
+//import com.chaquo.python.*;
+//import com.chaquo.python.android.AndroidPlatform;
 
 import static com.mashehu.anonyme.common.Constants.*;
 
@@ -26,7 +26,7 @@ public class AnonyME extends Application {
 				Environment.getExternalStoragePublicDirectory(DIRECTORY_DCIM), "Camera");
 
 		// Starts python engine when app starts
-		Python.start(new AndroidPlatform(this));
+//		Python.start(new AndroidPlatform(this));
 	}
 
 }

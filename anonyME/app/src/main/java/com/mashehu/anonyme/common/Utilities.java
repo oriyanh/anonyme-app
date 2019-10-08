@@ -71,7 +71,7 @@ public class Utilities {
 
 		NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(
 				context, channel)
-				.setSmallIcon(R.mipmap.ic_launcher_round)
+				.setSmallIcon(R.drawable.ic_stat_name)
 				.setPriority(NotificationCompat.PRIORITY_HIGH)
 				.setOngoing(ongoing)
 				.setAutoCancel(autoCancel)
@@ -124,30 +124,30 @@ public class Utilities {
 		Intent startEngineIntent = new Intent(INTENT_START_ENGINE, null,
 				context, EngineStartReceiver.class);
 
-		startEngineIntent.putExtra(EXTRA_ENGINE_ASSETS_PATH, ASSETS_PATH.toString());
-		startEngineIntent.putExtra(EXTRA_ENGINE_OUT_DIR, CAMERA_ROLL_PATH.toString());
+//		startEngineIntent.putExtra(EXTRA_ENGINE_ASSETS_PATH, ASSETS_PATH.toString());
+//		startEngineIntent.putExtra(EXTRA_ENGINE_OUT_DIR, CAMERA_ROLL_PATH.toString());
 		startEngineIntent.putStringArrayListExtra(EXTRA_ENGINE_INPUT_PICS, images);
 		context.sendBroadcast(startEngineIntent);
 	}
 
 
-	public static void copyAssets(Context context, String dest) throws IOException {
-		AssetManager assetManager = context.getAssets();
-		String[] files = assetManager.list("");
-		assert files != null;
-		for (String f : files) {
-			if (f.endsWith(".png") || f.endsWith(".jpg") || f.endsWith(".pb")) {
-				OutputStream myOutput = new FileOutputStream(dest + "/" + f);
-				byte[] buffer = new byte[1024];
-				int length;
-				InputStream myInput = assetManager.open(f);
-				while ((length = myInput.read(buffer)) > 0) {
-					myOutput.write(buffer, 0, length);
-				}
-				myInput.close();
-				myOutput.flush();
-				myOutput.close();
-			}
-		}
-	}
+//	public static void copyAssets(Context context, String dest) throws IOException {
+//		AssetManager assetManager = context.getAssets();
+//		String[] files = assetManager.list("");
+//		assert files != null;
+//		for (String f : files) {
+//			if (f.endsWith(".png") || f.endsWith(".jpg") || f.endsWith(".pb")) {
+//				OutputStream myOutput = new FileOutputStream(dest + "/" + f);
+//				byte[] buffer = new byte[1024];
+//				int length;
+//				InputStream myInput = assetManager.open(f);
+//				while ((length = myInput.read(buffer)) > 0) {
+//					myOutput.write(buffer, 0, length);
+//				}
+//				myInput.close();
+//				myOutput.flush();
+//				myOutput.close();
+//			}
+//		}
+//	}
 }
