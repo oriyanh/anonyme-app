@@ -71,7 +71,7 @@ public class Utilities {
 
 		NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(
 				context, channel)
-				.setSmallIcon(R.mipmap.ic_launcher_round)
+				.setSmallIcon(R.drawable.ic_stat_name)
 				.setPriority(NotificationCompat.PRIORITY_HIGH)
 				.setOngoing(ongoing)
 				.setAutoCancel(autoCancel)
