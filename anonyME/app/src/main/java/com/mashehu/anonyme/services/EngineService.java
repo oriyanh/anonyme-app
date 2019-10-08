@@ -88,7 +88,7 @@ public class EngineService extends Service {
 						getApplicationContext(), NOTIFICATION_CH_ID_PROGRESS,
 						"Anonymization in progress...",null, // TODO send meaningful notifications to demonstrate progress
 						null, true, false,
-						false, 0, 0, false);
+						false, 0, 0, true);
 			}
 			else
 			{

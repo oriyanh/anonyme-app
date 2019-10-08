@@ -45,9 +45,8 @@ public class SplashScreenFragment extends Fragment {
 				}
 			}
 		});
-
-	viewModel.loadGallery();
-	viewModel.loadAssets(requireActivity().getApplicationContext());
+		viewModel.loadGallery();
+		viewModel.loadAssets(requireActivity().getApplicationContext());
 	}
 
 }
