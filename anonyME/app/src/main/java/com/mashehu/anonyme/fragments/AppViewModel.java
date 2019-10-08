@@ -61,7 +61,7 @@ public class AppViewModel extends ViewModel {
 		});
 	}
 
-	private boolean COPY_ASSETS = false; //TODO remove this when in production
+	private boolean COPY_ASSETS = true; //TODO remove this when in production
 
 	public void loadAssets(Context context) {
 
