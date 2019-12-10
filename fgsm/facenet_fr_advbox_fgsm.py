@@ -27,7 +27,7 @@ from  advbox.attacks.tf.tools import  fgsm
 
 
 sys.path.append("../../thirdparty/facenet/src")
-from AdvBox.applications.face_recognition_attack import facenet
+import facenet
 
 FACENET_MODEL_CHECKPOINT = "20180402-114759.pb"
 
