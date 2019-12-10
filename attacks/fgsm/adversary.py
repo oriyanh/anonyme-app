@@ -61,13 +61,6 @@ class Adversary:
         feed_dict = {images_placeholder: [regularized_img], phase_train_placeholder: False}
         return self.sess.run(embeddings, feed_dict=feed_dict)[0]
 
-    def compare(self, input_pic, target_pic):
-        embedding1 = self.generate_embedding(input_pic)
-        embedding2 = self.generate_embedding(target_pic)
-
-        # if both pictures are same, return 0
-        return euclidian_distance(embedding1, embedding2)
-
     def generate_adv_whitebox(self, input_path, target_path, eps, num_iter):
         # Get input and output tensors
         images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
@@ -164,8 +157,8 @@ if __name__ == '__main__':
 
     fr = Adversary('/cs/ep/503/facenet_model.pb')
 
-    input_pic = "/cs/ep/503/amit/fgsm/Bill_Gates_0001.png"
-    target_pic = "/cs/ep/503/amit/fgsm/chaoren.png"
+    input_pic = "/cs/ep/503/inputs/Kofi_Annan_0003.png"
+    target_pic = "/cs/ep/503/amit/facenet/data/images/test_aligned/Silvio_Berlusconi/Silvio_Berlusconi_0017.png"
     # print fr.compare(input_pic,target_pic)
 
     iters = [500, 1000, 1500, 2000, 2500]
@@ -176,5 +169,5 @@ if __name__ == '__main__':
     for [iter, eps] in combs:
         print(f"Now using iter={iter} and eps={eps}")
         fr.generate_adv_whitebox(input_pic, target_pic, eps, int(iter))
-        break
+        # break
     # fr.generate_adv_whitebox(input_pic, target_pic, eps, iter)
