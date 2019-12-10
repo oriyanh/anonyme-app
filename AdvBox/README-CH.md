@@ -21,7 +21,7 @@ AdvDetect是一款从海量数据中检测对抗样本的工具。
 
 ## 攻击人脸识别
 
-[Homepage of Face Recogniztion Attack](applications/face_recognition_attack/README.md)
+[Homepage of Face Recogniztion Attack](../fgsm/README.md)
 
 ## 消失的T恤
 

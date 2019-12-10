@@ -38,7 +38,7 @@ Advbox give a command line tool to generate adversarial examples with Zero-Codin
 
 ###  Attack AI application
 
- - [Attack Face recognition ](applications/face_recognition_attack/README.md)
+ - [Attack Face recognition ](../fgsm/README.md)
 
 ## Overview
 [Szegedy et al.](https://arxiv.org/abs/1312.6199) discovered an intriguing properties of deep neural networks in the context of image classification for the first time. They showed that despite the state-of-the-art deep networks are surprisingly susceptible to adversarial attacks in the form of small perturbations to images that remain (almost) imperceptible to human vision system. These perturbations are found by optimizing the input to maximize the prediction error and the images modified by these perturbations are called as `adversarial examples`. The profound implications of these results triggered a wide interest of researchers in adversarial attacks and their defenses for deep learning in general.

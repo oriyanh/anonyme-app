@@ -231,7 +231,7 @@ advbox\_tools.py提供了丰富的配置参数，其中LocalSearch算法相关�
 
 基于AdvBox可以针对大量实际使用的AI模型生成对抗样本并给出通用加固方案。
 
- - [应用1：白盒攻击人脸识别系统](applications/face_recognition_attack/README.md)
+ - [应用1：白盒攻击人脸识别系统](../fgsm/README.md)
 
 
 # 问题反馈
