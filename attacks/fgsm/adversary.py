@@ -76,6 +76,7 @@ class Adversary:
         adversary = fgsm(images_placeholder, loss=loss, eps=eps, bounds=(-1.0, 1.0))
 
         input_image = regularize_img(input_path)
+        target_img = regularize_img(target_path)
         adv_img = input_image.reshape(-1, *input_image.shape)
 
         last_adv_loss = 0
@@ -91,9 +92,12 @@ class Adversary:
 
             # img_bias = np.sqrt(np.sum(np.square(adv_img[0, ...] - input_image)))
             img_bias = euclidian_distance(adv_img[0, ...], input_image)
-
+            target_bias = euclidian_distance(adv_img[0, ...], target_img)
             print(f'{i} Bias from original image: {img_bias:2.6f} Loss: {adv_loss:2.6f}')
-
+            print(f'{i} Bias from target image: {img_bias:2.6f} Loss: {adv_loss:2.6f}')
+            if img_bias > target_bias:
+                print('Adversarial example is now closer to target image, breaking...')
+                break
             if np.absolute(adv_loss - last_adv_loss) < LOSS_LIMIT:
                 if within_loss_limit:
                     cnt += 1
