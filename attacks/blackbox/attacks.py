@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 def generate_adversarial_sample(image, attack, args):
-    adversarial_sample = attack(image, *args)
+    adversarial_sample = attack(image, *args)  # TODO
     return adversarial_sample
 
 

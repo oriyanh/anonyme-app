@@ -1,5 +1,5 @@
 import tensorflow as tf
-from attacks.blackbox.substitute_model import SubstituteModel
+from attacks.blackbox.substitute_model import SubstituteModel, get_embeddings
 import attacks.blackbox.params as params
 from attacks.blackbox.augmentation import augment_dataset
 
@@ -13,9 +13,10 @@ def train(oracle, epochs_substitute, epochs_training, batch_size):
     x_train, y_train = params.load_initial_set(params.NUM_INIT_SAMPLES)
 
     for epoch in range(epochs_substitute):
-        substitute = SubstituteModel()
+        substitute = SubstituteModel(params.NUM_CLASSES)
+        embeddings = get_embeddings(x_train)
         estimated_labels = oracle(x_train)
-        train_substitute(substitute, epochs_training, x_train, estimated_labels, batch_size)
+        train_substitute(substitute, epochs_training, embeddings, estimated_labels, batch_size)
         x_train = augment_dataset(oracle, x_train, estimated_labels)
 
     # TODO save weights
@@ -50,5 +51,5 @@ def get_train_step():
 
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(gradients, model.trainable_variables)
-
+        train_loss(loss)
     return train_step
