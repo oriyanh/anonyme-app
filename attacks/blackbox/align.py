@@ -20,9 +20,12 @@ def align(venv_dir, input_dir, output_dir, image_size):
     :return:
     """
 
-    if not (os.path.exists(venv_dir) and os.path.exists(input_dir) and os.path.exists(output_dir)):
+    if not (os.path.exists(venv_dir) and os.path.exists(input_dir)):
         print("Invalid path received")
-        return 
+        return
+
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
 
     subprocess.run(f"./align.sh {venv_dir} {os.path.join(ROOT_DIR, MTCNN_PATH, MTCNN_ALIGN_FNAME)} "
                    f"{input_dir} {output_dir} {image_size}", shell=True)
