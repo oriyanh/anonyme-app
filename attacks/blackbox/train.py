@@ -1,9 +1,17 @@
-import os
+# import os
+from PIL import Image
+from keras.preprocessing import image
+from matplotlib import pyplot as plt
+
+import numpy as np
 import tensorflow as tf
-from attacks.blackbox.vgg_blackbox import Vggface2_ResNet50
+# from attacks.blackbox.vgg_blackbox import Vggface2_ResNet50
+from keras_vggface import utils
+from mtcnn.mtcnn import MTCNN
 from attacks.blackbox.substitute_model import SubstituteModel
 import attacks.blackbox.params as params
 from attacks.blackbox.augmentation import augment_dataset
+from keras_vggface.vggface import VGGFace
 
 optimizer = tf.keras.optimizers.Adam(params.LEARNING_RATE, beta_1=params.MOMENTUM)
 loss_obj_oracle = tf.keras.losses.sparse_categorical_crossentropy
@@ -13,33 +21,27 @@ train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy
 GPU_CONST = '2'
 
 
-def init_black_box_vggface2_keras(weights_path=params.VGGFACE2_BLACKBOX_WEIGHTS_PATH):
-    """
-    Loads trained VGGFace2 Keras black-box model using provided weights_path
-    *Ripped straight out of vggface2_Keras predict module*
-    :param weights_path: Path containing VGGFace2 Keras model weights
-    :type weights_path: str
-    :return: Loaded model
-    """
+def extract_face(filename, required_size=(224, 224)):
+    # load image from file
+    pixels = plt.imread(filename)
+    # create the detector, using default weights
+    detector = MTCNN()
+    # detect faces in the image
+    results = detector.detect_faces(pixels)
+    # extract the bounding box from the first face
+    x1, y1, width, height = results[0]['box']
+    x2, y2 = x1 + width, y1 + height
+    # extract the face
+    face = pixels[y1:y2, x1:x2]
+    # resize pixels to the model size
+    image = Image.fromarray(face)
+    image = image.resize(required_size)
+    face_array = np.asarray(image)
+    return face_array.astype('float32')
 
-    # Set basic environments.
-    # Initialize GPUs
-    # toolkits.initialize_GPU(args)
+def init_black_box_vggface2_keras():
+    return VGGFace(model='resnet50')
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = GPU_CONST
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    tf.Session(config=config)  # TODO: Check if this is necessary if the model isn't even training
-
-    # ==> loading the pre-trained model.
-    model_eval = Vggface2_ResNet50()
-
-    if os.path.isfile(weights_path):
-        model_eval.load_weights(weights_path, by_name=True)
-        print('==> successfully loaded the model {}'.format(weights_path))
-    else:
-        raise IOError('==> can not find the model to load {}'.format(weights_path))
-    return model_eval
 
 
 def train(oracle, epochs_substitute, epochs_training, batch_size):
@@ -89,4 +91,16 @@ def get_train_step():
 
 
 if __name__ == '__main__':
-    init_black_box_vggface2_keras()
+    model = init_black_box_vggface2_keras()
+
+    crop_size = (224, 224, 3)
+
+    # img = extract_face('/cs/ep/503/vggface2/vggface2_test/test/n000001/0001_01.jpg')
+    img = extract_face('channing_tatum.jpg')
+    plt.imshow(img)
+    plt.show()
+    x = np.expand_dims(img, axis=0)
+
+    x = utils.preprocess_input(x, version=2)
+    preds = model.predict(x)
+    print(f'Predicted: {utils.decode_predictions(preds)}')
