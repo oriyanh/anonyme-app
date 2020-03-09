@@ -18,12 +18,8 @@ loss_obj_oracle = tf.keras.losses.sparse_categorical_crossentropy
 train_loss = tf.keras.metrics.Mean(name='train_loss')
 train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
 
-GPU_CONST = '2'
 
-
-def extract_face(filename, required_size=(224, 224)):
-    # load image from file
-    pixels = plt.imread(filename)
+def extract_face(pixels, required_size=(224, 224)):
     # create the detector, using default weights
     detector = MTCNN()
     # detect faces in the image
@@ -37,11 +33,17 @@ def extract_face(filename, required_size=(224, 224)):
     image = Image.fromarray(face)
     image = image.resize(required_size)
     face_array = np.asarray(image)
-    return face_array.astype('float32')
+    return face_array
 
-def init_black_box_vggface2_keras():
-    return VGGFace(model='resnet50')
 
+# def run_blackbox(img, model):
+def run_blackbox(img):
+    model = VGGFace(model='resnet50')
+    img = extract_face(img)
+    x = img[np.newaxis, ...].astype(np.float)
+    x = utils.preprocess_input(x, version=2)
+    return model.predict(x)
+    # print(f'Predicted: {utils.decode_predictions(preds)}')
 
 
 def train(oracle, epochs_substitute, epochs_training, batch_size):
@@ -91,11 +93,9 @@ def get_train_step():
 
 
 if __name__ == '__main__':
-    model = init_black_box_vggface2_keras()
 
-    # img = extract_face('/cs/ep/503/vggface2/vggface2_test/test/n000001/0001_01.jpg')
-    img = extract_face('channing_tatum.jpg')
-    x = np.expand_dims(img, axis=0)
-    x = utils.preprocess_input(x, version=2)
-    preds = model.predict(x)
+    # load image from file
+    model = VGGFace(model='resnet50')
+    img = plt.imread('../../channing_tatum.jpg')
+    preds = run_blackbox(img, model)
     print(f'Predicted: {utils.decode_predictions(preds)}')
