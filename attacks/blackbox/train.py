@@ -93,14 +93,9 @@ def get_train_step():
 if __name__ == '__main__':
     model = init_black_box_vggface2_keras()
 
-    crop_size = (224, 224, 3)
-
     # img = extract_face('/cs/ep/503/vggface2/vggface2_test/test/n000001/0001_01.jpg')
     img = extract_face('channing_tatum.jpg')
-    plt.imshow(img)
-    plt.show()
     x = np.expand_dims(img, axis=0)
-
     x = utils.preprocess_input(x, version=2)
     preds = model.predict(x)
     print(f'Predicted: {utils.decode_predictions(preds)}')
