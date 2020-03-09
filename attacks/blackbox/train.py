@@ -94,9 +94,6 @@ if __name__ == '__main__':
     model = init_black_box_vggface2_keras()
 
     crop_size = (224, 224, 3)
-    # img = PIL.Image.open('/cs/ep/503/vggface2/vggface2_test/test/n000001/0001_01.jpg')
-    # im_shape = np.array(img.size)
-    # img = img.convert('RGB')
 
     # img = extract_face('/cs/ep/503/vggface2/vggface2_test/test/n000001/0001_01.jpg')
     img = extract_face('channing_tatum.jpg')
@@ -107,17 +104,3 @@ if __name__ == '__main__':
     x = utils.preprocess_input(x, version=2)
     preds = model.predict(x)
     print(f'Predicted: {utils.decode_predictions(preds)}')
-
-
-    # ratio = float(224) / np.min(im_shape)
-    # img = img.resize(size=(int(np.ceil(im_shape[0] * ratio)),   # width
-    #                        int(np.ceil(im_shape[1] * ratio))),  # height
-    #                  resample=PIL.Image.BILINEAR)
-    # img = np.array(img)
-    # newshape = img.shape[:2]
-    # h_start = (newshape[0] - crop_size[0])//2
-    # w_start = (newshape[1] - crop_size[1])//2
-    # img = img[h_start:h_start+crop_size[0], w_start:w_start+crop_size[1]]
-    # img = img[:, :, ::-1] - (91.4953, 103.8827, 131.0912)
-    # prediction = model.predict(img.reshape(*((-1, ) + img.shape)), batch_size=1)
-    # print(prediction)
