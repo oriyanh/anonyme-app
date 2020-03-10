@@ -1,54 +1,73 @@
-import tensorflow as tf
+# import os
+from PIL import Image
+from matplotlib import pyplot as plt
+
+import numpy as np
+from keras_vggface import utils
+from mtcnn.mtcnn import MTCNN
 from attacks.blackbox.substitute_model import SubstituteModel
 import attacks.blackbox.params as params
 from attacks.blackbox.augmentation import augment_dataset
+from keras_vggface.vggface import VGGFace
+
+import attacks.blackbox.substitute_model as substitute
+
+GPU_CONST = '2'
+
+def extract_face(filename, required_size=(224, 224)):
+    # load image from file
+    pixels = plt.imread(filename)
+    # create the detector, using default weights
+    detector = MTCNN()
+    # detect faces in the image
+    results = detector.detect_faces(pixels)
+    # extract the bounding box from the first face
+    x1, y1, width, height = results[0]['box']
+    x2, y2 = x1 + width, y1 + height
+    # extract the face
+    face = pixels[y1:y2, x1:x2]
+    # resize pixels to the model size
+    image = Image.fromarray(face)
+    image = image.resize(required_size)
+    face_array = np.asarray(image)
+    return face_array
+
+def init_black_box_vggface2_keras():
+    return VGGFace(model='resnet50')
 
 
-optimizer = tf.keras.optimizers.Adam(params.LEARNING_RATE, beta_1=params.MOMENTUM)
-loss_obj_oracle = tf.keras.losses.sparse_categorical_crossentropy
-train_loss = tf.keras.metrics.Mean(name='train_loss')
-train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
 
-def train(oracle, epochs_substitute, epochs_training, batch_size):
+def train(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, batch_size):
+    assert nepochs_substitute > 0
     x_train, y_train = params.load_initial_set(params.NUM_INIT_SAMPLES)
-
-    for epoch in range(epochs_substitute):
-        substitute = SubstituteModel()
-        estimated_labels = oracle(x_train)
-        train_substitute(substitute, epochs_training, x_train, estimated_labels, batch_size)
+    for epoch in range(nepochs_substitute):
+        substitute_model = SubstituteModel(num_oracle_classes)
+        estimated_labels = oracle.predict(x_train)
+        substitute.train(substitute_model, x_train, estimated_labels, nepochs_training, batch_size)
         x_train = augment_dataset(oracle, x_train, estimated_labels)
 
-    # TODO save weights
+    substitute.save_model(substitute_model, params.SUBSTITUTE_WEIGHTS_PATH)
+    return substitute_model
 
-    return substitute
+LOAD_WEIGHTS = False
 
-def train_substitute(substitute, num_epochs, images, labels, batch_size):
-    shuffle_seed = 10000
+def main():
+    oracle = init_black_box_vggface2_keras()
+    if LOAD_WEIGHTS:
+        substitute_model = substitute.load_model(params.SUBSTITUTE_WEIGHTS_PATH, params.NUM_CLASSES_VGGFACE)
+    else:
+        substitute_model = train(oracle, params.NUM_CLASSES_VGGFACE,params.EPOCHS_SUBSTITUTE, params.EPOCHS_TRAINING, params.BATCH_SIZE)
 
-    train_ds = tf.data.Dataset.from_tensor_slices(
-        (images, labels)).shuffle(shuffle_seed).batch(batch_size)
 
-    train_step = get_train_step()
-    for epoch in range(num_epochs):
-        for images, labels in train_ds:
-            train_step(substitute, images, labels)
-        train_accuracy(substitute(images), labels)
-        print(f'Epoch {epoch + 1}: Loss: {train_loss.result()}, '
-              f'Accuracy: {train_accuracy.result() * 100:.2f}%')
+if __name__ == '__main__':
+    model = init_black_box_vggface2_keras()
 
-        # Reset the metrics for the next epoch
-        train_loss.reset_states()
-        train_accuracy.reset_states()
-    return substitute
 
-def get_train_step():
-    @tf.function
-    def train_step(model, images, labels):
-        with tf.GradientTape() as tape:
-            preds = model(images)
-            loss = loss_obj_oracle(labels, preds)
+    img = extract_face('/cs/ep/503/oriyan/repo/channing_tatum.jpg')
+    plt.imshow(img)
+    plt.show()
+    x =img[np.newaxis, ...].astype(np.float)
 
-        gradients = tape.gradient(loss, model.trainable_variables)
-        optimizer.apply_gradients(gradients, model.trainable_variables)
-
-    return train_step
+    x = utils.preprocess_input(x, version=2)
+    preds = model.predict(x)
+    print(f'Predicted: {utils.decode_predictions(preds)}')
