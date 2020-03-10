@@ -4,11 +4,10 @@ import matplotlib.pyplot as plt
 from mtcnn import MTCNN
 from PIL import Image
 
-def extract_face(pixels, required_size=(224, 224)):
-    # load image from file
 
-    # create the detector, using default weights
-    detector = MTCNN()
+detector = MTCNN()
+
+def extract_face(pixels, required_size=(224, 224)):
     # detect faces in the image
     results = detector.detect_faces(pixels)
     # extract the bounding box from the first face
@@ -21,19 +20,22 @@ def extract_face(pixels, required_size=(224, 224)):
     image = image.resize(required_size)
     return image
 
+def extract_and_save(img_in, img_out, crop_size):
+    print(f"Aligning {img_in}")
+    pixels = plt.imread(img_in)
+    pixels_aligned = extract_face(pixels, crop_size)
+
+    if not os.path.exists(os.path.dirname(img_out)):
+        os.makedirs(os.path.dirname(img_out))
+    pixels_aligned.save(img_out)
+    print(f"Saved aligned image to {img_out}")
+
 def main(dataset_orig, dataset_out, crop_size=(224, 224)):
     for img_in, img_out in zip(dataset_orig, dataset_out):
-        print(f"Aligning {img_in}")
-        pixels = plt.imread(img_in)
         try:
-            pixels_aligned = extract_face(pixels, crop_size)
+            extract_and_save(img_in, img_out, crop_size)
         except Exception as e:
             print(f"Error processing file {img_in}: Exception: [ {e} ]", file=sys.stderr)
-            continue
-        if not os.path.exists(os.path.dirname(img_out)):
-            os.makedirs(os.path.dirname(img_out))
-        pixels_aligned.save(img_out)
-        print(f"Saved aligned image to {img_out}")
 
 if __name__ == '__main__':
     dataset_path = sys.argv[1]
