@@ -51,21 +51,34 @@ def load_model(weights_path, num_classes):
 def save_model(model, weights_path):
     model.save_weights(weights_path, save_format='h5')
 
-def train(model, images, labels, num_epochs, batch_size):
-    shuffle_seed = 1000
 
-    train_ds = tf.data.Dataset.from_tensor_slices(
-        (images, labels)).shuffle(shuffle_seed).batch(batch_size)
+def get_batches(images, labels, batch_size):
+    nbatches = (images.shape[0] // batch_size) + 1
+    permutation = np.random.permutation(np.arange(images.shape[0]))
+    images_perm = images[permutation]
+    labels_perm = labels[permutation]
+    for b in range(nbatches):
+        last_index = np.min(((b + 1) * batch_size, images.shape[0]))
+        x_train = images_perm[b * batch_size:last_index]
+        y_train = labels_perm[b * batch_size:last_index]
+        yield x_train, y_train
+
+def train(model, images, labels, num_epochs, batch_size):
+    # shuffle_seed = 1000
+
+    # train_ds = tf.data.Dataset.from_tensor_slices(
+    #     (images, labels)).shuffle(shuffle_seed).batch(batch_size)
 
     train_step = get_train_step()
     nbatches = images.shape[0] // batch_size
     for epoch in range(num_epochs):
+        print(f"Start training epoch #{epoch+1}")
         nbatch = 0
-        for im_batch, label_batch in train_ds:
+        for im_batch, label_batch in get_batches(images, labels, batch_size):
             nbatch += 1
             if nbatch > nbatches:
                 break
-            print(f"Progress: {100*nbatch/nbatches:.2f}%")
+            print(f"Training epoch progress: {100*nbatch/nbatches:.2f}%")
             train_step(model, im_batch, label_batch)
         # train_accuracy(labels, model(images))
         # with tf.Session().as_default():
