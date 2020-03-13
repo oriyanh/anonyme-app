@@ -5,14 +5,12 @@ import numpy as np
 import tensorflow as tf
 from keras_vggface import utils
 
+import attacks.blackbox.params as params
+import attacks.blackbox.substitute_model as substitute
+from attacks.blackbox.substitute_model import SubstituteModel
 from attacks.blackbox.blackbox_model import get_vggface_model
 from attacks.blackbox.params import extract_face
-from attacks.blackbox.substitute_model import SubstituteModel
-import attacks.blackbox.params as params
 from attacks.blackbox.augmentation import augment_dataset
-from keras_vggface.vggface import VGGFace
-
-import attacks.blackbox.substitute_model as substitute
 
 
 def train(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, batch_size):
@@ -21,8 +19,9 @@ def train(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, batc
     x_train = np.asarray(x_train).astype(np.float)
     x_train = utils.preprocess_input(x_train, version=2)
     for epoch in range(nepochs_substitute):
+        print(f"Starting training on new substitute model, epoch #{epoch+1}")
         model = SubstituteModel(num_oracle_classes)
-        y_train = np.argmax(oracle.predict(x_train), axis=1)
+        y_train = predict_in_batches(oracle, x_train, 32)
         substitute.train(model, x_train, y_train, nepochs_training, batch_size)
         pred = model(x_train)
         res = tf.argmax(pred, axis=1)
@@ -33,9 +32,20 @@ def train(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, batc
         res = y_train == pred_labels
         accuracy = np.count_nonzero(res) / pred_labels.shape[0]
         print(f"Accuracy after {epoch + 1} epochs: {accuracy * 100:.2f}%")
-        x_train = augment_dataset(oracle, x_train, params.LAMBDA)
+        x_train = augment_dataset(model, x_train, params.LAMBDA)
     substitute.save_model(model, params.SUBSTITUTE_WEIGHTS_PATH)
     return model
+
+def predict_in_batches(oracle, images, batch_size):
+    predictions = []
+    nbatches = (images.shape[0] // batch_size) + 1
+    for b in range(nbatches):
+        last_index = np.min(((b + 1) * batch_size, images.shape[0]))
+        batch = images[b * batch_size:last_index]
+        pred = np.argmax(oracle.predict(batch), axis=1)
+        predictions.extend(pred)
+        print(f"Prediction progress: {100 * (b + 1) / nbatches:.2f}%")
+    return np.asarray(predictions)
 
 LOAD_WEIGHTS = False
 
