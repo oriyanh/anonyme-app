@@ -7,15 +7,16 @@ from keras_vggface import utils
 
 import attacks.blackbox.params as params
 import attacks.blackbox.substitute_model as substitute
+import attacks.blackbox.utilities
 from attacks.blackbox.substitute_model import SubstituteModel
 from attacks.blackbox.blackbox_model import get_vggface_model
-from attacks.blackbox.params import extract_face
+from attacks.blackbox.utilities import extract_face
 from attacks.blackbox.augmentation import augment_dataset
 
 
 def train(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, batch_size):
     assert nepochs_substitute > 0
-    x_train = params.load_training_set()
+    x_train = attacks.blackbox.utilities.load_training_set()
     x_train = np.asarray(x_train).astype(np.float)
     x_train = utils.preprocess_input(x_train, version=2)
     for epoch in range(nepochs_substitute):
@@ -32,6 +33,17 @@ def train(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, batc
         res = y_train == pred_labels
         accuracy = np.count_nonzero(res) / pred_labels.shape[0]
         print(f"Accuracy after {epoch + 1} epochs: {accuracy * 100:.2f}%")
+        x_train = augment_dataset(model, x_train, params.LAMBDA)
+    substitute.save_model(model, params.SUBSTITUTE_WEIGHTS_PATH)
+    return model
+
+def train2(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, batch_size):
+    assert nepochs_substitute > 0
+    datagen = tf.keras.preprocessing.image.ImageDataGenerator()
+    for epoch in range(nepochs_substitute):
+        print(f"Starting training on new substitute model, epoch #{epoch+1}")
+        model = SubstituteModel(num_oracle_classes)
+        substitute.train2(model, oracle, datagen, train_dir, validation_dir, nepochs_substitute, batch_size, nsteps)
         x_train = augment_dataset(model, x_train, params.LAMBDA)
     substitute.save_model(model, params.SUBSTITUTE_WEIGHTS_PATH)
     return model

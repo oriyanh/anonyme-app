@@ -1,4 +1,5 @@
 import tensorflow as tf
+from keras_vggface import utils
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense, Conv2D, MaxPool2D, Flatten
 
@@ -35,6 +36,13 @@ class SubstituteModel(Model):
         x = self.dense2(x)
         return self.dense3(x)
 
+def SubstituteModel2(num_classes):
+    model = tf.keras.Sequential(layers=[Conv2D(64, 2), MaxPool2D(2), Conv2D(64, 2),
+                                        MaxPool2D(2), Flatten(), Dense(200, activation='sigmoid'), 
+                                        Dense(200, activation='sigmoid'), Dense(100, activation='relu'),
+                                        Dense(num_classes, activation='softmax')])
+    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    return model
 
 def get_embeddings(images):
     return facenet.embedding(images)
@@ -98,6 +106,54 @@ def train(model, images, labels, num_epochs, batch_size):
     # accuracy = np.count_nonzero(res) / pred_labels.shape[0]
     # print(f"Accuracy after {num_epochs} epochs: {accuracy * 100:.2f}%")
     return model
+
+def train2(model, oracle, datagen, train_dir, validation_dir, num_epochs, batch_size, nsteps):
+    # shuffle_seed = 1000
+
+    # train_ds = tf.data.Dataset.from_tensor_slices(
+    #     (images, labels)).shuffle(shuffle_seed).batch(batch_size)
+    train_it = datagen.flow_from_directory(train_dir, class_mode=None,
+                                           batch_size=batch_size,
+                                           shuffle=True, target_size=(224, 224))
+    train_step = get_train_step()
+    for epoch in range(num_epochs):
+        print(f"Start training epoch #{epoch+1}")
+        nbatch = 0
+        for im_batch in train_it:
+            nbatch +=1
+            if nbatch > nsteps:
+                break
+            normalized_batch = utils.preprocess_input(im_batch, version=2)
+            label_batch = oracle.predict(normalized_batch)
+            print(f"Training epoch progress: {100*nbatch/nsteps:.2f}%")
+            train_step(model, im_batch, label_batch)
+
+    val_gen = validation_generator(oracle, datagen, validation_dir, batch_size)
+    [loss, accuracy] = model.evaluate_generator(val_gen, steps=50)
+    print(f"Total loss on validation set: {loss:.2f} ; Accuracy: {accuracy:.2f}")
+    return model
+
+def training_generator(oracle, datagen, train_dir, batch_size):
+    train_it = datagen.flow_from_directory(train_dir, class_mode=None,
+                                           batch_size=batch_size,
+                                           shuffle=True, target_size=(224, 224))
+    while True:
+        im_batch = train_it.next()
+        x_train = utils.preprocess_input(im_batch, version=2)
+        label_batch = oracle.predict(x_train)
+        y_train = np.argmax(label_batch, axis=1)
+        yield x_train, y_train
+
+def validation_generator(oracle, datagen, validation_dir, batch_size):
+    val_it = datagen.flow_from_directory(validation_dir, class_mode=None,
+                                           batch_size=batch_size,
+                                           shuffle=True, target_size=(224, 224))
+    while True:
+        im_batch = val_it.next()
+        x_val = utils.preprocess_input(im_batch, version=2)
+        label_batch = oracle.predict(x_val)
+        y_val = np.argmax(label_batch, axis=1)
+        yield x_val, y_val
 
 def get_train_step():
     @tf.function
