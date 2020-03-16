@@ -66,7 +66,7 @@ def augment_batch2(model, batch, scale):
     with tf.GradientTape(persistent=True) as tape:
         tape.watch(batch)
         predictions = model(batch)
-        pred = tf.argmax(predictions)
+        pred = tf.argmax(predictions, axis=1)
     jacobian = tape.batch_jacobian(pred, batch)
     augmented_batch = batch + scale * tf.sign(jacobian)
     augmented_batch = tf.clip_by_value(augmented_batch[0], *BOUNDS)
