@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image
 from mtcnn import MTCNN
 
-from attacks.blackbox.params import DATASET_ALIGNED_TESTLIST, DATASET_ALIGNED_TRAINING
+from attacks.blackbox.params import DATASET_ALIGNED_TRAINLIST, TRAINING_SET_ALIGNED_PATH
 
 
 def load_initial_set(num_samples):
@@ -11,9 +11,9 @@ def load_initial_set(num_samples):
 
 def load_training_set():
     images = []
-    with open(DATASET_ALIGNED_TESTLIST, 'r') as f:
+    with open(DATASET_ALIGNED_TRAINLIST, 'r') as f:
         for r in f.readlines()[:1000]:
-            img_path = os.path.join(DATASET_ALIGNED_TRAINING, r.strip('\n\r'))
+            img_path = os.path.join(TRAINING_SET_ALIGNED_PATH, r.strip('\n\r'))
             try:
                 img = Image.open(img_path)
                 img_np = np.asarray(img)
