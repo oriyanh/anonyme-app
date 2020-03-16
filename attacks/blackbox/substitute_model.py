@@ -7,6 +7,7 @@ from easyfacenet.simple import facenet
 import attacks.blackbox.params as params
 import numpy as np
 
+
 loss_obj = tf.keras.losses.SparseCategoricalCrossentropy()
 optimizer = tf.keras.optimizers.Adam(params.LEARNING_RATE, beta_1=params.MOMENTUM)
 train_loss = tf.keras.metrics.Mean(name='train_loss')
@@ -38,7 +39,7 @@ class SubstituteModel(Model):
 
 def SubstituteModel2(num_classes):
     model = tf.keras.Sequential(layers=[Conv2D(64, 2), MaxPool2D(2), Conv2D(64, 2),
-                                        MaxPool2D(2), Flatten(), Dense(200, activation='sigmoid'), 
+                                        MaxPool2D(2), Flatten(), Dense(200, activation='sigmoid'),
                                         Dense(200, activation='sigmoid'), Dense(100, activation='relu'),
                                         Dense(num_classes, activation='softmax')])
     model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
@@ -58,7 +59,6 @@ def load_model(weights_path, num_classes):
 
 def save_model(model, weights_path):
     model.save_weights(weights_path, save_format='h5')
-
 
 def get_batches(images, labels, batch_size):
     nbatches = (images.shape[0] // batch_size) + 1
@@ -80,13 +80,13 @@ def train(model, images, labels, num_epochs, batch_size):
     train_step = get_train_step()
     nbatches = images.shape[0] // batch_size
     for epoch in range(num_epochs):
-        print(f"Start training epoch #{epoch+1}")
+        print(f"Start training epoch #{epoch + 1}")
         nbatch = 0
         for im_batch, label_batch in get_batches(images, labels, batch_size):
             nbatch += 1
             if nbatch > nbatches:
                 break
-            print(f"Training epoch progress: {100*nbatch/nbatches:.2f}%")
+            print(f"Training epoch progress: {100 * nbatch / nbatches:.2f}%")
             train_step(model, im_batch, label_batch)
         # train_accuracy(labels, model(images))
         # with tf.Session().as_default():
@@ -107,47 +107,38 @@ def train(model, images, labels, num_epochs, batch_size):
     # print(f"Accuracy after {num_epochs} epochs: {accuracy * 100:.2f}%")
     return model
 
-def train2(model, oracle, datagen, train_dir, validation_dir, num_epochs, batch_size, nsteps):
-    # shuffle_seed = 1000
-
-    # train_ds = tf.data.Dataset.from_tensor_slices(
-    #     (images, labels)).shuffle(shuffle_seed).batch(batch_size)
-    train_it = datagen.flow_from_directory(train_dir, class_mode=None,
-                                           batch_size=batch_size,
-                                           shuffle=True, target_size=(224, 224))
+def train2(model, oracle, train_dir, validation_dir, num_epochs, batch_size):
+    train_gen = training_generator(oracle, train_dir, batch_size)
     train_step = get_train_step()
     for epoch in range(num_epochs):
-        print(f"Start training epoch #{epoch+1}")
-        nbatch = 0
-        for im_batch in train_it:
-            nbatch +=1
-            if nbatch > nsteps:
-                break
-            normalized_batch = utils.preprocess_input(im_batch, version=2)
-            label_batch = oracle.predict(normalized_batch)
-            print(f"Training epoch progress: {100*nbatch/nsteps:.2f}%")
+        print(f"Start training epoch #{epoch + 1}")
+        for im_batch, label_batch in train_gen:
             train_step(model, im_batch, label_batch)
 
-    val_gen = validation_generator(oracle, datagen, validation_dir, batch_size)
+    val_gen = validation_generator(oracle, validation_dir, batch_size)
     [loss, accuracy] = model.evaluate_generator(val_gen, steps=50)
     print(f"Total loss on validation set: {loss:.2f} ; Accuracy: {accuracy:.2f}")
     return model
 
-def training_generator(oracle, datagen, train_dir, batch_size):
+def training_generator(oracle, train_dir, batch_size):
+    datagen = tf.keras.preprocessing.image.ImageDataGenerator()
     train_it = datagen.flow_from_directory(train_dir, class_mode=None,
                                            batch_size=batch_size,
                                            shuffle=True, target_size=(224, 224))
-    while True:
+    nsteps = (len(train_it.filepaths) // batch_size) + 1
+    for step in range(nsteps):
         im_batch = train_it.next()
         x_train = utils.preprocess_input(im_batch, version=2)
         label_batch = oracle.predict(x_train)
         y_train = np.argmax(label_batch, axis=1)
         yield x_train, y_train
+        print(f"Training epoch progress: {100 * step / nsteps:.2f}%")
 
-def validation_generator(oracle, datagen, validation_dir, batch_size):
+def validation_generator(oracle, validation_dir, batch_size):
+    datagen = tf.keras.preprocessing.image.ImageDataGenerator()
     val_it = datagen.flow_from_directory(validation_dir, class_mode=None,
-                                           batch_size=batch_size,
-                                           shuffle=True, target_size=(224, 224))
+                                         batch_size=batch_size,
+                                         shuffle=True, target_size=(224, 224))
     while True:
         im_batch = val_it.next()
         x_val = utils.preprocess_input(im_batch, version=2)
