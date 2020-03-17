@@ -108,15 +108,18 @@ def train(model, images, labels, num_epochs, batch_size):
     return model
 
 def train2(model, oracle, train_dir, validation_dir, num_epochs, batch_size):
-    train_gen = training_generator(oracle, train_dir, batch_size)
+    # train_gen = training_generator(oracle, train_dir, batch_size)
+    train_ds, nsamples = get_training_set(oracle, train_dir, batch_size)
     train_step = get_train_step()
-    for epoch in range(num_epochs):
-        print(f"Start training epoch #{epoch + 1}")
-        for im_batch, label_batch in train_gen:
-            train_step(model, im_batch, label_batch)
+    nsteps = (nsamples // batch_size) + 1
+    model.fit_generator(train_ds, epochs=num_epochs, steps_per_epoch=nsteps)
+    # for epoch in range(num_epochs):
+    #     print(f"Start training epoch #{epoch + 1}")
+        # for im_batch, label_batch in train_gen:
+        #     train_step(model, im_batch, label_batch)
 
     val_gen = validation_generator(oracle, validation_dir, batch_size)
-    [loss, accuracy] = model.evaluate_generator(val_gen, steps=50)
+    [loss, accuracy] = model.evaluate_generator(train_ds, steps=50)
     print(f"Total loss on validation set: {loss:.2f} ; Accuracy: {accuracy:.2f}")
     return model
 
@@ -133,6 +136,30 @@ def training_generator(oracle, train_dir, batch_size):
         y_train = np.argmax(label_batch, axis=1)
         yield x_train, y_train
         print(f"Training epoch progress: {100 * step / nsteps:.2f}%")
+
+def get_training_set(oracle, train_dir, batch_size):
+    datagen = tf.keras.preprocessing.image.ImageDataGenerator()
+    train_it = datagen.flow_from_directory(train_dir, class_mode=None, batch_size=batch_size,
+                                           shuffle=True, target_size=(224, 224))
+    def gen():
+        while True:
+            # for step in range(nsteps):
+            im_batch = train_it.next()
+            x_train = utils.preprocess_input(im_batch, version=2)
+            label_batch = oracle.predict(x_train)
+            y_train = np.argmax(label_batch, axis=1)
+            # print(f"Training epoch progress: {100 * (step+1) / nsteps:.2f}%")
+            yield x_train, y_train
+    ds_images = tf.data.Dataset.from_generator(gen, output_shapes=([batch_size, 224, 224, 3], tf.TensorShape([])),
+                                               output_types=(tf.float32, tf.int32))
+    return ds_images, len(train_it.filepaths)
+    # def preprocess(image):
+    #     x_train = utils.preprocess_input(image, version=2)
+    #     label_batch = oracle.predict(x_train)
+    #     y_train = np.argmax(label_batch, axis=1)
+    #     return x_train, y_train
+    #
+    # ds = ds_images.map(preprocess)
 
 def validation_generator(oracle, validation_dir, batch_size):
     datagen = tf.keras.preprocessing.image.ImageDataGenerator()
