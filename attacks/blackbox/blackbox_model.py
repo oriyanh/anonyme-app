@@ -1,4 +1,9 @@
+import tensorflow as tf
 from keras_vggface.vggface import VGGFace
 
+graph = tf.get_default_graph()
+sess = tf.Session(graph=graph)
 def get_vggface_model():
-    return VGGFace(model='resnet50')
+    tf.keras.backend.set_session(sess)
+    model = VGGFace(model='resnet50')
+    return model
