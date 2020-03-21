@@ -3,6 +3,8 @@ from datetime import datetime
 from PIL import Image
 import tensorflow as tf
 import numpy as np
+from keras_vggface import utils
+
 import attacks.blackbox.params as params
 from keras_preprocessing.image import ImageDataGenerator
 
@@ -74,3 +76,54 @@ def augment_batch2(model, batch, scale):
         sess.run(tf.global_variables_initializer())
         augmented_batch_np = sess.run(augmented_batch)
     return augmented_batch_np
+
+def augment_dataset3(model, image_dir, scale):
+    batch_size = 32
+    image_ds, nimages = get_augmentation_dataset(model, image_dir, scale, batch_size)
+    nbatches = (nimages // BATCH_SIZE) + 1
+    new_image_dir = os.path.join(params.DATASET_BASE_PATH, "intermediate_images",
+                                 datetime.now().strftime("%H%M%S%f"))
+    os.makedirs(new_image_dir, mode=0o777)
+    fname = 1
+    step = 0
+    # for step in range(nsteps):
+    for augmented_batch in image_ds:
+        print(f"Training epoch progress: step {step + 1}/{nbatches} ({100 * (step + 1) / nbatches:.2f}%)")
+        if step >= nbatches:
+            break
+        step += 1
+        for im_array in augmented_batch:
+            im = Image.fromarray(im_array)
+            im.save(os.path.join(new_image_dir,
+                                 f"{fname}.jpg".rjust(11, "0")))
+            fname += 1
+        print(
+            f"Augmentation progress: augmented {(step + 1) * batch_size} / {nbatches * batch_size} images ({100 * (step + 1) / nbatches:.2f}%)")
+
+    return new_image_dir
+
+def get_augmentation_dataset(model, image_dir, scale, batch_size):
+    datagen = tf.keras.preprocessing.image.ImageDataGenerator()
+    image_it = datagen.flow_from_directory(image_dir, class_mode=None, batch_size=batch_size,
+                                           shuffle=False, target_size=(224, 224))
+
+    def gen():
+        while True:
+            # for step in range(nsteps):
+            im_batch = image_it.next()
+            im_batch_norm = utils.preprocess_input(im_batch, version=2)
+            diff = im_batch - im_batch_norm
+            # with graph.as_default():
+            #     tf.keras.backend.set_session(sess)
+            label_batch = model(im_batch_norm)
+            labels = tf.argmax(label_batch, axis=1)
+            jacobian = tf.gradients(labels, im_batch)
+            augmented_batch = im_batch + scale * tf.sign(jacobian)
+            augmented_batch = tf.clip_by_value(augmented_batch[0], *BOUNDS)
+            augmented_batch = tf.cast(augmented_batch, tf.uint8)
+            # print(f"Training epoch progress: {100 * (step+1) / nsteps:.2f}%")
+            yield augmented_batch
+
+    ds_images = tf.data.Dataset.from_generator(gen, output_shapes=([batch_size, 224, 224, 3]),
+                                               output_types=(tf.uint8))
+    return ds_images, len(image_it.filepaths)

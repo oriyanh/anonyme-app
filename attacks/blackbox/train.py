@@ -10,7 +10,7 @@ import attacks.blackbox.substitute_model as substitute
 import attacks.blackbox.utilities
 from attacks.blackbox.substitute_model import SubstituteModel, SubstituteModel2
 from attacks.blackbox.blackbox_model import get_vggface_model
-from attacks.blackbox.augmentation import augment_dataset, augment_dataset2
+from attacks.blackbox.augmentation import augment_dataset, augment_dataset2, augment_dataset3
 
 
 def train(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, batch_size):
@@ -44,7 +44,8 @@ def train2(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, bat
         print(f"Starting training on new substitute model, epoch #{epoch + 1}")
         model = SubstituteModel2(num_oracle_classes)
         substitute.train2(model, oracle, train_dir, validation_dir, nepochs_training, batch_size)
-        train_dir = augment_dataset2(model, train_dir, params.LAMBDA)
+        # train_dir = augment_dataset2(model, train_dir, params.LAMBDA)
+        train_dir = augment_dataset3(model, train_dir, params.LAMBDA)
     substitute.save_model(model, params.SUBSTITUTE_WEIGHTS_PATH)
     return model
 
