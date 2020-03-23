@@ -2,9 +2,9 @@ import os
 
 LEARNING_RATE = 1e-2
 MOMENTUM = 0.9
-EPOCHS_TRAINING = 10
-EPOCHS_SUBSTITUTE = 6
-BATCH_SIZE = 8
+EPOCHS_TRAINING = 1
+EPOCHS_SUBSTITUTE = 1
+BATCH_SIZE = 32
 LAMBDA = 0.1  # Step size for jacobian augmentation
 NUM_INIT_SAMPLES = 1000
 SUBSTITUTE_WEIGHTS_PATH = '/cs/ep/503/outputs/weights/substitute_vggface.h5'

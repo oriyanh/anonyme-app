@@ -108,7 +108,7 @@ def train(model, images, labels, num_epochs, batch_size):
     return model
 
 def train2(model, oracle, train_dir, validation_dir, num_epochs, batch_size):
-    train_gen, nsamples = training_generator(oracle, train_dir, batch_size)
+    # train_gen, nsamples = training_generator(oracle, train_dir, batch_size)
     train_ds, nsamples = get_training_set(oracle, train_dir, batch_size)
     train_step = get_train_step()
     nsteps = (nsamples // batch_size) + 1
@@ -125,8 +125,12 @@ def train2(model, oracle, train_dir, validation_dir, num_epochs, batch_size):
     #         model.train_on_batch(train_ds)
             train_step(model, im_batch, label_batch)
             step += 1
+        print("Training loss: %s" % train_loss.result())
+        print("Training accuracy: %s" % train_accuracy.result())
+        train_loss.reset_states()
+        train_accuracy.reset_states()
 
-    val_gen = validation_generator(oracle, validation_dir, batch_size)
+    # val_gen = validation_generator(oracle, validation_dir, batch_size)
     # [loss, accuracy] = model.evaluate(train_ds, steps=2)
     # print(f"Total loss on validation set: {loss:.2f} ; Accuracy: {accuracy:.2f}")
     return model
@@ -198,5 +202,6 @@ def get_train_step():
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
         train_loss(loss)
+        train_accuracy(labels, preds)
 
     return train_step

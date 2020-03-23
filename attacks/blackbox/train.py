@@ -9,7 +9,7 @@ import attacks.blackbox.params as params
 import attacks.blackbox.substitute_model as substitute
 import attacks.blackbox.utilities
 from attacks.blackbox.substitute_model import SubstituteModel, SubstituteModel2
-from attacks.blackbox.blackbox_model import get_vggface_model
+from attacks.blackbox.blackbox_model import get_vggface_model, sess, graph
 from attacks.blackbox.augmentation import augment_dataset, augment_dataset2, augment_dataset3
 
 
@@ -74,6 +74,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+    sess.close()
     # model = get_vggface_model()
     #
     # img = extract_face('/cs/ep/503/oriyan/repo/channing_tatum.jpg')
