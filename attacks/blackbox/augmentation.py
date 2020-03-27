@@ -94,9 +94,12 @@ def augment_dataset3(model, image_dir, scale):
     step = 0
     # for step in range(nsteps):
     # for augmented_batch in image_ds:
-    load_img_fn = lambda x: np.asarray(tf.keras.preprocessing.image.load_img(x, target_size=(224, 224)))
+    load_img_fn = lambda x: np.asarray(tf.keras.preprocessing.image.load_img(x, target_size=(224, 224)), dtype=np.float32)
     save_img_fn = lambda x, y: tf.keras.preprocessing.image.save_img(os.path.join(new_image_dir,
                                                                f"{y}.jpg".rjust(11, "0")), x)
+    sess = tf.Session()
+    with sess.as_default():
+        sess.run(tf.global_variables_initializer())
     for nbatch in range(nbatches):
         if step >= nbatches:
             break
@@ -104,16 +107,21 @@ def augment_dataset3(model, image_dir, scale):
         # batch = np.zeros((last_index-nbatch*batch_size, 224, 224, 3), dtype=np.uint8)
         file_batch = files[nbatch*batch_size:last_index]
         batch = np.asarray([load_img_fn(f) for f in file_batch])
-
+        batch_norm = utils.preprocess_input(batch, version=2)
+        diff = batch - batch_norm
     # for batch in image_it:
         # print(f"Training epoch progress: step {step + 1}/{nbatches} ({100 * (step + 1) / nbatches:.2f}%)")
         # if step >= nbatches:
         #     break
-        augmented_batch = preprocess(model, scale, batch)
-
-        for im, im_augmented in zip(batch, augmented_batch):
-            save_img_fn(im, fname)
-            save_img_fn(im_augmented, fname+1)
+        augmented_batch = preprocess(model, batch, scale, diff)
+        fnames = np.arange(fname, fname+batch.shape[0])
+        fwrite = save_batch(augmented_batch, fnames)
+        with sess.as_default():
+            sess.run(fwrite)
+        fname += batch.shape[0]
+        # for im, im_augmented in zip(batch, augmented_batch):
+        #     save_img_fn(im, fname)
+        #     save_img_fn(im_augmented, fname+1)
             # tf.keras.preprocessing.image.save_img(os.path.join(new_image_dir,
             #                                                    f"{fname}.jpg".rjust(11, "0")), im)
             # tf.keras.preprocessing.image.save_img(os.path.join(new_image_dir,
@@ -121,32 +129,104 @@ def augment_dataset3(model, image_dir, scale):
             # im = Image.fromarray(im_array)
             # im.save(os.path.join(new_image_dir,
             #                      f"{fname}.jpg".rjust(11, "0")))
-            fname += 2
+            # fname += 2
         step += 1
         print(
             f"Augmentation progress: augmented {step * batch_size*2} / {nbatches * batch_size*2} images ({100 * step / nbatches:.2f}%)")
 
     return new_image_dir
 
-def preprocess(model, scale, batch):
-    im_batch_norm = utils.preprocess_input(batch, version=2)
-    diff = batch - im_batch_norm
+def augment_dataset4(model, image_dir, scale):
+    batch_size = 32
+    # image_ds, nimages = get_augmentation_dataset(model, image_dir, scale, batch_size)
+    datagen = tf.keras.preprocessing.image.ImageDataGenerator()
+
+    image_it = datagen.flow_from_directory(image_dir, class_mode=None, batch_size=batch_size,
+                                           shuffle=False, target_size=(224, 224))
+    files = [os.path.join(image_dir, name) for name in image_it.filenames]
+    nimages = image_it.n
+    nbatches = (nimages // BATCH_SIZE) + 1
+    new_image_dir = os.path.join(params.DATASET_BASE_PATH, "intermediate_images",
+                                 datetime.now().strftime("%Y%m%d%H%M%S%f"))
+    os.makedirs(new_image_dir, mode=0o777)
+    fname = 1
+    step = 0
+    # for step in range(nsteps):
+    # for augmented_batch in image_ds:
+    # load_img_fn = lambda x: np.asarray(tf.keras.preprocessing.image.load_img(x, target_size=(224, 224)), dtype=np.float32)
+    load_img_fn = lambda x: np.asarray(Image.open(x)).astype(np.float32)
+    # save_img_fn = lambda x, y: tf.keras.preprocessing.image.save_img(os.path.join(new_image_dir,
+    #                                                                               f"{y}.jpg".rjust(11, "0")), x)
+    save_img_fn = lambda x, y: Image.fromarray(x).save(os.path.join(new_image_dir,
+                                                                    f"{y}.jpg".rjust(11, "0")))
     sess = tf.Session()
     with sess.as_default():
         sess.run(tf.global_variables_initializer())
-        im_batch_tensor = tf.constant(im_batch_norm)
-        with tf.GradientTape(persistent=True) as tape:
-            tape.watch(im_batch_tensor)
-            label_batch = model(im_batch_tensor)
-            # labels = tf.argmax(label_batch, axis=1)
-            # labels = tf.cast(labels, tf.float32)
-        jacobian = tape.gradient(label_batch, im_batch_tensor)
-        augmented_batch = im_batch_tensor + scale * tf.sign(jacobian)
-        augmented_batch += diff
-        augmented_batch = tf.clip_by_value(augmented_batch, *BOUNDS)
-        augmented_batch = tf.cast(augmented_batch, tf.uint8)
-        augmented_batch_np = sess.run(augmented_batch)
-    return augmented_batch_np
+    for nbatch in range(nbatches):
+        if step >= nbatches:
+            break
+
+        last_index = min(((nbatch+1)*batch_size, nimages))
+        file_batch = files[nbatch*batch_size:last_index]
+        batch = np.asarray([load_img_fn(f) for f in file_batch])
+        batch_norm = utils.preprocess_input(batch, version=2)
+        diff = batch - batch_norm
+        batch_ph = tf.placeholder(tf.float32, shape=[None, 224, 224, 3], name="X")
+        augmented_batch_tensor = preprocess(model, batch_ph, scale, diff)
+        # save_batch(augmented_batch_tensor, np.arange(fname, fname+batch.shape[0]))
+        with sess.as_default():
+            augmented_batch = sess.run(augmented_batch_tensor, feed_dict={batch_ph: batch_norm})
+        for im_orig, im_augmented in zip(batch.astype(np.uint8), augmented_batch):
+            save_img_fn(im_orig, fname)
+            save_img_fn(im_augmented, fname+1)
+            fname += 2
+        # tf.keras.preprocessing.image.save_img(os.path.join(new_image_dir,
+        #                                                    f"{fname}.jpg".rjust(11, "0")), im)
+        # tf.keras.preprocessing.image.save_img(os.path.join(new_image_dir,
+        #                                                    f"{fname+1}.jpg".rjust(11, "0")), im_augmented)
+        # fnames = np.arange(fname, fname+batch.shape[0])
+        # fwrite = save_batch(augmented_batch, fnames)
+        # with sess.as_default():
+        #     sess.run(fwrite)
+        # fname += batch.shape[0]
+        step += 1
+        print(
+            f"Augmentation progress: augmented {step * batch_size*2} / {nbatches * batch_size*2} images ({100 * step / nbatches:.2f}%)")
+
+    return new_image_dir
+
+@tf.function
+def preprocess(model, batch, scale, diff):
+    # im_batch_norm = utils.preprocess_input(batch, version=2)
+    # diff = batch - im_batch_norm
+    # with sess.as_default():
+        # sess.run(tf.global_variables_initializer())
+    # im_batch_tensor = tf.constant(batch)
+    with tf.GradientTape(persistent=True) as tape:
+        tape.watch(batch)
+        label_batch = model(batch)
+        # labels = tf.argmax(label_batch, axis=1)
+        # labels = tf.cast(labels, tf.float32)
+    jacobian = tape.gradient(label_batch, batch)
+    augmented_batch = batch + scale * tf.sign(jacobian)
+    augmented_batch += diff
+    augmented_batch = tf.clip_by_value(augmented_batch, *BOUNDS)
+    augmented_batch = tf.cast(augmented_batch, tf.uint8)
+        # augmented_batch_np = sess.run(augmented_batch)
+    return augmented_batch
+    # return augmented_batch_np
+
+# @tf.function(input_signature=[tf.TensorSpec(shape=None, dtype=tf.uint8), tf.TensorSpec(shape=None, dtype=tf.uint32)])
+def save_batch(batch, fnames):
+    elements = batch, fnames
+    fwrite = tf.map_fn(lambda x: save_image(x[0], x[1]), elements, dtype=tf.Operation, name="WrFiles")
+    return fwrite
+# @tf.function
+def save_image(image, fname):
+    image_encoded = tf.image.encode_jpeg(image, quality=100, name="Encode")
+    fname_fmt = tf.strings.format("{}.jpg", fname, name="alcFileName")
+    fwrite = tf.io.write_file(fname_fmt, image_encoded, name="WrFile")
+    return fwrite
 
 def get_augmentation_dataset(model, image_dir, scale, batch_size):
 
@@ -154,6 +234,7 @@ def get_augmentation_dataset(model, image_dir, scale, batch_size):
 
     image_it = datagen.flow_from_directory(image_dir, class_mode=None, batch_size=batch_size,
                                            shuffle=False, target_size=(224, 224))
+    image_it.n
     def gen():
         while True:
             # for step in range(nsteps):
