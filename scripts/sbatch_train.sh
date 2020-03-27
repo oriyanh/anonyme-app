@@ -1,10 +1,13 @@
 #!/bin/csh
 
 
-#SBATCH --cpus-per-task=2
-#SBATCH --output=/cs/ep/503/outputs/slurm
-#SBATCH --mem-per-cpu=3000M
+#SBATCH --cpus-per-task=4
+#SBATCH --output=/cs/ep/503/outputs/slurm.out
+#SBATCH --err=/cs/ep/503/outputs/slurm.err
+#SBATCH --mem-per-cpu=4000M
+#SBATCH --time=1-0
 #SBATCH --account=peleg
+#SBATCH --constraint="lucy"
 
 setenv PYTHONPATH $PYTHONPATH\:/cs/ep/503/oriyan/repo
 
