@@ -84,6 +84,7 @@ def augment_dataset3(model, image_dir, scale):
 
     image_it = datagen.flow_from_directory(image_dir, class_mode=None, batch_size=batch_size,
                                        shuffle=False, target_size=(224, 224))
+    files = [os.path.join(image_dir, name) for name in image_it.filenames]
     nimages = len(image_it.filepaths)
     nbatches = (nimages // BATCH_SIZE) + 1
     new_image_dir = os.path.join(params.DATASET_BASE_PATH, "intermediate_images",
@@ -93,18 +94,30 @@ def augment_dataset3(model, image_dir, scale):
     step = 0
     # for step in range(nsteps):
     # for augmented_batch in image_ds:
-    for batch in image_it:
-        # print(f"Training epoch progress: step {step + 1}/{nbatches} ({100 * (step + 1) / nbatches:.2f}%)")
+    load_img_fn = lambda x: np.asarray(tf.keras.preprocessing.image.load_img(x, target_size=(224, 224)))
+    save_img_fn = lambda x, y: tf.keras.preprocessing.image.save_img(os.path.join(new_image_dir,
+                                                               f"{y}.jpg".rjust(11, "0")), x)
+    for nbatch in range(nbatches):
         if step >= nbatches:
             break
+        last_index = min(((nbatch+1)*batch_size, nimages))
+        # batch = np.zeros((last_index-nbatch*batch_size, 224, 224, 3), dtype=np.uint8)
+        file_batch = files[nbatch*batch_size:last_index]
+        batch = np.asarray([load_img_fn(f) for f in file_batch])
+
+    # for batch in image_it:
+        # print(f"Training epoch progress: step {step + 1}/{nbatches} ({100 * (step + 1) / nbatches:.2f}%)")
+        # if step >= nbatches:
+        #     break
         augmented_batch = preprocess(model, scale, batch)
 
         for im, im_augmented in zip(batch, augmented_batch):
-
-            tf.keras.preprocessing.image.save_img(os.path.join(new_image_dir,
-                                                               f"{fname}.jpg".rjust(11, "0")), im)
-            tf.keras.preprocessing.image.save_img(os.path.join(new_image_dir,
-                                                               f"{fname+1}.jpg".rjust(11, "0")), im_augmented)
+            save_img_fn(im, fname)
+            save_img_fn(im_augmented, fname+1)
+            # tf.keras.preprocessing.image.save_img(os.path.join(new_image_dir,
+            #                                                    f"{fname}.jpg".rjust(11, "0")), im)
+            # tf.keras.preprocessing.image.save_img(os.path.join(new_image_dir,
+            #                                                    f"{fname+1}.jpg".rjust(11, "0")), im_augmented)
             # im = Image.fromarray(im_array)
             # im.save(os.path.join(new_image_dir,
             #                      f"{fname}.jpg".rjust(11, "0")))
