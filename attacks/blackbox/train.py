@@ -10,7 +10,8 @@ import attacks.blackbox.substitute_model as substitute
 import attacks.blackbox.utilities
 from attacks.blackbox.substitute_model import SubstituteModel, SubstituteModel2
 from attacks.blackbox.blackbox_model import get_vggface_model, sess, graph
-from attacks.blackbox.augmentation import augment_dataset, augment_dataset2, augment_dataset3
+from attacks.blackbox.augmentation import augment_dataset, augment_dataset2, augment_dataset3, \
+    augment_dataset4
 
 
 def train(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, batch_size):
@@ -40,13 +41,16 @@ def train2(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, bat
     assert nepochs_substitute > 0 and nepochs_training > 0
     train_dir = params.TRAINING_SET_ALIGNED_PATH
     validation_dir = train_dir
-    for epoch in range(nepochs_substitute):
-        print(f"Starting training on new substitute model, epoch #{epoch + 1}")
+    for epoch in range(1, nepochs_substitute+1):
+        print(f"Starting training on new substitute model, epoch #{epoch}")
         model = SubstituteModel2(num_oracle_classes)
         substitute.train2(model, oracle, train_dir, validation_dir, nepochs_training, batch_size)
         # train_dir = augment_dataset2(model, train_dir, params.LAMBDA)
-        train_dir = augment_dataset3(model, train_dir, params.LAMBDA)
-    substitute.save_model(model, params.SUBSTITUTE_WEIGHTS_PATH)
+        print("Saving")
+        substitute.save_model(model, params.SUBSTITUTE_WEIGHTS_PATH)
+        if epoch < nepochs_substitute:
+            print("Augmenting")
+            train_dir = augment_dataset4(model, train_dir, params.LAMBDA)
     return model
 
 def predict_in_batches(oracle, images, batch_size):
