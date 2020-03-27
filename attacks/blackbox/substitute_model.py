@@ -113,26 +113,26 @@ def train2(model, oracle, train_dir, validation_dir, num_epochs, batch_size):
     train_step = get_train_step()
     nsteps = (nsamples // batch_size) + 1
     # model.fit_generator(iter(train_ds), epochs=num_epochs, steps_per_epoch=2, verbose=1)
-    # model.fit(train_ds, epochs=num_epochs, steps_per_epoch=nsteps, verbose=1)
-    for epoch in range(num_epochs):
-        print(f"Start training epoch #{epoch + 1}")
-        step = 0
-        # for step in range(nsteps):
-        for im_batch, label_batch in train_ds:
-            print(f"Training epoch progress: step {step+1}/{nsteps} ({100 * (step+1) / nsteps:.2f}%)")
-            if step >= nsteps:
-                    break
-    #         model.train_on_batch(train_ds)
-            train_step(model, im_batch, label_batch)
-            step += 1
-        print("Training loss: %s" % train_loss.result())
-        print("Training accuracy: %s" % train_accuracy.result())
-        train_loss.reset_states()
-        train_accuracy.reset_states()
+    model.fit(train_ds, epochs=num_epochs, steps_per_epoch=nsteps, verbose=1)
+    # for epoch in range(num_epochs):
+    #     print(f"Start training epoch #{epoch + 1}")
+    #     step = 0
+    #     # for step in range(nsteps):
+    #     for im_batch, label_batch in train_ds:
+    #         if step >= nsteps:
+    #                 break
+    # #         model.train_on_batch(train_ds)
+    #         train_step(model, im_batch, label_batch)
+    #         print(f"Training epoch progress: step {step+1}/{nsteps} ({100 * (step+1) / nsteps:.2f}%)")
+    #         step += 1
+    #     print("Training loss: %s" % train_loss.result())
+    #     print("Training accuracy: %s" % train_accuracy.result())
+    #     train_loss.reset_states()
+    #     train_accuracy.reset_states()
 
     # val_gen = validation_generator(oracle, validation_dir, batch_size)
-    # [loss, accuracy] = model.evaluate(train_ds, steps=2)
-    # print(f"Total loss on validation set: {loss:.2f} ; Accuracy: {accuracy:.2f}")
+    [loss, accuracy] = model.evaluate(train_ds, steps=10)
+    print(f"Training loss on validation set: {loss:.2f} ; Training Accuracy: {accuracy:.2f}")
     return model
 
 def training_generator(oracle, train_dir, batch_size):
