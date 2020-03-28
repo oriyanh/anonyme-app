@@ -44,13 +44,17 @@ def load_test_set():
     pass
 
 def extract_face(pixels, required_size=(224, 224)):
+
     # detect faces in the image
     results = detector.detect_faces(pixels)
+
     # extract the bounding box from the first face
     x1, y1, width, height = results[0]['box']
     x2, y2 = x1 + width, y1 + height
+
     # extract the face
     face = pixels[y1:y2, x1:x2]
+
     # resize pixels to the model size
     image = Image.fromarray(face)
     image = image.resize(required_size)

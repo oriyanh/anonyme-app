@@ -1,3 +1,6 @@
+from attacks.blackbox.params import extract_face, SUBSTITUTE_WEIGHTS_PATH, NUM_CLASSES_VGGFACE
+
+from keras_vggface import utils
 import tensorflow as tf
 import numpy as np
 
@@ -6,7 +9,7 @@ FGSM_ATTACK_NAME = 'fgsm'
 FGSM_ITER_NUM = 100
 
 def generate_adversarial_sample(image, attack, args):
-    adversarial_sample = attack(image, *args)  # TODO
+    adversarial_sample = attack(image, *args)
     return adversarial_sample
 
 
@@ -53,8 +56,4 @@ def fgsm(x, y, model, eps=0.3, bounds=(-1., 1.)):
     return adv_x
 
 def papernot():
-    pass
-
-
-if __name__ == '__main__':
     pass
