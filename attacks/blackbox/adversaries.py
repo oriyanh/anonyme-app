@@ -1,8 +1,9 @@
-from attacks.blackbox.params import extract_face, SUBSTITUTE_WEIGHTS_PATH, NUM_CLASSES_VGGFACE
+# from attacks.blackbox.params import extract_face, SUBSTITUTE_WEIGHTS_PATH, NUM_CLASSES_VGGFACE
 
-from keras_vggface import utils
+# from keras_vggface import utils
 import tensorflow as tf
 import numpy as np
+from flask import current_app
 
 CLASSIFICATION_LOSS = tf.keras.losses.CategoricalCrossentropy()
 FGSM_ATTACK_NAME = 'fgsm'
@@ -13,8 +14,12 @@ def generate_adversarial_sample(image, attack, args):
     return adversarial_sample
 
 
-def run_fgsm_attack(image, label, model, eps=0.3):
+def run_fgsm_attack(image, eps=0.3):
+    model = current_app.substitute_model
+    preds = model.predict(image)
     orig_pred = np.argmax(model.predict(image))
+    label = tf.one_hot(orig_pred, preds.shape[-1])
+    label = tf.reshape(label, (1, preds.shape[-1]))
     for i in range(FGSM_ITER_NUM):
         image = fgsm(image, label, model, eps)
         if np.argmax(model.predict(image)) != orig_pred:
@@ -54,6 +59,10 @@ def fgsm(x, y, model, eps=0.3, bounds=(-1., 1.)):
         adv_x = tf.clip_by_value(adv_x, clip_min, clip_max)
 
     return adv_x
+
+
+def run_papernot_attack(img, label):
+    pass
 
 def papernot():
     pass

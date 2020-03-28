@@ -36,6 +36,15 @@ class SubstituteModel(Model):
         return self.dense3(x)
 
 
+def SubstituteModel2(num_classes):
+    model = tf.keras.Sequential(layers=[Conv2D(64, 2), MaxPool2D(2), Conv2D(64, 2),
+                                        MaxPool2D(2), Flatten(), Dense(200, activation='sigmoid'),
+                                        Dense(200, activation='sigmoid'), Dense(100, activation='relu'),
+                                        Dense(num_classes, activation='softmax')])
+    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    return model
+
+
 def get_embeddings(images):
     return facenet.embedding(images)
 
@@ -44,7 +53,8 @@ def classify(model, images):
     return model(embeddings)
 
 def load_model(weights_path, num_classes):
-    model = SubstituteModel(num_classes)
+    model = SubstituteModel2(num_classes)
+    model.build((1, 224, 224, 3))
     model.load_weights(weights_path)
     return model
 
