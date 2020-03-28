@@ -64,12 +64,15 @@ def predict_in_batches(oracle, images, batch_size):
         print(f"Prediction progress: {100 * (b + 1) / nbatches:.2f}%")
     return np.asarray(predictions)
 
-LOAD_WEIGHTS = False
+LOAD_WEIGHTS = True
 
 def main():
     oracle = get_vggface_model()
     if LOAD_WEIGHTS:
         substitute_model = substitute.load_model(params.SUBSTITUTE_WEIGHTS_PATH, params.NUM_CLASSES_VGGFACE)
+        init_b = np.random.randn(1, 224, 224, 3)
+        assert substitute_model.predict(init_b) is not None
+        print(f"Successfully loaded model")
     else:
         # substitute_model = train(oracle, params.NUM_CLASSES_VGGFACE, params.EPOCHS_SUBSTITUTE,
         #                          params.EPOCHS_TRAINING, params.BATCH_SIZE)

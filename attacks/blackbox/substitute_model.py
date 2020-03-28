@@ -53,7 +53,8 @@ def classify(model, images):
     return model(embeddings)
 
 def load_model(weights_path, num_classes):
-    model = SubstituteModel(num_classes)
+    model = SubstituteModel2(num_classes)
+    model.build(input_shape=[None, 224, 224, 3])
     model.load_weights(weights_path)
     return model
 
@@ -130,9 +131,9 @@ def train2(model, oracle, train_dir, validation_dir, num_epochs, batch_size):
     #     train_loss.reset_states()
     #     train_accuracy.reset_states()
 
-    # val_gen = validation_generator(oracle, validation_dir, batch_size)
-    [loss, accuracy] = model.evaluate(train_ds, steps=10)
-    print(f"Training loss on validation set: {loss:.2f} ; Training Accuracy: {accuracy:.2f}")
+    val_ds, _ = get_training_set(oracle, validation_dir, batch_size)
+    [loss, accuracy] = model.evaluate(val_ds, steps=10)
+    print(f"Validation loss: {loss:.2f} ; Validation Accuracy: {accuracy:.2f}")
     return model
 
 def training_generator(oracle, train_dir, batch_size):
@@ -169,9 +170,9 @@ def get_training_set(oracle, train_dir, batch_size):
             y_train = np.argmax(label_batch, axis=1)
             # print(f"Training epoch progress: {100 * (step+1) / nsteps:.2f}%")
             yield x_train, y_train
-    ds_images = tf.data.Dataset.from_generator(gen, output_shapes=([batch_size, 224, 224, 3], [batch_size]),
+    ds_images = tf.data.Dataset.from_generator(gen, output_shapes=([None, 224, 224, 3], [None]),
                                                output_types=(tf.float32, tf.int32))
-    return ds_images, len(train_it.filepaths)
+    return ds_images, train_it.n
     # def preprocess(image):
     #     x_train = utils.preprocess_input(image, version=2)
     #     label_batch = oracle.predict(x_train)
