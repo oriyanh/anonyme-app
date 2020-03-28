@@ -3,7 +3,6 @@ from keras_vggface import utils
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense, Conv2D, MaxPool2D, Flatten
 
-from easyfacenet.simple import facenet
 import attacks.blackbox.params as params
 import numpy as np
 from attacks.blackbox.blackbox_model import graph, sess
@@ -45,12 +44,6 @@ def SubstituteModel2(num_classes):
     model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     return model
 
-def get_embeddings(images):
-    return facenet.embedding(images)
-
-def classify(model, images):
-    embeddings = get_embeddings(images)
-    return model(embeddings)
 
 def load_model(weights_path, num_classes):
     model = SubstituteModel2(num_classes)
