@@ -1,16 +1,36 @@
-import tensorflow as tf
+from attacks.blackbox.params import extract_face, SUBSTITUTE_WEIGHTS_PATH, NUM_CLASSES_VGGFACE
 
+from keras_vggface import utils
+import tensorflow as tf
+import numpy as np
+
+CLASSIFICATION_LOSS = tf.keras.losses.CategoricalCrossentropy()
+FGSM_ATTACK_NAME = 'fgsm'
+FGSM_ITER_NUM = 100
 
 def generate_adversarial_sample(image, attack, args):
-    adversarial_sample = attack(image, *args)  # TODO
+    adversarial_sample = attack(image, *args)
     return adversarial_sample
 
 
-def fgsm(x, loss, eps=0.3, bounds=(-1., 1.)):
+def run_fgsm_attack(image, label, model, eps=0.3):
+    orig_pred = np.argmax(model.predict(image))
+    for i in range(FGSM_ITER_NUM):
+        image = fgsm(image, label, model, eps)
+        if np.argmax(model.predict(image)) != orig_pred:
+            print(f"Convergence reached after {i + 1} iterations")
+            break
+    else:
+        print("Convergence not reached")
+    return image
+
+
+def fgsm(x, y, model, eps=0.3, bounds=(-1., 1.)):
     """
 
     :param x:
-    :param loss:
+    :param y:
+    :param model:
     :param eps:
     :param bounds:
     :return:
@@ -18,14 +38,17 @@ def fgsm(x, loss, eps=0.3, bounds=(-1., 1.)):
 
     (clip_min, clip_max) = bounds
 
-    grad, = tf.gradients(loss, x)
+    with tf.GradientTape() as tape:
+        tape.watch(x)
+        pred = model(x)
+        loss = CLASSIFICATION_LOSS(y, pred)
 
-    normalized_grad = tf.sign(grad)
-    normalized_grad = tf.stop_gradient(normalized_grad)
+    # Get the gradients of the loss w.r.t to the input image.
+    gradient = tape.gradient(loss, x)
+    # Get the sign of the gradients to create the perturbation
+    signed_grad = tf.sign(gradient)
 
-    scaled_grad = eps * normalized_grad
-
-    adv_x = x - scaled_grad
+    adv_x = x + eps * signed_grad
 
     if (clip_min is not None) and (clip_max is not None):
         adv_x = tf.clip_by_value(adv_x, clip_min, clip_max)
