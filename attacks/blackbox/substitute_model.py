@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras import Model
-from tensorflow.keras.layers import Dense, Conv2D, MaxPool2D, Flatten
+from tensorflow.keras.layers import Dense, Conv2D, MaxPool2D, Flatten, Input
 
 from easyfacenet.simple import facenet
 import attacks.blackbox.params as params
@@ -36,16 +36,30 @@ class SubstituteModel(Model):
         return self.dense3(x)
 
 
+def SubstituteModel2(num_classes):
+    model = tf.keras.Sequential(layers=[Conv2D(64, 2), MaxPool2D(2), Conv2D(64, 2),
+                                        MaxPool2D(2), Flatten(), Dense(200, activation='sigmoid'),
+                                        Dense(200, activation='sigmoid'), Dense(100, activation='relu'),
+                                        Dense(num_classes, activation='softmax')])
+    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    return model
+
+
 def get_embeddings(images):
     return facenet.embedding(images)
+
 
 def classify(model, images):
     embeddings = get_embeddings(images)
     return model(embeddings)
 
-def load_model(weights_path, num_classes):
-    model = SubstituteModel(num_classes)
+def load_model(weights_path, num_classes, input_shape=(224, 224, 3)):
+    input_tensor = Input(input_shape)
+    model = SubstituteModel2(num_classes)
+    model(input_tensor)
     model.load_weights(weights_path)
+    # model = Model(inputs=input_tensor, outputs=output_tensor)
+
     return model
 
 def save_model(model, weights_path):

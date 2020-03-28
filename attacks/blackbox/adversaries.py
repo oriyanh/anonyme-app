@@ -1,4 +1,4 @@
-from attacks.blackbox.params import extract_face, SUBSTITUTE_WEIGHTS_PATH, NUM_CLASSES_VGGFACE
+# from attacks.blackbox.params import extract_face, SUBSTITUTE_WEIGHTS_PATH, NUM_CLASSES_VGGFACE
 
 from keras_vggface import utils
 import tensorflow as tf
@@ -13,10 +13,13 @@ def generate_adversarial_sample(image, attack, args):
     return adversarial_sample
 
 
-def run_fgsm_attack(image, label, model, eps=0.3):
+def run_fgsm_attack(image, model, eps=0.3):
+    preds = model.predict(image)
     orig_pred = np.argmax(model.predict(image))
+    label = tf.one_hot(orig_pred, preds.shape[-1])
+    label = tf.reshape(label, (1, preds.shape[-1]))
     for i in range(FGSM_ITER_NUM):
-        image = fgsm(image, label, model, eps)
+        image = fgsm(tf.constant(image), label, model, eps)
         if np.argmax(model.predict(image)) != orig_pred:
             print(f"Convergence reached after {i + 1} iterations")
             break
@@ -53,7 +56,17 @@ def fgsm(x, y, model, eps=0.3, bounds=(-1., 1.)):
     if (clip_min is not None) and (clip_max is not None):
         adv_x = tf.clip_by_value(adv_x, clip_min, clip_max)
 
-    return adv_x
+    return tf.Session().run(adv_x)
 
 def papernot():
     pass
+
+
+if __name__ == '__main__':
+    from PIL import Image
+    from attacks.blackbox.params import extract_face, SUBSTITUTE_WEIGHTS_PATH, NUM_CLASSES_VGGFACE
+    from attacks.blackbox.substitute_model import load_model
+    model = load_model(SUBSTITUTE_WEIGHTS_PATH, NUM_CLASSES_VGGFACE)
+    img = extract_face(np.array(Image.open('/cs/ep/503/amit/channing_tatum.jpg'))).astype(np.float32)
+    model(img[np.newaxis, ...])
+    adv_img = run_fgsm_attack(img[np.newaxis, ...], model)
