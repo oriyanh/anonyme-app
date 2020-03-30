@@ -68,9 +68,7 @@ def preprocess(model, batch, scale, diff):
     jacobian = tape.gradient(label_batch, batch)
     augmented_batch = tf.scalar_mul(scale, tf.sign(jacobian, name="SignJacobian"), name="ScaleJacobian")
     augmented_batch = tf.add(batch, augmented_batch, name="AddScaledJacobian")
-    # augmented_batch = batch + scale * tf.sign(jacobian, name="SignJacobian")
     augmented_batch = tf.add(augmented_batch, diff, name="Decenter")
-    # augmented_batch += diff
     augmented_batch = tf.clip_by_value(augmented_batch, *BOUNDS, name="Clip")
     augmented_batch = tf.cast(augmented_batch, tf.uint8, "Cast")
     return augmented_batch
