@@ -1,8 +1,7 @@
 import os
 import numpy as np
 from PIL import Image
-from mtcnn import MTCNN
-
+from flask import current_app
 
 LEARNING_RATE = 1e-2
 MOMENTUM = 0.9
@@ -20,7 +19,7 @@ DATASET_ALIGNED_TRAINING = "/cs/ep/503/vggface2/vggface2_test/sub_training_align
 DATASET_ALIGNED_TESTLIST = "/cs/ep/503/vggface2/vggface2_test/train_list.txt"
 
 # DATASET_ALIGNED_PATH = "/cs/ep/503/vggface2/vggface2_test/test"
-detector = MTCNN()
+# detector = MTCNN()
 
 def load_initial_set(num_samples):
     pass
@@ -46,7 +45,7 @@ def load_test_set():
 def extract_face(pixels, required_size=(224, 224)):
 
     # detect faces in the image
-    results = detector.detect_faces(pixels)
+    results = current_app.mtcnn.detect_faces(pixels)
 
     # extract the bounding box from the first face
     x1, y1, width, height = results[0]['box']

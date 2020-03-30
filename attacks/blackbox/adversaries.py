@@ -4,6 +4,7 @@
 from matplotlib import pyplot as plt
 import tensorflow as tf
 import numpy as np
+from flask import current_app
 
 CLASSIFICATION_LOSS = tf.keras.losses.CategoricalCrossentropy()
 FGSM_ATTACK_NAME = 'fgsm'
@@ -14,7 +15,8 @@ def generate_adversarial_sample(image, attack, args):
     return adversarial_sample
 
 
-def run_fgsm_attack(image, model, sess, eps=0.15):
+def run_fgsm_attack(image, sess, eps=0.15):
+    model = current_app.substitute_model
     preds = model.predict(image)
     orig_pred = np.argmax(preds)
     confidence = np.max(preds)
@@ -81,6 +83,10 @@ def fgsm(x, y, model, sess, eps, bounds=(0., 255.)):
     adv_im = sess.run(adv_x)
 
     return adv_im
+
+
+def run_papernot_attack(img, label):
+    pass
 
 def papernot():
     pass
