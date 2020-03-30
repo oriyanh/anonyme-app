@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras import Model
-from tensorflow.keras.layers import Dense, Conv2D, MaxPool2D, Flatten
+from tensorflow.keras.layers import Dense, Conv2D, MaxPool2D, Flatten, Input
 
 from easyfacenet.simple import facenet
 import attacks.blackbox.params as params
@@ -48,14 +48,20 @@ def SubstituteModel2(num_classes):
 def get_embeddings(images):
     return facenet.embedding(images)
 
+
 def classify(model, images):
     embeddings = get_embeddings(images)
     return model(embeddings)
 
-def load_model(weights_path, num_classes):
+def load_model(weights_path, num_classes, input_shape=(None, 224, 224, 3)):
+    # input_tensor = Input(input_shape)
     model = SubstituteModel2(num_classes)
-    model.build((1, 224, 224, 3))
+    # model(input_tensor)
+    model.build(input_shape=input_shape)
     model.load_weights(weights_path)
+    model.predict(np.random.randn(1, 224, 224, 3))
+    # model = Model(inputs=input_tensor, outputs=output_tensor)
+
     return model
 
 def save_model(model, weights_path):
