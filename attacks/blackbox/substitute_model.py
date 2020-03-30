@@ -53,11 +53,13 @@ def classify(model, images):
     embeddings = get_embeddings(images)
     return model(embeddings)
 
-def load_model(weights_path, num_classes, input_shape=(224, 224, 3)):
-    input_tensor = Input(input_shape)
+def load_model(weights_path, num_classes, input_shape=(None, 224, 224, 3)):
+    # input_tensor = Input(input_shape)
     model = SubstituteModel2(num_classes)
-    model(input_tensor)
+    # model(input_tensor)
+    model.build(input_shape=input_shape)
     model.load_weights(weights_path)
+    model.predict(np.random.randn(1, 224, 224, 3))
     # model = Model(inputs=input_tensor, outputs=output_tensor)
 
     return model
