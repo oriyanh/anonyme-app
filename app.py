@@ -25,6 +25,12 @@ def load_app_globals():
     app.mtcnn = MTCNN()
     global graph
     graph = tf.get_default_graph()
+    with graph.as_default():
+        global sess
+        sess = tf.Session()
+        with sess.as_default():
+            sess.run(tf.global_variables_initializer())
+
 
 @app.route('/anonymize', methods=['POST'])
 def anonymize():
@@ -47,4 +53,5 @@ def anonymize():
 
 if __name__ == '__main__':
     load_app_globals()
-    app.run(host='0.0.0.0')
+    # app.debug = True
+    app.run(host='0.0.0.0', threaded=True)
