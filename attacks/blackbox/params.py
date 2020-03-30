@@ -3,8 +3,8 @@ import os
 # LEARNING_RATE = 1e-2
 LEARNING_RATE = 0.04
 MOMENTUM = 0.9
-EPOCHS_TRAINING = 6
-EPOCHS_SUBSTITUTE = 2
+EPOCHS_TRAINING = 10
+EPOCHS_SUBSTITUTE = 6
 BATCH_SIZE = 32
 # LAMBDA = 0.1  # Step size for jacobian augmentation (for images in [0,1]
 LAMBDA = 25.6  # Step size for jacobian augmentation (for images in [0, 255]
