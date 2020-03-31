@@ -24,6 +24,8 @@ ATTACK_TO_FUNC = {
     'papernot': run_papernot_attack,
 }
 
+WHITEBOX_KWARGS = {'eps', 'num_iter'}
+
 
 def load_app_globals():
     app.sess = tf.Session()
@@ -76,12 +78,19 @@ def blackbox():
 def whitebox():
     img = np.array(Image.open(request.files['input']))
     target_img = np.array(Image.open(request.files['target']))
+
+    req_whitebox_kwargs = {}
+    for arg in WHITEBOX_KWARGS:
+        if arg in request.form:
+            req_whitebox_kwargs[arg] = request.form[arg]
+
     face_img = extract_face(img, (160, 160))
     target_img = extract_face(target_img, (160, 160))
 
     with current_app.sess.as_default():
         with current_app.graph.as_default():
-            adv_img = generate_adv_whitebox(face_img, target_img)
+            adv_img = generate_adv_whitebox(face_img, target_img,
+                                            **req_whitebox_kwargs)
 
     file_object = BytesIO()
     Image.fromarray(adv_img).save(file_object, 'jpeg')
