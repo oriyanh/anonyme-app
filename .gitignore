@@ -4,3 +4,4 @@
 __pycache__
 *.pyc
 /mtcnn/*.npy
+/python/

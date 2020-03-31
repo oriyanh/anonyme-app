@@ -1,6 +1,7 @@
 import tensorflow as tf
-from tensorflow.python.platform import gfile
+from flask import current_app
 from imageio import imread, imwrite
+import cv2
 import os
 import numpy as np
 
@@ -9,6 +10,7 @@ ADV_LOSS_STOP = 0.01
 LOSS_LIMIT = 0.0008
 LOSS_CNT_THRESHOLD = 10
 
+
 def save_img(modified_img, input_path, target_path, eps, iter):
     (filepath, temp_input) = os.path.split(input_path)
     (shortname_input, extension) = os.path.splitext(temp_input)
@@ -16,7 +18,8 @@ def save_img(modified_img, input_path, target_path, eps, iter):
     (filepath, temp_target) = os.path.split(target_path)
     (shortname_target, extension) = os.path.splitext(temp_target)
 
-    file_name = f"{shortname_input}_{shortname_target}_eps_{eps}_iter_{iter}.png"
+    file_name = f"{shortname_input}_{shortname_target}_eps_{eps}_iter_" \
+                f"{iter}.png"
     modified_img = modified_img.reshape(*modified_img.shape[:3])
 
     imwrite(os.path.join(OUTPUT_PATH, file_name), modified_img)
@@ -24,10 +27,11 @@ def save_img(modified_img, input_path, target_path, eps, iter):
 
 def regularize_img(input_img):
     if type(input_img) is str:
-        img = imread(os.path.expanduser(input_img), as_gray=False, pilmode='RGB')
+        img = imread(os.path.expanduser(input_img), as_gray=False,
+                     pilmode='RGB')
     else:
         img = input_img.copy()
-    regularized_img = img * 2.0 / 255.0 - 1.0
+    regularized_img = (img * 2.0 / 255.0) - 1.0
     return regularized_img
 
 
@@ -38,96 +42,101 @@ def euclidian_distance(embeddings1, embeddings2):
     return np.sqrt(dist)
 
 
-class Adversary:
-    def __init__(self, model):
-        self.sess = tf.Session()
-        with self.sess.as_default():
-            model_exp = os.path.expanduser(model)
-            print(f'Model filename: {model_exp}')
-            with gfile.FastGFile(model_exp, 'rb') as f:
-                graph_def = tf.GraphDef()
-                graph_def.ParseFromString(f.read())
-                tf.import_graph_def(graph_def, name='')
+def generate_embedding(input_img):
+    regularized_img = regularize_img(input_img)
 
-    def generate_embedding(self, input_img):
-        regularized_img = regularize_img(input_img)
+    # Get input and output tensors
+    images_placeholder = current_app.graph.get_tensor_by_name(
+        "facenet/input:0")
+    embeddings = current_app.graph.get_tensor_by_name("facenet/embeddings:0")
+    phase_train_placeholder = current_app.graph.get_tensor_by_name(
+        "facenet/phase_train:0")
 
-        # Get input and output tensors
-        images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
-        embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
-        phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
+    # Run forward pass to calculate embeddings
+    feed_dict = {
+        images_placeholder: [regularized_img],
+        phase_train_placeholder: False,
+    }
+    return current_app.sess.run(embeddings, feed_dict=feed_dict)[0]
 
-        # Run forward pass to calculate embeddings
-        feed_dict = {images_placeholder: [regularized_img], phase_train_placeholder: False}
-        return self.sess.run(embeddings, feed_dict=feed_dict)[0]
 
-    def generate_adv_whitebox(self, input_path, target_path, eps, num_iter):
-        # Get input and output tensors
-        images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
-        embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
-        phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
+def generate_adv_whitebox(input_path, target_path, eps=0.001, num_iter=500):
+    # Get input and output tensors
+    images_placeholder = current_app.graph.get_tensor_by_name(
+        "facenet/input:0")
+    embeddings = current_app.graph.get_tensor_by_name("facenet/embeddings:0")
+    phase_train_placeholder = current_app.graph.get_tensor_by_name(
+        "facenet/phase_train:0")
 
-        target_emb = self.generate_embedding(target_path)
+    target_emb = generate_embedding(target_path)
 
-        # Calculates loss
-        loss = tf.sqrt(tf.reduce_sum(tf.square(embeddings - target_emb)))
+    # Calculates loss
+    loss = tf.sqrt(tf.reduce_sum(tf.square(embeddings - target_emb)))
 
-        # Run fgsm
-        adversary = fgsm(images_placeholder, loss=loss, eps=eps, bounds=(-1.0, 1.0))
+    # Run fgsm
+    adversary = fgsm(images_placeholder, loss=loss, eps=eps,
+                     bounds=(-1.0, 1.0))
 
-        input_image = regularize_img(input_path)
-        target_img = regularize_img(target_path)
-        adv_img = input_image.reshape(-1, *input_image.shape)
+    input_image = regularize_img(input_path)
+    target_img = regularize_img(target_path)
+    adv_img = input_image.reshape(-1, *input_image.shape)
 
-        last_adv_loss = 0
-        cnt = 0
-        within_loss_limit = False
+    last_adv_loss = 0
+    cnt = 0
+    within_loss_limit = False
 
-        for i in range(num_iter):
-            feed_dict = {
-                images_placeholder: adv_img,
-                phase_train_placeholder: False
-            }
-            adv_img, adv_loss = self.sess.run([adversary, loss], feed_dict=feed_dict)
-
-            # img_bias = np.sqrt(np.sum(np.square(adv_img[0, ...] - input_image)))
-            img_bias = euclidian_distance(adv_img[0, ...], input_image)
-            target_bias = euclidian_distance(adv_img[0, ...], target_img)
-            print(f'{i} Bias from original image: {img_bias:2.6f} Loss: {adv_loss:2.6f}')
-            print(f'{i} Bias from target image: {img_bias:2.6f} Loss: {adv_loss:2.6f}')
-            if img_bias > target_bias:
-                print('Adversarial example is now closer to target image, breaking...')
-                break
-            if np.absolute(adv_loss - last_adv_loss) < LOSS_LIMIT:
-                if within_loss_limit:
-                    cnt += 1
-                else:
-                    within_loss_limit = True
-            else:
-                within_loss_limit = False
-                cnt = 0
-
-            if cnt == LOSS_CNT_THRESHOLD:
-                print('Convergence reached')
-                break
-
-            if adv_loss < ADV_LOSS_STOP:
-                print('Loss threshold reached')
-                break
-
-            last_adv_loss = adv_loss
-
-        save_img(adv_img[0, ...], input_path, target_path, eps, iter)
-
+    for i in range(num_iter):
         feed_dict = {
             images_placeholder: adv_img,
             phase_train_placeholder: False
         }
+        adv_img, adv_loss = current_app.sess.run([adversary, loss],
+                                                 feed_dict=feed_dict)
 
-        adv_embedding = self.sess.run(embeddings, feed_dict=feed_dict)[0]
-        embedding_dist = euclidian_distance(adv_embedding, target_emb)
+        # img_bias = np.sqrt(np.sum(np.square(adv_img[0, ...] - input_image)))
+        img_bias = euclidian_distance(adv_img[0, ...], input_image)
+        target_bias = euclidian_distance(adv_img[0, ...], target_img)
+        print(f'Iteration #{i + 1}/{num_iter}\n'
+              f'Bias from original image: {img_bias:2.6f}\n'
+              f'Bias from target image: {target_bias:2.6f}\n'
+              f'L2 Loss from target: {adv_loss:2.6f}\n\n')
+        if img_bias > target_bias:
+            print('Image embedding is now closer to target embedding')
+            break
 
-        print(f'The distance between input embedding and target is {embedding_dist:2.6f}')
+        if np.absolute(adv_loss - last_adv_loss) < LOSS_LIMIT:
+            if within_loss_limit:
+                cnt += 1
+            else:
+                within_loss_limit = True
+        else:
+            within_loss_limit = False
+            cnt = 0
+
+        if cnt == LOSS_CNT_THRESHOLD:
+            print('Loss convergence reached')
+            break
+
+        if adv_loss < ADV_LOSS_STOP:
+            print('Loss threshold reached')
+            break
+
+        last_adv_loss = adv_loss
+
+    # feed_dict = {
+    #     images_placeholder: adv_img,
+    #     phase_train_placeholder: False
+    # }
+    #
+    # adv_embedding = self.sess.run(embeddings, feed_dict=feed_dict)[0]
+    # embedding_dist = euclidian_distance(adv_embedding, target_emb)
+    #
+    # print(f'The distance between input embedding and target is {embedding_dist:2.6f}')
+
+    # adv_img = adv_img[0, ...].reshape(*adv_img[0, ...].shape[:3])
+    adv_img = cv2.normalize(adv_img[0, ...], None, alpha=0, beta=255,
+                            norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+    return adv_img.astype(np.uint8)
 
 
 def fgsm(x, loss, eps=0.3, bounds=(0, 1)):
@@ -159,7 +168,7 @@ def fgsm(x, loss, eps=0.3, bounds=(0, 1)):
 
 if __name__ == '__main__':
 
-    fr = Adversary('/cs/ep/503/facenet_model.pb')
+    # fr = Adversary('/cs/ep/503/facenet_model.pb')
 
     input_pic = "/cs/ep/503/inputs/Kofi_Annan_0003.png"
     target_pic = "/cs/ep/503/amit/facenet/data/images/test_aligned/Silvio_Berlusconi/Silvio_Berlusconi_0017.png"
@@ -172,6 +181,6 @@ if __name__ == '__main__':
 
     for [iter, eps] in combs:
         print(f"Now using iter={iter} and eps={eps}")
-        fr.generate_adv_whitebox(input_pic, target_pic, eps, int(iter))
+        # fr.generate_adv_whitebox(input_pic, target_pic, eps, int(iter))
         # break
     # fr.generate_adv_whitebox(input_pic, target_pic, eps, iter)
