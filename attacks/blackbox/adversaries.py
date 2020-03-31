@@ -8,25 +8,24 @@ from flask import current_app
 
 CLASSIFICATION_LOSS = tf.keras.losses.CategoricalCrossentropy()
 FGSM_ATTACK_NAME = 'fgsm'
-FGSM_ITER_NUM = 100
 
-def generate_adversarial_sample(image, attack, args):
-    adversarial_sample = attack(image, *args)
+def generate_adversarial_sample(image, attack, kwargs):
+    adversarial_sample = attack(image[np.newaxis, ...], **kwargs)
     return adversarial_sample
 
 
-def run_fgsm_attack(image, sess, eps=0.15):
+def run_fgsm_attack(image, eps=0.15, num_iter=100):
     model = current_app.substitute_model
     preds = model.predict(image)
     orig_pred = np.argmax(preds)
     confidence = np.max(preds)
-    print(f"Initial predicted class is {orig_pred} with confidence {confidence * 100:.03f}%")
-    # label = np.zeros(preds.shape)
-    # label[0][orig_pred] = 1
+    print(f"Initial predicted class is {orig_pred} with confidence "
+          f"{confidence * 100:.03f}%")
+
     label = tf.one_hot(orig_pred, preds.shape[-1])
     label = tf.reshape(label, (1, preds.shape[-1]))
-    for i in range(FGSM_ITER_NUM):
-        image = fgsm(tf.constant(image), label, model, sess, eps)
+    for i in range(num_iter):
+        image = fgsm(tf.constant(image), label, eps)
         # plt.imshow(np.floor(image[0]))
         # plt.show()
         # image = fgsm(image, label, model, sess, eps)
@@ -34,7 +33,9 @@ def run_fgsm_attack(image, sess, eps=0.15):
         cur_preds = model.predict(image)
         pred = np.argmax(cur_preds)
         confidence = np.max(cur_preds)
-        print(f"Iteration {i + 1}: predicted class is {pred} with confidence {confidence * 100:.03f}%")
+        print(f"Iteration {i + 1}/{num_iter}\n"
+              f"Predicted class is {pred} with "
+              f"confidence {confidence * 100:.03f}%")
         if np.argmax(model.predict(image)) != orig_pred:
             print(f"Convergence reached after {i + 1} iterations")
             break
@@ -43,7 +44,7 @@ def run_fgsm_attack(image, sess, eps=0.15):
     return image
 
 
-def fgsm(x, y, model, sess, eps, bounds=(0., 255.)):
+def fgsm(x, y, eps, bounds=(0., 255.)):
     """
 
     :param x:
@@ -65,7 +66,7 @@ def fgsm(x, y, model, sess, eps, bounds=(0., 255.)):
     # Get the gradients of the loss w.r.t to the input image.
     # gradient = tape.gradient(loss, x)
 
-    pred = model(x)
+    pred = current_app.substitute_model(x)
     loss = CLASSIFICATION_LOSS(y, pred)
     gradient = tf.gradients(loss, x)[0]
 
@@ -80,13 +81,14 @@ def fgsm(x, y, model, sess, eps, bounds=(0., 255.)):
     adv_x = tf.math.floor(adv_x)
 
     # with sess.as_default():
-    adv_im = sess.run(adv_x)
+    adv_im = current_app.sess.run(adv_x)
 
     return adv_im
 
 
 def run_papernot_attack(img, label):
     pass
+
 
 def papernot():
     pass
