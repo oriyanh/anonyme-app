@@ -25,7 +25,7 @@ class FireModule(Layer):
         x = self.concat([left, right])
         return x
 
-def SqueezeNet(num_classes):
+def squeeze_net(num_classes):
     model = tf.keras.Sequential(layers=[Conv2D(64, 3, 2, padding='valid', activation='relu'),
                                         MaxPool2D(3, 2),
                                         FireModule(squeeze=16, expand=64),
@@ -46,7 +46,7 @@ def SqueezeNet(num_classes):
     return model
 
 if __name__ == '__main__':
-    model = SqueezeNet(params.NUM_CLASSES_VGGFACE)
+    model = squeeze_net(params.NUM_CLASSES_VGGFACE)
     import numpy as np
 
 

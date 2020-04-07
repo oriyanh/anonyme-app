@@ -5,7 +5,7 @@ from keras_vggface import utils, VGGFace
 
 import attacks.blackbox.params as params
 from attacks.blackbox.blackbox_model import graph, sess
-from attacks.blackbox.squeezenet import SqueezeNet
+from attacks.blackbox.squeezenet import squeeze_net
 
 
 loss_obj = tf.keras.losses.SparseCategoricalCrossentropy()
@@ -28,7 +28,7 @@ def vggface(num_classes):
 
 def load_model(weights_path, num_classes, model='squeezenet'):
     if 'squeezenet' == model:
-        model = SqueezeNet(num_classes)
+        model = squeeze_net(num_classes)
     elif 'custom' == model:
         model = substitute_model(num_classes)
     else:

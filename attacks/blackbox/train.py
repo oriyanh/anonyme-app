@@ -3,7 +3,7 @@ import tensorflow as tf
 
 import attacks.blackbox.params as params
 import attacks.blackbox.substitute_model as substitute
-from attacks.blackbox.squeezenet import SqueezeNet
+from attacks.blackbox.squeezenet import squeeze_net
 from attacks.blackbox.substitute_model import substitute_model
 from attacks.blackbox.blackbox_model import get_vggface_model, sess
 from attacks.blackbox.augmentation import augment_dataset
@@ -16,7 +16,7 @@ def train(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, batc
     for epoch in range(1, nepochs_substitute+1):
         print(f"Starting training on new substitute model, epoch #{epoch}")
         # model = SubstituteModel(num_oracle_classes)
-        model = SqueezeNet(num_oracle_classes)
+        model = squeeze_net(num_oracle_classes)
         substitute.train(model, oracle, train_dir, validation_dir, nepochs_training, batch_size)
         print("Saving")
         # substitute.save_model(model, params.SUBSTITUTE_WEIGHTS_PATH)
