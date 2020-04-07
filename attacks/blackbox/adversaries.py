@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 import tensorflow as tf
 import numpy as np
 
-CLASSIFICATION_LOSS = tf.keras.losses.CategoricalCrossentropy()
+CLASSIFICATION_LOSS = tf.keras.losses.SparseCategoricalCrossentropy()
 FGSM_ATTACK_NAME = 'fgsm'
 
 
@@ -21,11 +21,10 @@ def run_fgsm_attack(image, model, eps=0.15, num_iter=100):
     print(f"Initial predicted class is {orig_pred} with confidence "
           f"{confidence * 100:.03f}%")
 
-    label = tf.one_hot(orig_pred, preds.shape[-1])
-    label = tf.reshape(label, (1, preds.shape[-1]))
+    # label = tf.one_hot(orig_pred, preds.shape[-1])
+    # label = tf.reshape(label, (1, preds.shape[-1]))
     for i in range(num_iter):
-        image = fgsm(model, tf.constant(image), label, eps)
-        # image = fgsm(model, tf.constant(image), label, eps)
+        image = fgsm(model, tf.constant(image), tf.constant(orig_pred), eps)
         # plt.imshow(np.floor(image[0]))
         # plt.show()
         # image = fgsm(image, label, model, sess, eps)
