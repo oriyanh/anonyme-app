@@ -68,6 +68,7 @@ def generate_adv_whitebox(input_path, target_path, eps=0.001, num_iter=500):
     phase_train_placeholder = current_app.graph.get_tensor_by_name(
         "facenet/phase_train:0")
 
+    # input_emb = generate_embedding(input_path)
     target_emb = generate_embedding(target_path)
 
     # Calculates loss
@@ -96,12 +97,14 @@ def generate_adv_whitebox(input_path, target_path, eps=0.001, num_iter=500):
         # img_bias = np.sqrt(np.sum(np.square(adv_img[0, ...] - input_image)))
         img_bias = euclidian_distance(adv_img[0, ...], input_image)
         target_bias = euclidian_distance(adv_img[0, ...], target_img)
+
         print(f'Iteration #{i + 1}/{num_iter}\n'
               f'Bias from original image: {img_bias:2.6f}\n'
               f'Bias from target image: {target_bias:2.6f}\n'
               f'L2 Loss from target: {adv_loss:2.6f}\n\n')
+
         if img_bias > target_bias:
-            print('Image embedding is now closer to target embedding')
+            print('Image is now closer to target by L2 distance')
             break
 
         if np.absolute(adv_loss - last_adv_loss) < LOSS_LIMIT:
@@ -123,17 +126,6 @@ def generate_adv_whitebox(input_path, target_path, eps=0.001, num_iter=500):
 
         last_adv_loss = adv_loss
 
-    # feed_dict = {
-    #     images_placeholder: adv_img,
-    #     phase_train_placeholder: False
-    # }
-    #
-    # adv_embedding = self.sess.run(embeddings, feed_dict=feed_dict)[0]
-    # embedding_dist = euclidian_distance(adv_embedding, target_emb)
-    #
-    # print(f'The distance between input embedding and target is {embedding_dist:2.6f}')
-
-    # adv_img = adv_img[0, ...].reshape(*adv_img[0, ...].shape[:3])
     adv_img = cv2.normalize(adv_img[0, ...], None, alpha=0, beta=255,
                             norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
     return adv_img.astype(np.uint8)
@@ -164,23 +156,3 @@ def fgsm(x, loss, eps=0.3, bounds=(0, 1)):
         adv_x = tf.clip_by_value(adv_x, clip_min, clip_max)
 
     return adv_x
-
-
-if __name__ == '__main__':
-
-    # fr = Adversary('/cs/ep/503/facenet_model.pb')
-
-    input_pic = "/cs/ep/503/inputs/Kofi_Annan_0003.png"
-    target_pic = "/cs/ep/503/amit/facenet/data/images/test_aligned/Silvio_Berlusconi/Silvio_Berlusconi_0017.png"
-    # print fr.compare(input_pic,target_pic)
-
-    iters = [500, 1000, 1500, 2000, 2500]
-    eps = [0.001, 0.0025, 0.005, 0.01, 0.02]
-
-    combs = np.transpose([np.tile(iters, len(eps)), np.repeat(eps, len(iters))])
-
-    for [iter, eps] in combs:
-        print(f"Now using iter={iter} and eps={eps}")
-        # fr.generate_adv_whitebox(input_pic, target_pic, eps, int(iter))
-        # break
-    # fr.generate_adv_whitebox(input_pic, target_pic, eps, iter)

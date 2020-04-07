@@ -25,7 +25,10 @@ ATTACK_TO_FUNC = {
     'papernot': run_papernot_attack,
 }
 
-WHITEBOX_KWARGS = {'eps', 'num_iter'}
+WHITEBOX_KWARGS = {
+    'eps': 0.001,
+    'num_iter': 500,
+}
 
 
 def load_app_globals():
@@ -56,9 +59,14 @@ def blackbox():
     img = np.array(Image.open(request.files['input']))
 
     # json_dict = request.json
-    attack = request.form.get('attack')
+    attack_name = request.form.get('attack')
+
+    attack_func = None
+    if attack_name is not None:
+        attack_func = ATTACK_TO_FUNC.get(attack_name)
+
     attack_args = json.loads(request.form.get('attack_args', '{}'))
-    if attack is None or not ATTACK_TO_FUNC.get(attack):
+    if not attack_func:
         return jsonify({
             'Error': f'Attack type not supported, attack should be one '
                      f'of {set(ATTACK_TO_FUNC.keys())}'
@@ -68,10 +76,9 @@ def blackbox():
     face_img = extract_face(current_app.mtcnn, img, (224, 224),
                             graph=current_app.graph).astype(np.float32)
 
-    with current_app.sess.as_default():
-        with current_app.graph.as_default():
-            adv_img = generate_adversarial_sample(
-                face_img, ATTACK_TO_FUNC[attack], attack_args)
+    with current_app.graph.as_default():
+        adv_img = generate_adversarial_sample(
+            face_img, current_app.substitute_model, attack_func, attack_args)
 
     file_object = BytesIO()
     adv_img.save(file_object, 'jpeg')
@@ -85,9 +92,8 @@ def whitebox():
     target_img = np.array(Image.open(request.files['target']))
 
     req_whitebox_kwargs = {}
-    for arg in WHITEBOX_KWARGS:
-        if arg in request.form:
-            req_whitebox_kwargs[arg] = request.form[arg]
+    for arg, default_val in WHITEBOX_KWARGS.items():
+        req_whitebox_kwargs[arg] = request.form.get(arg, default_val)
 
     set_session(current_app.sess)
 
@@ -109,7 +115,11 @@ def whitebox():
 @app.route('/face_align', methods=['POST'])
 def face_align():
     img = np.array(Image.open(request.files['input']))
-    face_img = extract_face(img, (160, 160))
+
+    set_session(current_app.sess)
+
+    face_img = extract_face(current_app.mtcnn, img, (160, 160),
+                            graph=current_app.graph)
 
     file_object = BytesIO()
     Image.fromarray(face_img).save(file_object, 'jpeg')
