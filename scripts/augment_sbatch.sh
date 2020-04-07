@@ -1,10 +1,10 @@
 #!/bin/csh
 
 
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=2
 #SBATCH --output=/cs/ep/503/outputs/slurm_augment.out
 #SBATCH --err=/cs/ep/503/outputs/slurm_augment.err
-#SBATCH --mem-per-cpu=8000M
+#SBATCH --mem=16000M
 #SBATCH --time=1-0
 #SBATCH --account=peleg
 #SBATCH --constraint="lucy"
