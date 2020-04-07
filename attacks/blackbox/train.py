@@ -4,7 +4,7 @@ import tensorflow as tf
 import attacks.blackbox.params as params
 import attacks.blackbox.substitute_model as substitute
 from attacks.blackbox.squeezenet import SqueezeNet
-from attacks.blackbox.substitute_model import SubstituteModel
+from attacks.blackbox.substitute_model import substitute_model
 from attacks.blackbox.blackbox_model import get_vggface_model, sess
 from attacks.blackbox.augmentation import augment_dataset
 

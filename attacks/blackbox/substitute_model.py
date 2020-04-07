@@ -13,7 +13,7 @@ optimizer = tf.keras.optimizers.Adam(params.LEARNING_RATE, beta_1=params.MOMENTU
 train_loss = tf.keras.metrics.Mean(name='train_loss')
 train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
 
-def SubstituteModel(num_classes):
+def substitute_model(num_classes):
     model = tf.keras.Sequential(layers=[Conv2D(64, 2), MaxPool2D(2), Conv2D(64, 2),
                                         MaxPool2D(2), Flatten(), Dense(200, activation='sigmoid'),
                                         Dense(200, activation='sigmoid'), Dense(100, activation='relu'),
@@ -21,7 +21,7 @@ def SubstituteModel(num_classes):
     model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     return model
 
-def SubstituteModel_VGG(num_classes):
+def vggface(num_classes):
     model = VGGFace(include_top=True, model='resnet50', weights=None, classes=num_classes)
     model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     return model
@@ -30,7 +30,7 @@ def load_model(weights_path, num_classes, model='squeezenet'):
     if 'squeezenet' == model:
         model = SqueezeNet(num_classes)
     elif 'custom' == model:
-        model = SubstituteModel(num_classes)
+        model = substitute_model(num_classes)
     else:
         raise NotImplementedError(f"Unspoorted model architecture {model}")
 
