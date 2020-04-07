@@ -1,15 +1,10 @@
 import tensorflow as tf
-from tensorflow.keras.backend import backend as K
 from tensorflow.keras.layers import Input, Conv2D, MaxPool2D, Activation, Concatenate, Dropout, Layer
 from tensorflow.keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D
-from tensorflow.keras.models import Model
-# from tensorflow.keras.engine.topology import get_source_inputs
-# from tensorflow.keras.utils import get_file
-# from tensorflow.keras.utils import layer_utils
-
 from attacks.blackbox import params
-optimizer = tf.keras.optimizers.Adam(params.LEARNING_RATE, beta_1=params.MOMENTUM)
 
+
+optimizer = tf.keras.optimizers.SGD(params.LEARNING_RATE, momentum=params.MOMENTUM, nesterov=True)
 
 class FireModule(Layer):
 
@@ -21,7 +16,6 @@ class FireModule(Layer):
         super(FireModule, self).__init__(**kwargs)
 
     def call(self, x):
-
         x = self.squeeze(x)
 
         left = self.expand1(x)
@@ -50,9 +44,12 @@ def SqueezeNet(num_classes):
                                         Activation('softmax')])
     model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     return model
+
 if __name__ == '__main__':
     model = SqueezeNet(params.NUM_CLASSES_VGGFACE)
     import numpy as np
+
+
     init_b = np.random.randn(1, 224, 224, 3)
     assert model.predict(init_b) is not None
     print(f"Successfully loaded model")
