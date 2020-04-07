@@ -15,11 +15,12 @@ def train(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, batc
     validation_dir = train_dir
     for epoch in range(1, nepochs_substitute+1):
         print(f"Starting training on new substitute model, epoch #{epoch}")
-        # model = SubstituteModel2(num_oracle_classes)
+        # model = SubstituteModel(num_oracle_classes)
         model = SqueezeNet(num_oracle_classes)
         substitute.train(model, oracle, train_dir, validation_dir, nepochs_training, batch_size)
         print("Saving")
-        substitute.save_model(model, params.SUBSTITUTE_WEIGHTS_PATH)
+        # substitute.save_model(model, params.SUBSTITUTE_WEIGHTS_PATH)
+        substitute.save_model(model, params.SQUEEZENET_WEIGHTS_PATH)
         if epoch < nepochs_substitute:
             print("Augmenting")
             train_dir = augment_dataset(model, train_dir, params.LAMBDA)
