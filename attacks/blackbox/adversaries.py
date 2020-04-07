@@ -4,18 +4,17 @@
 from matplotlib import pyplot as plt
 import tensorflow as tf
 import numpy as np
-from flask import current_app
 
 CLASSIFICATION_LOSS = tf.keras.losses.CategoricalCrossentropy()
 FGSM_ATTACK_NAME = 'fgsm'
 
-def generate_adversarial_sample(image, attack, kwargs):
-    adversarial_sample = attack(image[np.newaxis, ...], **kwargs)
+
+def generate_adversarial_sample(image, model, attack, kwargs):
+    adversarial_sample = attack(image[np.newaxis, ...], model, **kwargs)
     return adversarial_sample
 
 
-def run_fgsm_attack(image, eps=0.15, num_iter=100):
-    model = current_app.substitute_model
+def run_fgsm_attack(image, model, eps=0.15, num_iter=100):
     preds = model.predict(image)
     orig_pred = np.argmax(preds)
     confidence = np.max(preds)
@@ -25,7 +24,8 @@ def run_fgsm_attack(image, eps=0.15, num_iter=100):
     label = tf.one_hot(orig_pred, preds.shape[-1])
     label = tf.reshape(label, (1, preds.shape[-1]))
     for i in range(num_iter):
-        image = fgsm(tf.constant(image), label, eps)
+        image = fgsm(model, tf.constant(image), label, eps)
+        # image = fgsm(model, tf.constant(image), label, eps)
         # plt.imshow(np.floor(image[0]))
         # plt.show()
         # image = fgsm(image, label, model, sess, eps)
@@ -44,15 +44,22 @@ def run_fgsm_attack(image, eps=0.15, num_iter=100):
     return image
 
 
-def fgsm(x, y, eps, bounds=(0., 255.)):
+def fgsm(model, x, y, eps, bounds=(0., 255.)):
     """
-
-    :param x:
-    :param y:
-    :param model:
-    :param eps:
-    :param bounds:
-    :return:
+    Performs fgsm attack on input x with label y using prediction from given
+    model.
+    :param model: Model to perform attack on
+    :type model: tf.Model
+    :param x: Tensor of input image
+    :type x: tf.Tensor
+    :param y: Tensor of image label
+    :type y: tf.Tensor
+    :param eps: Step size for fgsm attack
+    :type eps: float
+    :param bounds: 2-Tuple representing image value boundaries
+    :type bounds: Tuple[float, float]
+    :return: Image after attack iteration
+    :rtype: np.ndarray
     """
 
     (clip_min, clip_max) = bounds
@@ -66,7 +73,7 @@ def fgsm(x, y, eps, bounds=(0., 255.)):
     # Get the gradients of the loss w.r.t to the input image.
     # gradient = tape.gradient(loss, x)
 
-    pred = current_app.substitute_model(x)
+    pred = model(x)
     loss = CLASSIFICATION_LOSS(y, pred)
     gradient = tf.gradients(loss, x)[0]
 
@@ -81,12 +88,12 @@ def fgsm(x, y, eps, bounds=(0., 255.)):
     adv_x = tf.math.floor(adv_x)
 
     # with sess.as_default():
-    adv_im = current_app.sess.run(adv_x)
+    adv_im = tf.get_default_session().run(adv_x)
 
     return adv_im
 
 
-def run_papernot_attack(img, label):
+def run_papernot_attack(img, model, label):
     pass
 
 

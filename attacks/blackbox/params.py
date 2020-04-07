@@ -1,8 +1,7 @@
 import os
 import numpy as np
 from PIL import Image
-from flask import current_app
-from tensorflow.python.keras.backend import set_session
+import tensorflow as tf
 # from mtcnn import MTCNN
 
 LEARNING_RATE = 1e-2
@@ -50,12 +49,12 @@ def load_test_set():
     pass
 
 
-def extract_face(pixels, required_size=(224, 224)):
+def extract_face(mtcnn, pixels, required_size=(224, 224),
+                 graph=tf.get_default_graph()):
 
     # detect faces in the image
-    with current_app.graph.as_default():
-        set_session(current_app.sess)
-        results = current_app.mtcnn.detect_faces(pixels)
+    with graph.as_default():
+        results = mtcnn.detect_faces(pixels)
 
     # extract the bounding box from the first face
     x1, y1, width, height = results[0]['box']
@@ -70,12 +69,3 @@ def extract_face(pixels, required_size=(224, 224)):
     face_array = np.asarray(image)
     return face_array
 
-
-if __name__ == '__main__':
-    from matplotlib import pyplot as plt
-
-    a = np.array(Image.open(r'C:\Users\Segal\Desktop\Channing_Tatum_by_'
-                            'Gage_Skidmore_3.jpg'))
-    a = extract_face(a)
-    plt.imshow(a)
-    plt.show()

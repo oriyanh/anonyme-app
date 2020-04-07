@@ -29,15 +29,11 @@ WHITEBOX_KWARGS = {'eps', 'num_iter'}
 
 
 def load_app_globals():
-    app.sess = tf.Session()
     app.graph = tf.get_default_graph()
-
-    set_session(app.sess)
-
-    # Load MTCNN model
-    app.mtcnn = MTCNN()
     app.substitute_model = load_model(SUBSTITUTE_WEIGHTS_PATH,
                                       NUM_CLASSES_VGGFACE)
+
+    app.sess = tf.Session(graph=app.graph)
 
     # Load Facenet model for whitebox
     with app.sess.as_default():
@@ -47,6 +43,12 @@ def load_app_globals():
             graph_def = tf.GraphDef()
             graph_def.ParseFromString(f.read())
             tf.import_graph_def(graph_def, name='facenet')
+        # app.sess.run(tf.global_variables_initializer())
+
+    set_session(app.sess)
+
+    # Load MTCNN model
+    app.mtcnn = MTCNN()
 
 
 @app.route('/blackbox', methods=['POST'])
@@ -62,7 +64,9 @@ def blackbox():
                      f'of {set(ATTACK_TO_FUNC.keys())}'
         }), 400
 
-    face_img = extract_face(img, (224, 224)).astype(np.float32)
+    set_session(current_app.sess)
+    face_img = extract_face(current_app.mtcnn, img, (224, 224),
+                            graph=current_app.graph).astype(np.float32)
 
     with current_app.sess.as_default():
         with current_app.graph.as_default():
@@ -85,13 +89,16 @@ def whitebox():
         if arg in request.form:
             req_whitebox_kwargs[arg] = request.form[arg]
 
-    face_img = extract_face(img, (160, 160))
-    target_img = extract_face(target_img, (160, 160))
+    set_session(current_app.sess)
 
-    with current_app.sess.as_default():
-        with current_app.graph.as_default():
-            adv_img = generate_adv_whitebox(face_img, target_img,
-                                            **req_whitebox_kwargs)
+    face_img = extract_face(current_app.mtcnn, img, (160, 160),
+                            graph=current_app.graph).astype(np.float32)
+    target_img = extract_face(current_app.mtcnn, target_img, (160, 160),
+                              graph=current_app.graph).astype(np.float32)
+
+    with current_app.graph.as_default():
+        adv_img = generate_adv_whitebox(face_img, target_img,
+                                        **req_whitebox_kwargs)
 
     file_object = BytesIO()
     Image.fromarray(adv_img).save(file_object, 'jpeg')
