@@ -1,5 +1,5 @@
 import tensorflow as tf
-from keras_vggface.vggface import VGGFace
+from keras_vggface import VGGFace
 
 graph = tf.get_default_graph()
 sess = tf.Session(graph=graph)
