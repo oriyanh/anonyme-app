@@ -1,3 +1,4 @@
+import atexit
 from flask import Flask, request, send_file, current_app, jsonify
 from io import BytesIO
 import os
@@ -109,7 +110,16 @@ def face_align():
     return send_file(file_object, mimetype='image/jpeg')
 
 
+def webservice_cleanup():
+    try:
+        current_app.sess.close()
+        print("tf session closed successfully")
+    except Exception as e:
+        print(f"Error when closing tf session: {e}")
+
+
 if __name__ == '__main__':
     load_app_globals()
+    atexit.register(webservice_cleanup)
     # app.debug = True
     app.run(host='0.0.0.0', threaded=True)
