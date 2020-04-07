@@ -171,7 +171,7 @@ if __name__ == '__main__':
 
 
     tf.keras.backend.set_session(sess)
-    substitute_model = load_model(params.SUBSTITUTE_WEIGHTS_PATH, params.NUM_CLASSES_VGGFACE)
+    substitute_model = load_model(params.SQUEEZENET_WEIGHTS_PATH, params.NUM_CLASSES_VGGFACE)
     init_b = np.random.randn(1, 224, 224, 3)
     assert substitute_model.predict(init_b) is not None
     print(f"Successfully loaded model")
