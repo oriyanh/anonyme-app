@@ -1,10 +1,11 @@
 import tensorflow as tf
-from keras_vggface import utils
+import numpy as np
 from tensorflow.keras.layers import Dense, Conv2D, MaxPool2D, Flatten
+from keras_vggface import utils
 
 import attacks.blackbox.params as params
-import numpy as np
 from attacks.blackbox.blackbox_model import graph, sess
+from attacks.blackbox.squeezenet import SqueezeNet
 
 
 loss_obj = tf.keras.losses.SparseCategoricalCrossentropy()
@@ -20,8 +21,14 @@ def SubstituteModel(num_classes):
     model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     return model
 
-def load_model(weights_path, num_classes):
-    model = SubstituteModel(num_classes)
+def load_model(weights_path, num_classes, model='squeezenet'):
+    if 'squeezenet' == model:
+        model = SqueezeNet(num_classes)
+    elif 'custom' == model:
+        model = SubstituteModel(num_classes)
+    else:
+        raise NotImplementedError(f"Unspoorted model architecture {model}")
+
     model.build(input_shape=[None, 224, 224, 3])
     model.load_weights(weights_path)
     return model
