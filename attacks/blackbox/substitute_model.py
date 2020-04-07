@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from tensorflow.keras.layers import Dense, Conv2D, MaxPool2D, Flatten
-from keras_vggface import utils
+from keras_vggface import utils, VGGFace
 
 import attacks.blackbox.params as params
 from attacks.blackbox.blackbox_model import graph, sess
@@ -17,6 +17,11 @@ def SubstituteModel(num_classes):
                                         MaxPool2D(2), Flatten(), Dense(200, activation='sigmoid'),
                                         Dense(200, activation='sigmoid'), Dense(100, activation='relu'),
                                         Dense(num_classes, activation='softmax')])
+    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    return model
+
+def SubstituteModel_VGG(num_classes):
+    model = VGGFace(include_top=True, model='resnet50', weights=None, classes=num_classes)
     model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     return model
 
