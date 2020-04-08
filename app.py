@@ -35,10 +35,6 @@ WHITEBOX_KWARGS = {
 
 def load_app_globals():
     app.graph = tf.get_default_graph()
-    app.substitute_model = load_model(os.path.join(ROOT_DIR,
-                                                   SQUEEZENET_WEIGHTS_PATH),
-                                      NUM_CLASSES_VGGFACE)
-
     app.sess = tf.Session(graph=app.graph)
 
     # Load Facenet model for whitebox
@@ -49,12 +45,14 @@ def load_app_globals():
             graph_def = tf.GraphDef()
             graph_def.ParseFromString(f.read())
             tf.import_graph_def(graph_def, name='facenet')
-        # app.sess.run(tf.global_variables_initializer())
 
     set_session(app.sess)
 
     # Load MTCNN model
     app.mtcnn = MTCNN()
+    app.substitute_model = load_model(os.path.join(ROOT_DIR,
+                                                   SQUEEZENET_WEIGHTS_PATH),
+                                      NUM_CLASSES_VGGFACE)
 
 
 @app.route('/blackbox', methods=['POST'])
@@ -80,8 +78,10 @@ def blackbox():
                             graph=current_app.graph).astype(np.float32)
 
     with current_app.graph.as_default():
-        adv_img = generate_adversarial_sample(
-            face_img, current_app.substitute_model, attack_func, attack_args)
+        with current_app.sess.as_default():
+            adv_img = generate_adversarial_sample(
+                face_img, current_app.substitute_model, attack_func,
+                attack_args)
 
     file_object = BytesIO()
     adv_img.save(file_object, 'jpeg')
