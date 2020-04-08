@@ -10,8 +10,10 @@ import tensorflow as tf
 from keras.backend import set_session
 from tensorflow.python.platform import gfile
 
-from attacks.blackbox.params import extract_face, FACENET_WEIGHTS_PATH, \
-    SUBSTITUTE_WEIGHTS_PATH, NUM_CLASSES_VGGFACE
+from attacks.blackbox.utilities import extract_face
+from project_params import ROOT_DIR
+from attacks.blackbox.params import FACENET_WEIGHTS_PATH, \
+    NUM_CLASSES_VGGFACE, SQUEEZENET_WEIGHTS_PATH
 from attacks.blackbox.adversaries import run_fgsm_attack, \
     run_papernot_attack, generate_adversarial_sample
 from attacks.blackbox.substitute_model import load_model
@@ -33,7 +35,8 @@ WHITEBOX_KWARGS = {
 
 def load_app_globals():
     app.graph = tf.get_default_graph()
-    app.substitute_model = load_model(SUBSTITUTE_WEIGHTS_PATH,
+    app.substitute_model = load_model(os.path.join(ROOT_DIR,
+                                                   SQUEEZENET_WEIGHTS_PATH),
                                       NUM_CLASSES_VGGFACE)
 
     app.sess = tf.Session(graph=app.graph)
