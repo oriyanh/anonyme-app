@@ -1,11 +1,11 @@
 import os
 
-# import numpy as np
+import numpy as np
 
 import attacks.blackbox.params as params
 import attacks.blackbox.substitute_model as substitute
 from attacks.blackbox.squeezenet import squeeze_net
-# from attacks.blackbox.blackbox_model import get_vggface_model, sess
+from attacks.blackbox.blackbox_model import get_vggface_model, sess
 from attacks.blackbox.augmentation import augment_dataset
 from project_params import ROOT_DIR
 
@@ -29,21 +29,21 @@ def train(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, batc
     return model
 
 
-# LOAD_WEIGHTS = False
+LOAD_WEIGHTS = False
 
 
-# def main():
-#     oracle = get_vggface_model()
-#     if LOAD_WEIGHTS:
-#         substitute_model = substitute.load_model(params.SUBSTITUTE_WEIGHTS_PATH, params.NUM_CLASSES_VGGFACE)
-#         init_b = np.random.randn(1, 224, 224, 3)
-#         assert substitute_model.predict(init_b) is not None
-#         print(f"Successfully loaded model")
-#     else:
-#         substitute_model = train(oracle, params.NUM_CLASSES_VGGFACE, params.EPOCHS_SUBSTITUTE,
-#                                  params.EPOCHS_TRAINING, params.BATCH_SIZE)
-#
-#
-# if __name__ == '__main__':
-#     main()
-#     sess.close()
+def main():
+    oracle = get_vggface_model()
+    if LOAD_WEIGHTS:
+        substitute_model = substitute.load_model(params.SUBSTITUTE_WEIGHTS_PATH, params.NUM_CLASSES_VGGFACE)
+        init_b = np.random.randn(1, 224, 224, 3)
+        assert substitute_model.predict(init_b) is not None
+        print(f"Successfully loaded model")
+    else:
+        substitute_model = train(oracle, params.NUM_CLASSES_VGGFACE, params.EPOCHS_SUBSTITUTE,
+                                 params.EPOCHS_TRAINING, params.BATCH_SIZE)
+
+
+if __name__ == '__main__':
+    main()
+    sess.close()
