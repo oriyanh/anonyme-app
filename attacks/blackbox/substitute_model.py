@@ -40,8 +40,10 @@ def load_model(weights_path, num_classes, model='squeezenet'):
     print("Model loaded successfully!")
     return model
 
+
 def save_model(model, weights_path):
     model.save_weights(weights_path, save_format='h5')
+
 
 def train(model, oracle, train_dir, validation_dir, num_epochs, batch_size):
     train_ds, nsamples = get_training_set(oracle, train_dir, batch_size)
@@ -70,6 +72,7 @@ def train(model, oracle, train_dir, validation_dir, num_epochs, batch_size):
     [loss, accuracy] = model.evaluate(val_ds, steps=10)
     print(f"Validation loss: {loss:.2f} ; Validation Accuracy: {accuracy:.2f}")
     return model
+
 
 def get_training_set(oracle, train_dir, batch_size):
     datagen = tf.keras.preprocessing.image.ImageDataGenerator()

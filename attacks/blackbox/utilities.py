@@ -1,13 +1,14 @@
 import os
 import numpy as np
 from PIL import Image
-from mtcnn import MTCNN
+import tensorflow as tf
 
 from attacks.blackbox.params import DATASET_ALIGNED_TRAINLIST, TRAINING_SET_ALIGNED_PATH
 
 
 def load_initial_set(num_samples):
     pass
+
 
 def load_training_set():
     images = []
@@ -24,19 +25,25 @@ def load_training_set():
                 print(f"Error processing file {img_path}: {e}")
     return images
 
+
 def load_test_set():
     pass
 
-detector = MTCNN()
 
-def extract_face(pixels, required_size=(224, 224)):
+def extract_face(mtcnn, pixels, required_size=(224, 224),
+                 graph=tf.get_default_graph()):
+
     # detect faces in the image
-    results = detector.detect_faces(pixels)
+    with graph.as_default():
+        results = mtcnn.detect_faces(pixels)
+
     # extract the bounding box from the first face
     x1, y1, width, height = results[0]['box']
     x2, y2 = x1 + width, y1 + height
+
     # extract the face
     face = pixels[y1:y2, x1:x2]
+
     # resize pixels to the model size
     image = Image.fromarray(face)
     image = image.resize(required_size)

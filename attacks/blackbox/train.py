@@ -1,12 +1,13 @@
+import os
+
 import numpy as np
-import tensorflow as tf
 
 import attacks.blackbox.params as params
 import attacks.blackbox.substitute_model as substitute
 from attacks.blackbox.squeezenet import squeeze_net
-from attacks.blackbox.substitute_model import substitute_model
 from attacks.blackbox.blackbox_model import get_vggface_model, sess
 from attacks.blackbox.augmentation import augment_dataset
+from project_params import ROOT_DIR
 
 
 def train(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, batch_size):
@@ -20,7 +21,8 @@ def train(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, batc
         substitute.train(model, oracle, train_dir, validation_dir, nepochs_training, batch_size)
         print("Saving")
         # substitute.save_model(model, params.SUBSTITUTE_WEIGHTS_PATH)
-        substitute.save_model(model, params.SQUEEZENET_WEIGHTS_PATH)
+        substitute.save_model(model, os.path.join(
+            ROOT_DIR, params.SQUEEZENET_WEIGHTS_PATH))
         if epoch < nepochs_substitute:
             print("Augmenting")
             train_dir = augment_dataset(model, train_dir, params.LAMBDA)
@@ -28,6 +30,7 @@ def train(oracle, num_oracle_classes, nepochs_substitute, nepochs_training, batc
 
 
 LOAD_WEIGHTS = False
+
 
 def main():
     oracle = get_vggface_model()
@@ -39,6 +42,7 @@ def main():
     else:
         substitute_model = train(oracle, params.NUM_CLASSES_VGGFACE, params.EPOCHS_SUBSTITUTE,
                                  params.EPOCHS_TRAINING, params.BATCH_SIZE)
+
 
 if __name__ == '__main__':
     main()
