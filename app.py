@@ -53,6 +53,7 @@ def load_app_globals():
     app.substitute_model = load_model(os.path.join(ROOT_DIR,
                                                    SQUEEZENET_WEIGHTS_PATH),
                                       NUM_CLASSES_VGGFACE)
+    atexit.register(webservice_cleanup, app.sess)
 
 
 @app.route('/blackbox', methods=['POST'])
@@ -107,6 +108,7 @@ def whitebox():
 
     with current_app.graph.as_default():
         adv_img = generate_adv_whitebox(face_img, target_img,
+                                        current_app.graph, current_app.sess,
                                         **req_whitebox_kwargs)
 
     file_object = BytesIO()
@@ -130,9 +132,9 @@ def face_align():
     return send_file(file_object, mimetype='image/jpeg')
 
 
-def webservice_cleanup():
+def webservice_cleanup(sess):
     try:
-        current_app.sess.close()
+        sess.close()
         print("tf session closed successfully")
     except Exception as e:
         print(f"Error when closing tf session: {e}")
@@ -140,6 +142,5 @@ def webservice_cleanup():
 
 if __name__ == '__main__':
     load_app_globals()
-    atexit.register(webservice_cleanup)
     # app.debug = True
     app.run(host='0.0.0.0', threaded=True)

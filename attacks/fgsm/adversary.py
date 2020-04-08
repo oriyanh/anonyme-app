@@ -1,5 +1,4 @@
 import tensorflow as tf
-from flask import current_app
 from imageio import imread, imwrite
 import cv2
 import os
@@ -42,14 +41,14 @@ def euclidian_distance(embeddings1, embeddings2):
     return np.sqrt(dist)
 
 
-def generate_embedding(input_img):
+def generate_embedding(input_img, graph, sess):
     regularized_img = regularize_img(input_img)
 
     # Get input and output tensors
-    images_placeholder = current_app.graph.get_tensor_by_name(
+    images_placeholder = graph.get_tensor_by_name(
         "facenet/input:0")
-    embeddings = current_app.graph.get_tensor_by_name("facenet/embeddings:0")
-    phase_train_placeholder = current_app.graph.get_tensor_by_name(
+    embeddings = graph.get_tensor_by_name("facenet/embeddings:0")
+    phase_train_placeholder = graph.get_tensor_by_name(
         "facenet/phase_train:0")
 
     # Run forward pass to calculate embeddings
@@ -57,30 +56,36 @@ def generate_embedding(input_img):
         images_placeholder: [regularized_img],
         phase_train_placeholder: False,
     }
-    return current_app.sess.run(embeddings, feed_dict=feed_dict)[0]
+    return sess.run(embeddings, feed_dict=feed_dict)[0]
 
 
-def generate_adv_whitebox(input_path, target_path, eps=0.001, num_iter=500):
+def generate_adv_whitebox(input_path, target_path,
+                          graph=tf.get_default_graph(),
+                          sess=tf.get_default_session(),
+                          eps=0.001, num_iter=500):
     # Get input and output tensors
-    images_placeholder = current_app.graph.get_tensor_by_name(
+    images_placeholder = graph.get_tensor_by_name(
         "facenet/input:0")
-    embeddings = current_app.graph.get_tensor_by_name("facenet/embeddings:0")
-    phase_train_placeholder = current_app.graph.get_tensor_by_name(
+    embeddings = graph.get_tensor_by_name("facenet/embeddings:0")
+    phase_train_placeholder = graph.get_tensor_by_name(
         "facenet/phase_train:0")
 
     # input_emb = generate_embedding(input_path)
-    target_emb = generate_embedding(target_path)
+    target_emb = generate_embedding(target_path, graph, sess)
 
     # Calculates loss
-    loss = tf.sqrt(tf.reduce_sum(tf.square(embeddings - target_emb)))
+    loss = tf.norm(embeddings - target_emb, ord='euclidean')
 
     # Run fgsm
     adversary = fgsm(images_placeholder, loss=loss, eps=eps,
                      bounds=(-1.0, 1.0))
+    adversary_scaled = tf.image.convert_image_dtype((adversary + 1) / 2,
+                                                    tf.uint8)
 
     input_image = regularize_img(input_path)
     target_img = regularize_img(target_path)
     adv_img = input_image.reshape(-1, *input_image.shape)
+    adv_img_scaled = adv_img
 
     last_adv_loss = 0
     cnt = 0
@@ -91,8 +96,8 @@ def generate_adv_whitebox(input_path, target_path, eps=0.001, num_iter=500):
             images_placeholder: adv_img,
             phase_train_placeholder: False
         }
-        adv_img, adv_loss = current_app.sess.run([adversary, loss],
-                                                 feed_dict=feed_dict)
+        adv_img, adv_img_scaled, adv_loss = sess.run(
+            [adversary, adversary_scaled, loss], feed_dict=feed_dict)
 
         # img_bias = np.sqrt(np.sum(np.square(adv_img[0, ...] - input_image)))
         img_bias = euclidian_distance(adv_img[0, ...], input_image)
@@ -126,9 +131,7 @@ def generate_adv_whitebox(input_path, target_path, eps=0.001, num_iter=500):
 
         last_adv_loss = adv_loss
 
-    adv_img = cv2.normalize(adv_img[0, ...], None, alpha=0, beta=255,
-                            norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-    return adv_img.astype(np.uint8)
+    return adv_img_scaled[0, ...]
 
 
 def fgsm(x, loss, eps=0.3, bounds=(0, 1)):
@@ -151,8 +154,6 @@ def fgsm(x, loss, eps=0.3, bounds=(0, 1)):
     scaled_grad = eps * normalized_grad
 
     adv_x = x - scaled_grad
-
-    if (clip_min is not None) and (clip_max is not None):
-        adv_x = tf.clip_by_value(adv_x, clip_min, clip_max)
+    adv_x = tf.clip_by_value(adv_x, clip_min, clip_max)
 
     return adv_x
