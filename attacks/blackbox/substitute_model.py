@@ -4,7 +4,8 @@ from tensorflow.keras.layers import Dense, Conv2D, MaxPool2D, Flatten
 from keras_vggface import utils, VGGFace
 
 import attacks.blackbox.params as params
-from attacks.blackbox.blackbox_model import graph, sess
+# from attacks.blackbox.blackbox_model import graph, sess
+from attacks.blackbox.models import graph, sess
 from attacks.blackbox.squeezenet import squeeze_net
 
 
@@ -87,7 +88,7 @@ def get_training_set(oracle, train_dir, batch_size):
                 tf.keras.backend.set_session(sess)
                 label_batch = oracle.predict(im_batch_norm)
             y_train = np.argmax(label_batch, axis=1)
-            yield x_train, y_train
+            yield x_train/255.0, y_train
 
     ds_images = tf.data.Dataset.from_generator(gen, output_shapes=([None, 224, 224, 3], [None]),
                                                output_types=(tf.float32, tf.int32))
