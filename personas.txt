@@ -1,9 +1,0 @@
-Eitan
-User: 24 y/o, intelligence officer at IDF, "lawful good"
-Situation: Eitan wants to post pictures of himself online, without compromising his likeness as an intelligence officer.
-Story: Eitan just got married and wants to show-off his wedding pictures with his beautiful new wife. He wants to do so without breaking any rules, and risking his military carreer, and without any security risks. However, he still wants his friends to see him in his photos. Eitan locates his wedding album through the link their photographer sent them from his smartphone, and shares these photos to anonyME. He is notified everytime anonyME finishes processing a photo, and gets a final notification when his anonymized wedding album is ready. The notification takes him to his gallery, from there he can share his entire anonymized wedding album to his Facebook account, and create a public wedding album without compromising his likeness.
-
-Avi
-User: 47 y/o, avid watcher of Channel 13 news, a little technophobic.
-Situation: Avi likes to stay in contact with his friends online, but he's afraid of cyber attacks and security vulnerabilities online.
-Story: Avi saw an item on the Channel 13 news about a cyber attack in which a vulnerability in Facebook was compromised and the likeness of hundreds of thousands of accounts was leaked from the website. Avi informs his millenial, technological daughter about his new-found fear of posting pictures of himself to Facbook. His daughter downloads anonyME to his phone for him, puts it in his Android homescreen, and tells him to from now on use this app to take his pictures. The next time, Avi fires up anonyME, takes a picture from the in-app camera, anonymizes it from within the app, and shares it to Facebook with his mind at ease.
