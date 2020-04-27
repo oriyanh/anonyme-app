@@ -17,7 +17,7 @@ from attacks.blackbox.params import FACENET_WEIGHTS_PATH, \
 from attacks.blackbox.adversaries import run_fgsm_attack, \
     run_papernot_attack, generate_adversarial_sample
 from attacks.blackbox.substitute_model import load_model
-from attacks.fgsm.adversary import generate_adv_whitebox
+from attacks.whitebox.fgsm import generate_adv_whitebox
 
 app = Flask(__name__)
 
