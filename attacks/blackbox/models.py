@@ -10,13 +10,13 @@ from keras_vggface import VGGFace
 from attacks.blackbox import params
 
 
-
-
 _weights = {'squeeze_net': params.SQUEEZENET_WEIGHTS_PATH,
-           'custom': params.CUSTOM_SUB_WEIGHTS_PATH,
-           'resnet50': params.RESNET50_WEIGHTS_PATH}
+            'custom': params.CUSTOM_SUB_WEIGHTS_PATH,
+            'resnet50': params.RESNET50_WEIGHTS_PATH}
+config = tf.ConfigProto(device_count={'GPU': 0})
 graph = tf.get_default_graph()
-sess = tf.Session(graph=graph)
+sess = tf.Session(graph=graph, config=config)
+
 def load_model(model_type='squeeze_net', *args, **kwargs):
     try:
         model_fn = _model_functions[model_type]
@@ -26,7 +26,7 @@ def load_model(model_type='squeeze_net', *args, **kwargs):
 
     assert model.predict(np.random.randn(1, 224, 224, 3)) is not None
 
-    print("Model loaded successfully!")
+    print(f"Model '{model_type}' loaded successfully!")
     return model
 
 def save_model(model, model_type):
@@ -36,7 +36,6 @@ def save_model(model, model_type):
         raise NotImplementedError(f"Unsupported model type: '{model_type}'")
 
     model.save_weights(weights_path, save_format='h5')
-
 
 def custom_model(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
     optimizer = tf.keras.optimizers.Adam(params.LEARNING_RATE, beta_1=params.MOMENTUM)
@@ -55,7 +54,9 @@ def custom_model(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
 def resnet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
     tf.keras.backend.set_session(sess)
 
-    optimizer = tf.keras.optimizers.Adam(params.LEARNING_RATE, beta_1=params.MOMENTUM)
+    # optimizer = tf.keras.optimizers.Adam(params.LEARNING_RATE, beta_1=params.MOMENTUM)
+    # optimizer = tf.keras.optimizers.Adam()
+    optimizer = tf.keras.optimizers.SGD(lr=0.1, momentum=0.9, decay=0.0, nesterov=True)
     model = ResNet50(include_top=True, weights=None, classes=num_classes)
     model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
@@ -64,7 +65,6 @@ def resnet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
         model.load_weights(params.RESNET50_WEIGHTS_PATH)
 
     return model
-
 
 def squeeze_net(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
     optimizer = tf.keras.optimizers.SGD(params.LEARNING_RATE, momentum=params.MOMENTUM, nesterov=True)
@@ -110,7 +110,6 @@ class FireModule(Layer):
 
         x = self.concat([left, right])
         return x
-
 
 def blackbox(architecture='resnet50'):
     model = None
