@@ -13,10 +13,10 @@ from tensorflow.python.platform import gfile
 from attacks.blackbox.utilities import extract_face
 from project_params import ROOT_DIR
 from attacks.blackbox.params import FACENET_WEIGHTS_PATH, \
-    NUM_CLASSES_VGGFACE, SQUEEZENET_WEIGHTS_PATH
+    NUM_CLASSES_VGGFACE
 from attacks.blackbox.adversaries import run_fgsm_attack, \
     run_papernot_attack, generate_adversarial_sample
-from attacks.blackbox.substitute_model import load_model
+from attacks.blackbox.models import load_model
 from attacks.fgsm.adversary import generate_adv_whitebox
 
 app = Flask(__name__)
@@ -50,9 +50,8 @@ def load_app_globals():
 
     # Load MTCNN model
     app.mtcnn = MTCNN()
-    app.substitute_model = load_model(os.path.join(ROOT_DIR,
-                                                   SQUEEZENET_WEIGHTS_PATH),
-                                      NUM_CLASSES_VGGFACE)
+    app.substitute_model = load_model('squeeze_net',
+                                      num_classes=NUM_CLASSES_VGGFACE, trained=True)
     atexit.register(webservice_cleanup, app.sess)
 
 
