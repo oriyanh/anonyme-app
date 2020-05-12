@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from mtcnn import MTCNN
 from PIL import Image
 
-
 detector = MTCNN()
 
 def extract_face(pixels, required_size=(224, 224)):
@@ -21,21 +20,27 @@ def extract_face(pixels, required_size=(224, 224)):
     return image
 
 def extract_and_save(img_in, img_out, crop_size):
-    print(f"Aligning {img_in}")
     pixels = plt.imread(img_in)
     pixels_aligned = extract_face(pixels, crop_size)
 
     if not os.path.exists(os.path.dirname(img_out)):
         os.makedirs(os.path.dirname(img_out))
     pixels_aligned.save(img_out)
-    print(f"Saved aligned image to {img_out}")
 
 def main(dataset_orig, dataset_out, crop_size=(224, 224)):
+    num_files = len(dataset_orig)
+    nfiles_processed = 0
     for img_in, img_out in zip(dataset_orig, dataset_out):
+        if nfiles_processed % 10000 == 0:
+            print(f"Progress {nfiles_processed * 100. / num_files:.3f}% - {nfiles_processed} files out of {num_files} total files")
+        nfiles_processed += 1
+        if os.path.exists(img_out):
+            continue
         try:
             extract_and_save(img_in, img_out, crop_size)
         except Exception as e:
-            print(f"Error processing file {img_in}: Exception: [ {e} ]", file=sys.stderr)
+            print(f"Error processing file {img_in}: {e}.")
+    print("Done!")
 
 if __name__ == '__main__':
     dataset_path = sys.argv[1]
