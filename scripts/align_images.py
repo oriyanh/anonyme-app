@@ -38,6 +38,8 @@ def main(dataset_orig, dataset_out, crop_size=(224, 224)):
             continue
         try:
             extract_and_save(img_in, img_out, crop_size)
+        except FileNotFoundError:
+            continue
         except Exception as e:
             print(f"Error processing file {img_in}: {e}.")
     print("Done!")
