@@ -101,7 +101,6 @@ def preprocess(model, batch, scale):
 if __name__ == '__main__':
     from attacks.blackbox.substitute_model import load_model
 
-
     tf.keras.backend.set_session(sess)
     substitute_model = load_model(params.SQUEEZENET_WEIGHTS_PATH, params.NUM_CLASSES_VGGFACE)
     augment_dataset(substitute_model, params.TRAINING_SET_ALIGNED_PATH, params.LAMBDA)
