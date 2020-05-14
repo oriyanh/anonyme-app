@@ -6,7 +6,7 @@ import attacks.blackbox.params as params
 import attacks.blackbox.substitute_model as substitute
 from attacks.blackbox import models
 from attacks.blackbox.squeezenet import squeeze_net
-from attacks.blackbox.blackbox_model import get_vggface_model, sess
+from attacks.blackbox.blackbox_model import sess
 from attacks.blackbox.augmentation import augment_dataset
 from project_params import ROOT_DIR
 
