@@ -52,6 +52,10 @@ def extract_face(mtcnn, pixels, required_size=(224, 224),
 
 
 class Singleton(type):
+    """
+    Metaclass to be used for singleton (used for representing blackbox model
+    class)
+    """
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
