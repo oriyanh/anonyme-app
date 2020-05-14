@@ -8,13 +8,19 @@ sess = tf.Session(graph=graph)
 
 
 class BlackboxModel(metaclass=Singleton):
+    """
+    Singleton class representing blackbox model
+    """
     def __init__(self):
         self.model = VGGFace(model='resnet50')
 
-    def predict(self, input):
-        self.model.predict(preprocess_input(input, version=2))
+    def predict(self, batch):
+        preprocessed_batch = preprocess_input(batch, version=2)
+        preds = self.model.predict(preprocessed_batch)
+        return preds
 
 
 def get_blackbox_prediction(batch):
     blackbox = BlackboxModel()
-    return blackbox.predict(batch)
+    preds = blackbox.predict(batch)
+    return preds
