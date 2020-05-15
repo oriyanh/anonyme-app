@@ -22,7 +22,7 @@ FACENET_WEIGHTS_FNAME = 'facenet_model.pb'
 FACENET_WEIGHTS_PATH = os.path.join(WEIGHTS_DIR, FACENET_WEIGHTS_FNAME)
 NUM_CLASSES_VGGFACE = 8631
 
-DATASET_BASE_PATH = os.path.join(ROOT_DIR, 'vggface2')
+DATASET_BASE_PATH = os.path.join(os.path.dirname(ROOT_DIR), 'vggface2')
 DATASET_UNALIGNED_PATH = os.path.join(DATASET_BASE_PATH, "vggface2_test", "test")
 DATASET_UNALIGNED_TESTLIST = os.path.join(DATASET_BASE_PATH, "test_list.txt")
 TRAINING_SET_ALIGNED_PATH = os.path.join(DATASET_BASE_PATH, "vggface2_test", "sub_training_aligned")

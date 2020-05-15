@@ -18,13 +18,13 @@ with sess.as_default():
 
 def augment_dataset(model, image_dir, scale):
     """
-    Augment dataset using jacobian in w.r.t oracle predictions
+    Augment dataset using Jacobian matrix w.r.t oracle predictions
     :param model: substitute model on which jacobian is activated.
-    :param image_dir: Directory from
-    :param scale:
-    :return:
+    :param image_dir: Directory from which to iterate training images
+    :param scale: Scale by which to add the signed jacobian to each image
+    :return: Directory containing the augmented dataset images
     """
-    batch_size = 16
+    batch_size = 2
     datagen = tf.keras.preprocessing.image.ImageDataGenerator()
 
     image_it = datagen.flow_from_directory(
@@ -45,7 +45,7 @@ def augment_dataset(model, image_dir, scale):
 
     batch_ph = tf.placeholder(tf.float32, shape=[None, 224, 224, 3],
                               name="batch_in")
-    oracle_label_batch_ph = tf.placeholder(tf.int32, shape=[None, 2],
+    oracle_label_batch_ph = tf.placeholder(tf.int64, shape=[None, 2],
                                            name="oracle_preds_in")
 
     for nbatch in range(nbatches):
@@ -57,11 +57,11 @@ def augment_dataset(model, image_dir, scale):
         batch = np.asarray([load_img_fn(f) for f in file_batch])
         oracle_label_batch = np.argmax(get_blackbox_prediction(batch),
                                        axis=1)
-        oracle_label_batch = np.hstack(
+        oracle_label_batch = np.vstack(
             [
-                np.arange(len(oracle_label_batch)).reshape((-1, 1)),
-                oracle_label_batch.reshape((-1, 1))
-            ])
+                np.arange(len(oracle_label_batch)),
+                oracle_label_batch
+            ]).T
 
         fnames = np.arange(fname, batch.shape[0] * 2).astype(np.uint32)
         augmented_batch_tensor = augment(model, batch_ph,
@@ -91,12 +91,26 @@ def augment_dataset(model, image_dir, scale):
 
 @tf.function
 def augment(model, batch, oracle_label_batch, scale):
+    """
+    Function to augment batch of images by evaluating the substitute prediction's Jacobian matrix according
+    to the oracle's predictions, and adding its sign to the original images
+    :param model: Substitute model
+    :param batch: Placeholder tensor containing batch of images
+    :param oracle_label_batch: Placeholder tensor containing the batch's oracle predictions
+    :param scale: Scale constant to add to the images
+    :return:
+    """
+
+    # TODO: Change substitute architecture to support vectorization, and work without tape here
     with tf.GradientTape(persistent=True) as tape:
         tape.watch(batch)
         label_batch = model(batch)
 
+    # Shape size is (batch_size, num_classes, 224, 224, 3)
     jacobians = tape.batch_jacobian(label_batch, batch,
                                     experimental_use_pfor=False)
+
+    # Shape size is (batch_size, 224, 224, 3)
     eval_jacobians = tf.gather_nd(jacobians, oracle_label_batch,
                                   name="OracePredsJacobians")
     augmented_batch = tf.scalar_mul(
@@ -141,10 +155,11 @@ if __name__ == '__main__':
     # from attacks.blackbox.substitute_model import load_model
 
     tf.keras.backend.set_session(sess)
-    substitute_model = VGGFace(model='resnet50', weights=None)
     # substitute_model = load_model(params.CUSTOM_SUB_WEIGHTS_PATH,
     #                               params.NUM_CLASSES_VGGFACE,
     #                               model='custom')
+
+    substitute_model = VGGFace(model='resnet50', weights=None)
     augment_dataset(substitute_model, params.TRAINING_SET_ALIGNED_PATH,
                     params.LAMBDA)
     sess.close()
