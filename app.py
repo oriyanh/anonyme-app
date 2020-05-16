@@ -10,7 +10,7 @@ import tensorflow as tf
 from keras.backend import set_session
 from tensorflow.python.platform import gfile
 
-from attacks.blackbox.utilities import extract_face
+from project_utilities import extract_face
 from project_params import ROOT_DIR
 from attacks.blackbox.params import FACENET_WEIGHTS_PATH, \
     NUM_CLASSES_VGGFACE, SQUEEZENET_WEIGHTS_PATH

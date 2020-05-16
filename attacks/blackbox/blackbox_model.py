@@ -1,7 +1,7 @@
 import tensorflow as tf
 from keras_vggface import VGGFace
 from keras_vggface.utils import preprocess_input
-from attacks.blackbox.utilities import Singleton
+from project_utilities import Singleton
 
 graph = tf.get_default_graph()
 sess = tf.Session(graph=graph)
