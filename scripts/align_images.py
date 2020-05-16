@@ -1,5 +1,7 @@
 import sys
 import os
+from math import floor
+import numpy as np
 import matplotlib.pyplot as plt
 from mtcnn import MTCNN
 from PIL import Image
@@ -8,19 +10,88 @@ detector = MTCNN()
 
 def extract_face(pixels, required_size=(224, 224)):
     # detect faces in the image
+    pixels_h, pixels_w, _ = pixels.shape
     results = detector.detect_faces(pixels)
     # extract the bounding box from the first face
-    x1, y1, width, height = results[0]['box']
-    x2, y2 = x1 + width, y1 + height
+    y1, x1, height, width = results[0]['box']
+    x_mid = x1 + width//2 if width%2 ==0 else x1 + width//2 + 1
+    y_mid = y1 + height//2 if height%2 ==0 else y1 + height//2 + 1
+    smaller_dim = min((width, height))
+    if smaller_dim < 224:
+        ratio = smaller_dim/224.0
+
+        width_new = max((floor(width/ratio), 224))
+        height_new = max((floor(height/ratio), 224))
+        # x1 = x_mid - width_new // 2
+        # x2 = x1 + width_new
+
+        # y1 = y_mid - height_new // 2
+        # y2 = y1 + height_new
+
+        # x_mid = x1 + width_new // 2
+        # y_mid = y1 + height_new
+
+        x1 = x_mid - 112
+        x2 = x1 + 224
+        y1 = y_mid - 112
+        y2 = y1 + 224
+
+    else:
+        if height < width:
+            # width_new = max((floor(width / ratio), 224))
+            height_new = min((width, pixels_h))
+            width_new = min((height_new, width))
+        else:
+            width_new = min((height, pixels_w))
+            height_new = min((width_new, height))
+        x1 = x_mid - width_new // 2
+        x2 = x1 + width_new
+
+        y1 = y_mid - height_new // 2
+        y2 = y1 + height_new
+
+    if x1 < 0:
+        remainder = abs(x1)
+        x1_new = 0
+        x2_new = x2 + remainder
+    elif x2 > pixels_w:
+        remainder = x2 - pixels_w
+        x1_new = x1 - remainder
+        x2_new = pixels_w
+    else:
+        x1_new = x1
+        x2_new = x2
+    if y1 < 0:
+        remainder = abs(y1)
+        y1_new = 0
+        y2_new = y2 + remainder
+    elif y2 > pixels_h:
+        remainder = y2 - pixels_h
+        y1_new = y1 - remainder
+        y2_new = pixels_h
+    else:
+        y1_new = y1
+        y2_new = y2
+    # x2, y2 = x1 + width, y1 + height
     # extract the face
-    face = pixels[y1:y2, x1:x2]
+    # face = pixels[y1:y2, x1:x2]
+    face = pixels[y1_new:y2_new, x1_new:x2_new]
     # resize pixels to the model size
     image = Image.fromarray(face)
     image = image.resize(required_size)
     return image
 
 def extract_and_save(img_in, img_out, crop_size):
-    pixels = plt.imread(img_in)
+    pixels = Image.open(img_in)
+    # pixels = plt.imread(img_in)
+    height, width = pixels.height, pixels.width
+    smaller_dim = min((width,height))
+    if smaller_dim < 224:
+        ratio = smaller_dim / 224.0
+        width_new = max((floor(width / ratio), 224))
+        height_new = max((floor(height / ratio), 224))
+        pixels = pixels.resize((height_new, width_new))
+    pixels = np.asarray(pixels)
     pixels_aligned = extract_face(pixels, crop_size)
 
     if not os.path.exists(os.path.dirname(img_out)):
@@ -38,7 +109,7 @@ def main(dataset_orig, dataset_out, crop_size=(224, 224)):
             continue
         try:
             extract_and_save(img_in, img_out, crop_size)
-        except FileNotFoundError:
+        except (FileNotFoundError, ValueError):
             continue
         except Exception as e:
             print(f"Error processing file {img_in}: {e}.")
