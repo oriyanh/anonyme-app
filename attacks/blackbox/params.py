@@ -1,4 +1,5 @@
 import os
+from project_params import ROOT_DIR
 
 # LEARNING_RATE = 1e-2
 LEARNING_RATE = 0.04
@@ -24,6 +25,7 @@ NUM_CLASSES_VGGFACE = 8631
 
 DATASET_BASE_PATH = '/cs/ep/503/dataset'  # TODO: change to os-independent path
 # DATASET_BASE_PATH = r'E:\Datasets\vggface2'  # TODO: change to os-independent path
+# DATASET_BASE_PATH = os.path.join(os.path.dirname(ROOT_DIR), 'vggface2')
 DATASET_UNALIGNED_PATH = os.path.join(DATASET_BASE_PATH, "vggface2_test", "test")
 DATASET_TRAIN_UNALIGNED = os.path.join(DATASET_BASE_PATH, "train")
 DATASET_TEST_UNALIGNED = os.path.join(DATASET_BASE_PATH, "test")

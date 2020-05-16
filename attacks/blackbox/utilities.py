@@ -52,6 +52,7 @@ def extract_face(mtcnn, pixels, required_size=(224, 224),
     face_array = np.asarray(image)
     return face_array
 
+
 def get_training_set(oracle, train_dir, batch_size):
     datagen = tf.keras.preprocessing.image.ImageDataGenerator()
     train_it = datagen.flow_from_directory(train_dir, class_mode=None, batch_size=batch_size,
@@ -71,3 +72,17 @@ def get_training_set(oracle, train_dir, batch_size):
                                                output_types=(tf.float32, tf.int32))
     # return ds_images, train_it.n
     return gen(), train_it.n
+
+
+class Singleton(type):
+    """
+    Metaclass to be used for singleton (used for representing blackbox model
+    class)
+    """
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args,
+                                                                 **kwargs)
+        return cls._instances[cls]
