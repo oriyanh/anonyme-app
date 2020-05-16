@@ -5,7 +5,7 @@ LEARNING_RATE = 0.04
 MOMENTUM = 0.9
 EPOCHS_TRAINING = 10
 EPOCHS_SUBSTITUTE = 1
-BATCH_SIZE = 48
+BATCH_SIZE = 96
 # LAMBDA = 0.1  # Step size for jacobian augmentation (for images in [0,1]
 LAMBDA = 25.6  # Step size for jacobian augmentation (for images in [0, 255]
 NUM_INIT_SAMPLES = 1000
@@ -30,6 +30,11 @@ DATASET_TEST_UNALIGNED = os.path.join(DATASET_BASE_PATH, "test")
 # TRAIN_SET_ALIGNED = r"D:\vggface2_train\train_aligned"
 # TRAIN_SET_ALIGNED = os.path.join(DATASET_BASE_PATH, "test_aligned")
 TRAIN_SET_ALIGNED = os.path.join(DATASET_BASE_PATH, "train_aligned")
+# TRAIN_SET_ALIGNED = os.path.join(DATASET_BASE_PATH, "train_aligned_subset")
+
 TEST_SET_ALIGNED = os.path.join(DATASET_BASE_PATH, "test_aligned")
 DATASET_TRAIN_LIST = os.path.join(DATASET_BASE_PATH, "train_list.txt")
 DATASET_TEST_LIST = os.path.join(DATASET_BASE_PATH, "test_list.tx")
+
+TRAIN_SET_INITIAL = os.path.join(DATASET_BASE_PATH, "initial_dataset")
+TRAIN_SET_WORKING = os.path.join(DATASET_BASE_PATH, "working_dataset")
