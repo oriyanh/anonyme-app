@@ -1,21 +1,19 @@
 import tensorflow as tf
 import numpy as np
-from tensorflow.keras import Model, backend as K, layers
+import keras
 from tensorflow.keras.utils import get_source_inputs, get_file
 from tensorflow.python.keras.applications import ResNet50
 from tensorflow.keras.layers import Conv2D, MaxPool2D, Flatten, Dense, Layer, Concatenate, Dropout, \
-    GlobalAveragePooling2D, Activation, GlobalMaxPooling2D, Input, AveragePooling2D, BatchNormalization
-from keras_vggface import VGGFace
+    GlobalAveragePooling2D, Activation, GlobalMaxPooling2D, Input, AveragePooling2D
+from keras_vggface import VGGFace, utils
 
 from attacks.blackbox import params
+from attacks.blackbox.utilities import Singleton, sess
 
 
 _weights = {'squeeze_net': params.SQUEEZENET_WEIGHTS_PATH,
             'custom': params.CUSTOM_SUB_WEIGHTS_PATH,
             'resnet50': params.RESNET50_WEIGHTS_PATH}
-config = tf.ConfigProto(device_count={'GPU': 0})
-graph = tf.get_default_graph()
-sess = tf.Session(graph=graph, config=config)
 
 def load_model(model_type='squeeze_net', *args, **kwargs):
     try:
@@ -35,7 +33,10 @@ def save_model(model, model_type):
     except KeyError:
         raise NotImplementedError(f"Unsupported model type: '{model_type}'")
 
-    model.save_weights(weights_path, save_format='h5')
+    try:
+        model.save_weights(weights_path, save_format='h5')
+    except TypeError:
+        model.save_weights(weights_path)
 
 def custom_model(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
     optimizer = tf.keras.optimizers.Adam(params.LEARNING_RATE, beta_1=params.MOMENTUM)
@@ -56,7 +57,7 @@ def resnet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
 
     # optimizer = tf.keras.optimizers.Adam(params.LEARNING_RATE, beta_1=params.MOMENTUM)
     # optimizer = tf.keras.optimizers.Adam()
-    optimizer = tf.keras.optimizers.SGD(lr=0.1, momentum=0.9, decay=0.0, nesterov=True)
+    optimizer = keras.optimizers.SGD(lr=0.1, momentum=0.9, decay=0.0, nesterov=True)
     model = VGGFace(model='resnet50', include_top=True, weights=None, classes=num_classes)
     model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
@@ -115,8 +116,21 @@ def blackbox(architecture='resnet50'):
     model = None
     tf.keras.backend.set_session(sess)
     if architecture == 'resnet50':
-        model = VGGFace(model='resnet50')
+        model = BlackboxModel(architecture)
     return model
+
+class BlackboxModel(metaclass=Singleton):
+    """
+    Singleton class representing blackbox model
+    """
+
+    def __init__(self, architecture):
+        self.model = VGGFace(model=architecture)
+
+    def predict(self, batch):
+        preprocessed_batch = utils.preprocess_input(batch, version=2)
+        preds = self.model.predict(preprocessed_batch)
+        return preds
 
 _model_functions = {'squeeze_net': squeeze_net,
                     'custom': custom_model,
