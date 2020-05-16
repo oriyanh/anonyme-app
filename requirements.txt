@@ -20,6 +20,7 @@ Keras-Applications==1.0.8
 Keras-Preprocessing==1.1.0
 keras-vggface==0.6
 kiwisolver==1.1.0
+lpips-tf==0.0.0
 Markdown==3.1.1
 MarkupSafe==1.1.1
 matplotlib==3.1.1
