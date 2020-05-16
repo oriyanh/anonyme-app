@@ -57,7 +57,7 @@ def resnet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
     # optimizer = tf.keras.optimizers.Adam(params.LEARNING_RATE, beta_1=params.MOMENTUM)
     # optimizer = tf.keras.optimizers.Adam()
     optimizer = tf.keras.optimizers.SGD(lr=0.1, momentum=0.9, decay=0.0, nesterov=True)
-    model = ResNet50(include_top=True, weights=None, classes=num_classes)
+    model = VGGFace(model='resnet50', include_top=True, weights=None, classes=num_classes)
     model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
     if trained:
