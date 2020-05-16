@@ -1,11 +1,11 @@
 import tensorflow as tf
 import numpy as np
 from tensorflow.keras.layers import Dense, Conv2D, MaxPool2D, Flatten
-from keras_vggface import utils, VGGFace
 
 import attacks.blackbox.params as params
 # from attacks.blackbox.blackbox_model import graph, sess
-from attacks.blackbox.models import graph, sess, save_model, load_model
+from attacks.blackbox.models import save_model, load_model
+from attacks.blackbox.utilities import get_training_set
 
 
 loss_obj = tf.keras.losses.SparseCategoricalCrossentropy()
@@ -39,11 +39,11 @@ def train(model_type, oracle, train_dir, validation_dir, num_epochs, batch_size)
             [loss, acc] = model.train_on_batch(im_batch, label_batch)
             epoch_loss += loss
             epoch_acc += acc
-            print(f"Step {step+1}/{nsteps} ({100 * (step+1) / nsteps:.2f}%) - Loss={loss}, accuracy={acc:.3f}")
+            print(f"Step {step+1}/{nsteps} ({100 * (step+1) / nsteps:.2f}%) - Loss={loss}, accuracy={acc}")
             step += 1
         epoch_loss /= nsteps
         epoch_acc /= nsteps
-        print(f"Average training loss for epoch: {epoch_loss} ; Average accuracy: {epoch_acc:.3f}")
+        print(f"Average training loss for epoch: {epoch_loss} ; Average accuracy: {epoch_acc}")
         print("Saving checkpoint")
         save_model(model, 'resnet50')
 
@@ -59,27 +59,6 @@ def train(model_type, oracle, train_dir, validation_dir, num_epochs, batch_size)
         validation_acc += np.count_nonzero(y_pred == y_true)
     print(f"Substitute model accuracy after {num_epochs} epochs: {validation_acc/(num_validation_steps*batch_size):.2f}")
     return model
-
-
-def get_training_set(oracle, train_dir, batch_size):
-    datagen = tf.keras.preprocessing.image.ImageDataGenerator()
-    train_it = datagen.flow_from_directory(train_dir, class_mode=None, batch_size=batch_size,
-                                           shuffle=True, target_size=(224, 224))
-
-    def gen():
-        while True:
-            x_train = train_it.next()
-            im_batch_norm = utils.preprocess_input(x_train, version=2)
-            with graph.as_default():
-                tf.keras.backend.set_session(sess)
-                label_batch = oracle.predict(im_batch_norm)
-            y_train = np.argmax(label_batch, axis=1)
-            yield x_train.astype(np.float32)/255.0, y_train
-
-    ds_images = tf.data.Dataset.from_generator(gen, output_shapes=([None, 224, 224, 3], [None]),
-                                               output_types=(tf.float32, tf.int32))
-    # return ds_images, train_it.n
-    return gen(), train_it.n
 
 ##### Useful implementations that we might want to use further down the line #####
 ##### Uncomment if needed
