@@ -4,7 +4,7 @@ from time import perf_counter
 from datetime import timedelta
 from attacks.blackbox import models
 from attacks.blackbox.augmentation import augment_dataset
-from attacks.blackbox.utilities import get_training_set, oracle_classify_and_save, sess
+from attacks.blackbox.utilities import get_dataset_generator, oracle_classify_and_save, sess
 
 
 def train(oracle, substitute_type, nepochs_substitute, nepochs_training, batch_size):
@@ -23,7 +23,7 @@ def train(oracle, substitute_type, nepochs_substitute, nepochs_training, batch_s
         train_dir = params.TRAIN_SET_WORKING
 
         print("b) Start training substitute model")
-        train_ds, nsteps, num_classes = get_training_set(train_dir, batch_size)
+        train_ds, nsteps, num_classes = get_dataset_generator(train_dir, batch_size)
         model = models.load_model(model_type=substitute_type, trained=False, num_classes=num_classes)
 
         for epoch in range(nepochs_training):
