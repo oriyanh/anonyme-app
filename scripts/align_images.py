@@ -8,37 +8,27 @@ from PIL import Image
 
 detector = MTCNN()
 
-def extract_face(pixels, required_size=(224, 224)):
+def extract_face(pixels, required_size=224):
     # detect faces in the image
     pixels_h, pixels_w, _ = pixels.shape
     results = detector.detect_faces(pixels)
+    if not results:
+        return None
+
     # extract the bounding box from the first face
     y1, x1, height, width = results[0]['box']
     x_mid = x1 + width//2 if width%2 ==0 else x1 + width//2 + 1
     y_mid = y1 + height//2 if height%2 ==0 else y1 + height//2 + 1
     smaller_dim = min((width, height))
-    if smaller_dim < 224:
-        ratio = smaller_dim/224.0
+    if smaller_dim < required_size:
 
-        width_new = max((floor(width/ratio), 224))
-        height_new = max((floor(height/ratio), 224))
-        # x1 = x_mid - width_new // 2
-        # x2 = x1 + width_new
-
-        # y1 = y_mid - height_new // 2
-        # y2 = y1 + height_new
-
-        # x_mid = x1 + width_new // 2
-        # y_mid = y1 + height_new
-
-        x1 = x_mid - 112
-        x2 = x1 + 224
-        y1 = y_mid - 112
-        y2 = y1 + 224
+        x1 = x_mid - required_size//2
+        x2 = x1 + required_size
+        y1 = y_mid - required_size//2
+        y2 = y1 + required_size
 
     else:
         if height < width:
-            # width_new = max((floor(width / ratio), 224))
             height_new = min((width, pixels_h))
             width_new = min((height_new, width))
         else:
@@ -72,33 +62,34 @@ def extract_face(pixels, required_size=(224, 224)):
     else:
         y1_new = y1
         y2_new = y2
-    # x2, y2 = x1 + width, y1 + height
-    # extract the face
-    # face = pixels[y1:y2, x1:x2]
+
     face = pixels[y1_new:y2_new, x1_new:x2_new]
     # resize pixels to the model size
+    height = y2_new - y1_new
+    width = x2_new - x1_new
     image = Image.fromarray(face)
-    image = image.resize(required_size)
+    if height != required_size or width != required_size:
+        image = image.resize((required_size, required_size))
     return image
 
 def extract_and_save(img_in, img_out, crop_size):
     pixels = Image.open(img_in)
-    # pixels = plt.imread(img_in)
     height, width = pixels.height, pixels.width
     smaller_dim = min((width,height))
-    if smaller_dim < 224:
-        ratio = smaller_dim / 224.0
-        width_new = max((floor(width / ratio), 224))
-        height_new = max((floor(height / ratio), 224))
+    if smaller_dim < crop_size:
+        ratio = smaller_dim / float(crop_size)
+        width_new = max((floor(width / ratio), crop_size))
+        height_new = max((floor(height / ratio), crop_size))
         pixels = pixels.resize((height_new, width_new))
     pixels = np.asarray(pixels)
     pixels_aligned = extract_face(pixels, crop_size)
 
-    if not os.path.exists(os.path.dirname(img_out)):
-        os.makedirs(os.path.dirname(img_out))
-    pixels_aligned.save(img_out)
+    if pixels_aligned is not None:
+        if not os.path.exists(os.path.dirname(img_out)):
+            os.makedirs(os.path.dirname(img_out))
+        pixels_aligned.save(img_out)
 
-def main(dataset_orig, dataset_out, crop_size=(224, 224)):
+def main(dataset_orig, dataset_out, crop_size=224):
     num_files = len(dataset_orig)
     nfiles_processed = 0
     for img_in, img_out in zip(dataset_orig, dataset_out):
@@ -111,8 +102,8 @@ def main(dataset_orig, dataset_out, crop_size=(224, 224)):
             extract_and_save(img_in, img_out, crop_size)
         except (FileNotFoundError, ValueError):
             continue
-        except Exception as e:
-            print(f"Error processing file {img_in}: {e}.")
+        # except Exception as e:
+        #     print(f"Error processing file {img_in}: {e}.")
     print("Done!")
 
 if __name__ == '__main__':
