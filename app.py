@@ -75,7 +75,7 @@ def blackbox():
         }), 400
 
     set_session(current_app.sess)
-    face_img = extract_face(current_app.mtcnn, img, (224, 224),
+    face_img = extract_face(current_app.mtcnn, img, 224,
                             graph=current_app.graph).astype(np.float32)
 
     with current_app.graph.as_default():
@@ -101,9 +101,9 @@ def whitebox():
 
     set_session(current_app.sess)
 
-    face_img = extract_face(current_app.mtcnn, img, (160, 160),
+    face_img = extract_face(current_app.mtcnn, img, 160,
                             graph=current_app.graph).astype(np.float32)
-    target_img = extract_face(current_app.mtcnn, target_img, (160, 160),
+    target_img = extract_face(current_app.mtcnn, target_img, 160,
                               graph=current_app.graph).astype(np.float32)
 
     with current_app.graph.as_default():
@@ -123,7 +123,7 @@ def face_align():
 
     set_session(current_app.sess)
 
-    face_img = extract_face(current_app.mtcnn, img, (160, 160),
+    face_img = extract_face(current_app.mtcnn, img, 160,
                             graph=current_app.graph)
 
     file_object = BytesIO()
