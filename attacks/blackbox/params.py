@@ -4,13 +4,13 @@ from project_params import ROOT_DIR
 # LEARNING_RATE = 1e-2
 LEARNING_RATE = 0.04
 MOMENTUM = 0.9
-EPOCHS_TRAINING = 1
+EPOCHS_TRAINING = 5
 EPOCHS_SUBSTITUTE = 2
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 LAMBDA = 0.1  # Step size for jacobian augmentation (for images in [0,1]
 # LAMBDA = 25.6  # Step size for jacobian augmentation (for images in [0, 255]
 NUM_INIT_SAMPLES = 1000
-PROJECT_DIR = ROOT_DIR
+PROJECT_DIR = '/cs/ep/503'
 WEIGHTS_DIR = os.path.join(PROJECT_DIR, 'dataset', 'weights')
 # WEIGHTS_DIR = r'D:\vggface2_train\weights'
 SQUEEZENET_WEIGHTS_FNAME = 'substitute_squeezenet.h5'
