@@ -1,8 +1,8 @@
 import os
 import numpy as np
-from PIL import Image
 import tensorflow as tf
-
+from PIL import Image
+from shutil import rmtree
 from attacks.blackbox.params import DATASET_TRAIN_LIST, TRAIN_SET_ALIGNED, NUM_CLASSES_VGGFACE
 
 
@@ -64,7 +64,7 @@ def get_training_set(train_dir, batch_size):
     # return ds_images, train_it.n
     return gen(), nbatches, train_it.num_classes
 
-def predict_and_save(oracle, dataset_dir, output_dir, batch_size):
+def oracle_classify_and_save(oracle, dataset_dir, output_dir, batch_size):
     datagen = tf.keras.preprocessing.image.ImageDataGenerator()
     train_it = datagen.flow_from_directory(dataset_dir, class_mode=None, batch_size=batch_size,
                                            shuffle=True, target_size=(224, 224))
@@ -81,6 +81,7 @@ def predict_and_save(oracle, dataset_dir, output_dir, batch_size):
             label_batch = oracle.predict(images)
             labels = np.argmax(label_batch, axis=1)
             save_batch(images, labels, output_dir)
+    prune_dataset(output_dir)
 
 def save_batch(images, labels, output_dir):
     for image, label in zip(images, labels):
@@ -96,6 +97,19 @@ def save_batch(images, labels, output_dir):
 
         img = Image.fromarray(image.astype(np.uint8))
         img.save(output)
+
+def prune_dataset(dataset_dir, threshold=10):
+    print(f"Pruning classes from {dataset_dir} that have less than {threshold} samples")
+    sub_directories = os.listdir(dataset_dir)
+    print(f"Initial number of classes: {len(sub_directories)}")
+    for sub_dir in sub_directories:
+        class_path = os.path.join(dataset_dir, sub_dir)
+        num_samples = len(os.listdir(class_path))
+        if num_samples < threshold:
+            print(f"Pruning class {sub_dir}")
+            rmtree(class_path, ignore_errors=True)
+    num_classes = len(os.listdir(dataset_dir))
+    print(f"Remaining number of classes: {num_classes}")
 
 class Singleton(type):
     """
