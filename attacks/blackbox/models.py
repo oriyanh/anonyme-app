@@ -1,8 +1,9 @@
+print(f"Loading module {__file__}")
+import os
+os.umask(2)
 import tensorflow as tf
 import numpy as np
 import keras
-from tensorflow.keras.utils import get_source_inputs, get_file
-from tensorflow.python.keras.applications import ResNet50
 from tensorflow.keras.layers import Conv2D, MaxPool2D, Flatten, Dense, Layer, Concatenate, Dropout, \
     GlobalAveragePooling2D, Activation, GlobalMaxPooling2D, Input, AveragePooling2D
 from keras_vggface import VGGFace, utils
@@ -12,7 +13,6 @@ from attacks.blackbox.utilities import Singleton, sess
 
 
 _weights = {'squeeze_net': params.SQUEEZENET_WEIGHTS_PATH,
-            'custom': params.CUSTOM_SUB_WEIGHTS_PATH,
             'resnet50': params.RESNET50_WEIGHTS_PATH}
 
 def load_model(model_type='squeeze_net', *args, **kwargs):
@@ -35,29 +35,13 @@ def save_model(model, model_type):
 
     try:
         model.save_weights(weights_path, save_format='h5')
-    except TypeError:
+    except TypeError:  # If model is pure keras
         model.save_weights(weights_path)
-
-def custom_model(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
-    optimizer = tf.keras.optimizers.Adam(params.LEARNING_RATE, beta_1=params.MOMENTUM)
-    model = tf.keras.Sequential(layers=[Conv2D(64, 2), MaxPool2D(2), Conv2D(64, 2),
-                                        MaxPool2D(2), Flatten(), Dense(200, activation='sigmoid'),
-                                        Dense(200, activation='sigmoid'), Dense(100, activation='relu'),
-                                        Dense(num_classes, activation='softmax')])
-    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-
-    if trained:
-        model.build(input_shape=[None, 224, 224, 3])
-        model.load_weights(params.CUSTOM_SUB_WEIGHTS_PATH)
-
-    return model
 
 def resnet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
     tf.keras.backend.set_session(sess)
 
-    # optimizer = tf.keras.optimizers.Adam(params.LEARNING_RATE, beta_1=params.MOMENTUM)
-    # optimizer = tf.keras.optimizers.Adam()
-    optimizer = keras.optimizers.SGD(lr=0.1, momentum=0.9, decay=0.0, nesterov=True)
+    optimizer = keras.optimizers.Adam()
     model = VGGFace(model='resnet50', include_top=True, weights=None, classes=num_classes)
     model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
@@ -133,6 +117,7 @@ class BlackboxModel(metaclass=Singleton):
         return preds
 
 _model_functions = {'squeeze_net': squeeze_net,
-                    'custom': custom_model,
                     'resnet50': resnet50,
                     'blackbox': blackbox}
+
+print(f"Successfully loaded module {__file__}")
