@@ -1,17 +1,18 @@
+print(f"Loading module {__file__}")
 import os
+os.umask(2)
+from time import perf_counter
+from datetime import timedelta
 import tensorflow as tf
 import numpy as np
 from datetime import datetime
 from PIL import Image
-from keras_vggface import VGGFace
 
-# from attacks.blackbox.blackbox_model import get_blackbox_prediction
 import attacks.blackbox.params as params
 from attacks.blackbox.models import load_model
 from attacks.blackbox.utilities import sess
 
 
-# BOUNDS = (0, 255)
 BOUNDS = (0., 1.)
 
 with sess.as_default():
@@ -32,16 +33,14 @@ def augment_dataset(model, image_dir, scale):
     image_it = datagen.flow_from_directory(
         image_dir, class_mode=None, batch_size=batch_size, shuffle=False,
         target_size=(224, 224))
-    # files = [os.path.join(image_dir, name) for name in image_it.filenames]
     nimages = image_it.n
     nbatches = (nimages // batch_size) + 1
     new_image_dir = os.path.join(
-        params.DATASET_BASE_PATH, "intermediate",
-        datetime.now().strftime("%Y%m%d%H%M%S%f"), 'augmented_images')
+        params.DATASET_BASE_PATH, "augmented_images",
+        datetime.now().strftime("%Y%m%d%H%M%S%f"), 'results')  # Nested 'results' directory is a bugfix, don't change
     os.makedirs(new_image_dir, mode=0o777)
     fname = 1
     step = 0
-    # load_img_fn = lambda x: np.asarray(Image.open(x)).astype(np.float32)/255.0
     save_img_fn = lambda x, y: Image.fromarray(x).save(
         os.path.join(new_image_dir, f"{y}.jpg".rjust(11, "0")))
 
@@ -49,14 +48,11 @@ def augment_dataset(model, image_dir, scale):
                               name="batch_in")
     oracle_label_batch_ph = tf.placeholder(tf.int64, shape=[None, 2],
                                            name="oracle_preds_in")
-
+    epoch_start_time = perf_counter()
     for nbatch in range(nbatches):
         if step >= nbatches:
             break
 
-        last_index = min(((nbatch + 1) * batch_size, nimages))
-        # file_batch = files[nbatch * batch_size:last_index]
-        # batch = np.asarray([load_img_fn(f) for f in file_batch])
         batch = image_it.next().astype(np.float) / 255.
         oracle_label_batch = np.argmax(model.predict(batch),
                                        axis=1)
@@ -79,7 +75,6 @@ def augment_dataset(model, image_dir, scale):
 
         for im_orig, im_augmented in zip(batch,
                                          augmented_batch):
-            # save_img_fn(im_orig, fname)
             img = (im_augmented*255).astype(np.uint8)
             save_img_fn(img, fname)
             fname += 1
@@ -88,8 +83,14 @@ def augment_dataset(model, image_dir, scale):
         step += 1
         print(f"Augmentation progress: augmented "
               f"{step * batch_size} / {nimages} images "
-              f"({100 * step / nbatches:.2f}%)")
+              f"({100 * step / nbatches:.2f}%); ", end="")
 
+        time_now = perf_counter()
+        time_elapsed = time_now - epoch_start_time
+        time_per_step = time_elapsed / (step+1)
+        steps_remaining = nbatches - (step+1)
+        time_remaining = steps_remaining * time_per_step
+        print(f"Est. time remaining: {timedelta(seconds=time_remaining)}")
     return os.path.dirname(new_image_dir)
 
 
@@ -124,8 +125,6 @@ def augment(model, batch, oracle_label_batch, scale):
                              name="AddScaledJacobians")
     augmented_batch = tf.clip_by_value(augmented_batch, *BOUNDS,
                                        name="Clip")
-    # augmented_batch = tf.scalar_mul(augmented_batch, 255., "UpScale")
-    # augmented_batch = tf.cast(augmented_batch, tf.uint8, "Cast")
     return augmented_batch
 
 ### Uncomment function in future if needed ###
@@ -155,17 +154,16 @@ def augment(model, batch, oracle_label_batch, scale):
 #                                                output_types=(tf.uint8))
 #     return ds_images, len(image_it.filepaths)
 
+print(f"Successfully loaded module {__file__}")
 
 if __name__ == '__main__':
-    # from attacks.blackbox.substitute_model import load_model
 
     tf.keras.backend.set_session(sess)
     # substitute_model = load_model(params.CUSTOM_SUB_WEIGHTS_PATH,
     #                               params.NUM_CLASSES_VGGFACE,
     #                               model='custom')
 
-    # substitute_model = VGGFace(model='resnet50', weights=None)
-    model = load_model('resnet50', trained=False, num_classes=25)
+    model = load_model('resnet50', trained=False, num_classes=195)
     augment_dataset(model, params.TRAIN_SET_WORKING,
                     params.LAMBDA)
     sess.close()
