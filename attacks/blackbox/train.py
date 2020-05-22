@@ -1,33 +1,32 @@
+print(f"Loading module {__file__}")
+import os
+os.umask(2)
 import tensorflow as tf
 import attacks.blackbox.params as params
 from time import perf_counter
 from datetime import timedelta
 from attacks.blackbox import models
 from attacks.blackbox.augmentation import augment_dataset
-from attacks.blackbox.utilities import get_dataset_generator, oracle_classify_and_save, sess
+from attacks.blackbox.utilities import get_train_set, oracle_classify_and_save, sess, get_validation_set
 
 
 def train(oracle, substitute_type, nepochs_substitute, nepochs_training, batch_size):
     assert nepochs_substitute > 0 and nepochs_training > 0
-    # image_dir = params.TRAIN_SET_ALIGNED
-    image_dir = params.TRAIN_SET_INITIAL
-    # validation_dir = train_dir
+
+    train_set_dir = params.TRAIN_SET
+    validation_dir = params.VALIDATION_SET
+    train_dir = params.TRAIN_SET_WORKING
+
+    print("1) Preprocess dataset - acquire oracle predictions and prune")
+    oracle_classify_and_save(oracle, train_set_dir, train_dir, batch_size, prune_threshold=10)
+
     model = None
     for epoch_sub in range(1, nepochs_substitute + 1):
-        print(f"Starting training on new substitute model, epoch #{epoch_sub}")
-
-        print("a) Acquiring oracle predictions")
-        # if epoch_sub > 1:
-        #     oracle_classify_and_save(oracle, image_dir, params.TRAIN_SET_WORKING, batch_size)
-        oracle_classify_and_save(oracle, image_dir, params.TRAIN_SET_WORKING, batch_size)
-        train_dir = params.TRAIN_SET_WORKING
-
-        print("b) Start training substitute model")
-        train_ds, nsteps, num_classes = get_dataset_generator(train_dir, batch_size)
+        print(f"2) Training substitute model #{epoch_sub}/{nepochs_substitute}")
+        train_ds, nsteps, num_classes, class_indices = get_train_set(train_dir, batch_size)
         model = models.load_model(model_type=substitute_type, trained=False, num_classes=num_classes)
-
         for epoch in range(nepochs_training):
-            print(f"b.1) Starting training epoch #{epoch + 1}")
+            print(f"2.1) Training epoch #{epoch + 1}")
             epoch_start_time = perf_counter()
             epoch_loss = 0.
             epoch_acc = 0.
@@ -38,9 +37,9 @@ def train(oracle, substitute_type, nepochs_substitute, nepochs_training, batch_s
                 [loss, acc] = model.train_on_batch(im_batch, label_batch)
                 epoch_loss += loss
                 epoch_acc += acc
-                print(f"Step {step + 1}/{nsteps} ({100 * (step + 1) / nsteps:.2f}%) "
-                      f"- Loss={loss}, accuracy={acc}; ", end="")
                 step += 1
+                print(f"Step {step + 1}/{nsteps} ({100 * (step) / nsteps:.2f}%) "
+                      f"- Loss={loss}, accuracy={acc}; ", end="")
 
                 time_now = perf_counter()
                 time_elapsed = time_now - epoch_start_time
@@ -51,27 +50,54 @@ def train(oracle, substitute_type, nepochs_substitute, nepochs_training, batch_s
 
             epoch_loss /= nsteps
             epoch_acc /= nsteps
-            print(f"Average training loss for epoch: {epoch_loss} ; Average accuracy: {epoch_acc}")
-            print("b.2) Saving checkpoint")
+            print(f"Average training loss: {epoch_loss} ; Average accuracy: {epoch_acc}")
+
+            # TODO validation dir is unmapped at the moment, need to resolve this
+            # print(f"2.2) Validation epoch #{epoch + 1}")
+            # validation_ds, nsteps = get_validation_set(validation_dir, class_indices, batch_size)
+            # step = 0
+            # validation_loss = 0.
+            # validation_acc = 0.
+            # for im_batch, label_batch in validation_ds:
+            #     if step >= nsteps:
+            #         break
+            #     [loss, acc] = model.test_on_batch(im_batch, label_batch)
+            #     validation_loss += loss
+            #     validation_acc += acc
+            #     print(f"Step {step + 1}/{nsteps} ({100 * (step + 1) / nsteps:.2f}%) "
+            #           f"- Loss={loss}, accuracy={acc}; ", end="")
+            #     step += 1
+            #
+            # validation_loss /= nsteps
+            # validation_acc /= nsteps
+            # print(f"Validation loss for epoch: {validation_loss} ; Accuracy: {validation_acc}")
+
+            print("2.2) Save checkpoint")
             models.save_model(model, substitute_type)
 
         if epoch_sub < nepochs_substitute:
-            print("c) Augmenting")
-            image_dir = augment_dataset(model, train_dir, params.LAMBDA)
+            print("3) Augment dataset")
+            augmented_images_dir = augment_dataset(model, train_dir, params.LAMBDA)
+
+            print("4) Acquire oracle predictions for new samples")
+            oracle_classify_and_save(oracle, augmented_images_dir, train_dir, batch_size)
+
+        print(f"Number of output classes in model #{nepochs_substitute}: {num_classes}")
 
     return model
 
-PRE_TRAINED = False
 
-def main():
+print(f"Successfully loaded module {__file__}")
+
+if __name__ == '__main__':
+    PRE_TRAINED = False
+    tf.keras.backend.set_session(sess)
     oracle = models.load_model(model_type='blackbox', architecture='resnet50')
     if PRE_TRAINED:
         substitute_model = models.load_model(model_type='resnet50', trained=True)
+        # Do something
+
     else:
         substitute_model = train(oracle, 'resnet50', params.EPOCHS_SUBSTITUTE,
                                  params.EPOCHS_TRAINING, params.BATCH_SIZE)
-
-if __name__ == '__main__':
-    tf.keras.backend.set_session(sess)
-    main()
     sess.close()
