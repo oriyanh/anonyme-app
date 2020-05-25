@@ -52,25 +52,25 @@ def train(oracle, substitute_type, nepochs_substitute, nepochs_training, batch_s
             epoch_acc /= nsteps_train
             print(f"Average training loss: {epoch_loss} ; Average accuracy: {epoch_acc}")
 
-            # TODO validation dir is unmapped at the moment, need to resolve this
-            # print(f"2.2) Validation epoch #{epoch + 1}")
-            # validation_ds, nsteps = get_validation_set(validation_dir, class_indices, batch_size)
-            # step = 0
-            # validation_loss = 0.
-            # validation_acc = 0.
-            # for im_batch, label_batch in validation_ds:
-            #     if step >= nsteps:
-            #         break
-            #     [loss, acc] = model.test_on_batch(im_batch, label_batch)
-            #     validation_loss += loss
-            #     validation_acc += acc
-            #     print(f"Step {step + 1}/{nsteps} ({100 * (step + 1) / nsteps:.2f}%) "
-            #           f"- Loss={loss}, accuracy={acc}; ", end="")
-            #     step += 1
-            #
-            # validation_loss /= nsteps
-            # validation_acc /= nsteps
-            # print(f"Validation loss for epoch: {validation_loss} ; Accuracy: {validation_acc}")
+            # TODO Validation dir is assumed to be mapped using oracle predictions
+            print(f"2.2) Validation epoch #{epoch + 1}")
+            validation_ds, nsteps_val = get_validation_set(validation_dir, class_indices, batch_size)
+            step_val = 0
+            validation_loss = 0.
+            validation_acc = 0.
+            for im_batch, label_batch in validation_ds:
+                if step_val >= nsteps_val:
+                    break
+                [loss, acc] = model.test_on_batch(im_batch, label_batch)
+                validation_loss += loss
+                validation_acc += acc
+                step_val += 1
+                print(f"Step {step_val}/{nsteps_val} ({100 * step_val / nsteps_val:.2f}%) "
+                      f"- Loss={loss}, accuracy={acc}")
+
+            validation_loss /= nsteps_val
+            validation_acc /= nsteps_val
+            print(f"Validation loss for epoch: {validation_loss} ; Validation accuracy: {validation_acc}")
 
             print("2.2) Save checkpoint")
             models.save_model(model, substitute_type)
