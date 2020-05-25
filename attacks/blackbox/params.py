@@ -4,11 +4,10 @@ import os
 
 LEARNING_RATE = 0.04
 MOMENTUM = 0.9
-EPOCHS_TRAINING = 10
+EPOCHS_TRAINING = 30
 EPOCHS_SUBSTITUTE = 5
 BATCH_SIZE = 64
 LAMBDA = 0.1  # Step size for jacobian augmentation (for images in [0,1]
-NUM_INIT_SAMPLES = 1000
 
 PROJECT_DIR = '/cs/ep/503'  # TODO: change to os-independent path
 
@@ -19,7 +18,8 @@ DATASET_TRAIN_LIST = os.path.join(DATASET_BASE_PATH, "train_list.txt")
 DATASET_TEST_LIST = os.path.join(DATASET_BASE_PATH, "test_list.tx")
 
 TRAIN_SET = os.path.join(DATASET_BASE_PATH, "train_aligned_subset")
-VALIDATION_SET = os.path.join(DATASET_BASE_PATH, "validation_aligned")
+# VALIDATION_SET = os.path.join(DATASET_BASE_PATH, "validation_aligned")
+VALIDATION_SET = os.path.join(DATASET_BASE_PATH, "validation_aligned_pred")
 TRAIN_SET_WORKING = os.path.join(DATASET_BASE_PATH, "working_dataset")
 if not os.path.exists(TRAIN_SET_WORKING):
     os.makedirs(TRAIN_SET_WORKING)
