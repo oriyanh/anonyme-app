@@ -31,7 +31,7 @@ def augment_dataset(model, image_dir, scale):
     datagen = tf.keras.preprocessing.image.ImageDataGenerator()
 
     image_it = datagen.flow_from_directory(
-        image_dir, class_mode=None, batch_size=batch_size, shuffle=False,
+        image_dir, class_mode='sparse', batch_size=batch_size, shuffle=False,
         target_size=(224, 224))
     nimages = image_it.n
     nbatches = (nimages // batch_size) + 1
@@ -53,27 +53,27 @@ def augment_dataset(model, image_dir, scale):
         if step >= nbatches:
             break
 
-        batch = image_it.next().astype(np.float) / 255.
-        oracle_label_batch = np.argmax(model.predict(batch),
-                                       axis=1)
-        oracle_label_batch = np.vstack(
+        image_batch, label_batch = image_it.next()
+        image_batch = image_batch.astype(np.float) / 255.
+
+        label_batch = np.vstack(
             [
-                np.arange(len(oracle_label_batch)),
-                oracle_label_batch
+                np.arange(len(label_batch)),
+                label_batch
             ]).T
 
-        fnames = np.arange(fname, batch.shape[0] * 2).astype(np.uint32)
+        fnames = np.arange(fname, image_batch.shape[0] * 2).astype(np.uint32)
         augmented_batch_tensor = augment(model, batch_ph,
                                          oracle_label_batch_ph, scale)
         with sess.as_default():
             augmented_batch = sess.run(
                 augmented_batch_tensor,
                 feed_dict={
-                    batch_ph: batch,
-                    oracle_label_batch_ph: oracle_label_batch,
+                    batch_ph: image_batch,
+                    oracle_label_batch_ph: label_batch,
                 })
 
-        for im_orig, im_augmented in zip(batch,
+        for im_orig, im_augmented in zip(image_batch,
                                          augmented_batch):
             img = (im_augmented*255).astype(np.uint8)
             save_img_fn(img, fname)
