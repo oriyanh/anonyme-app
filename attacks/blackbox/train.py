@@ -23,33 +23,33 @@ def train(oracle, substitute_type, nepochs_substitute, nepochs_training, batch_s
     model = None
     for epoch_sub in range(1, nepochs_substitute + 1):
         print(f"2) Training substitute model #{epoch_sub}/{nepochs_substitute}")
-        train_ds, nsteps, num_classes, class_indices = get_train_set(train_dir, batch_size)
+        train_ds, nsteps_train, num_classes, class_indices = get_train_set(train_dir, batch_size)
         model = models.load_model(model_type=substitute_type, trained=False, num_classes=num_classes)
         for epoch in range(nepochs_training):
             print(f"2.1) Training epoch #{epoch + 1}")
             epoch_start_time = perf_counter()
             epoch_loss = 0.
             epoch_acc = 0.
-            step = 0
+            step_train = 0
             for im_batch, label_batch in train_ds:
-                if step >= nsteps:
+                if step_train >= nsteps_train:
                     break
                 [loss, acc] = model.train_on_batch(im_batch, label_batch)
                 epoch_loss += loss
                 epoch_acc += acc
-                step += 1
-                print(f"Step {step + 1}/{nsteps} ({100 * (step) / nsteps:.2f}%) "
+                step_train += 1
+                print(f"Step {step_train}/{nsteps_train} ({100 * (step_train) / nsteps_train:.2f}%) "
                       f"- Loss={loss}, accuracy={acc}; ", end="")
 
                 time_now = perf_counter()
                 time_elapsed = time_now - epoch_start_time
-                time_per_step = time_elapsed / (step+1)
-                steps_remaining = nsteps - (step+1)
+                time_per_step = time_elapsed / step_train
+                steps_remaining = nsteps_train - step_train
                 time_remaining = steps_remaining * time_per_step
                 print(f"Est. time remaining for epoch: {timedelta(seconds=time_remaining)}")
 
-            epoch_loss /= nsteps
-            epoch_acc /= nsteps
+            epoch_loss /= nsteps_train
+            epoch_acc /= nsteps_train
             print(f"Average training loss: {epoch_loss} ; Average accuracy: {epoch_acc}")
 
             # TODO validation dir is unmapped at the moment, need to resolve this
