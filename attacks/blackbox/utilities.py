@@ -93,7 +93,9 @@ def extract_face(mtcnn, pixels, bounding_box_size=256, crop_size=224,
     return face
 
 def get_train_set(train_dir, batch_size):
-    datagen = tf.keras.preprocessing.image.ImageDataGenerator()
+    datagen = tf.keras.preprocessing.image.ImageDataGenerator(rotation_range=10,
+                                                              horizontal_flip=True,
+                                                              zoom_range=0.15)
     train_it = datagen.flow_from_directory(train_dir, class_mode='sparse', batch_size=batch_size,
                                            shuffle=True, target_size=(224, 224))
     nbatches = train_it.n // batch_size
@@ -111,8 +113,9 @@ def get_train_set(train_dir, batch_size):
 def get_validation_set(validation_dir, train_class_indices, batch_size):
     # TODO validation dir is assumed to be mapped properly, need to resolve this
     datagen = tf.keras.preprocessing.image.ImageDataGenerator()
-    validation_it = datagen.flow_from_directory(validation_dir, class_mode='sparse', batch_size=batch_size,
-                                           shuffle=True, target_size=(224, 224))
+    validation_it = datagen.flow_from_directory(validation_dir, class_mode='sparse',
+                                                batch_size=batch_size,
+                                                shuffle=True, target_size=(224, 224))
     class_indices = validation_it.class_indices
     class_map = {idx: name for name, idx in class_indices.items()}
     nbatches = validation_it.n // batch_size
