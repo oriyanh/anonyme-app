@@ -1,3 +1,5 @@
+print(f"Loading module {__file__}")
+
 import tensorflow as tf
 import numpy as np
 
@@ -77,3 +79,5 @@ def run_papernot_attack(img, model, label):
 
 def papernot():
     pass
+
+print(f"Successfully loaded module {__file__}")

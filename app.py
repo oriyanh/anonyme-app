@@ -12,11 +12,10 @@ from tensorflow.python.platform import gfile
 
 from attacks.blackbox.utilities import extract_face
 from project_params import ROOT_DIR
-from attacks.blackbox.params import FACENET_WEIGHTS_PATH, \
-    NUM_CLASSES_VGGFACE, SQUEEZENET_WEIGHTS_PATH
+from attacks.blackbox.params import FACENET_WEIGHTS_PATH, NUM_CLASSES_RESNET50
 from attacks.blackbox.adversaries import run_fgsm_attack, \
     run_papernot_attack, generate_adversarial_sample
-from attacks.blackbox.substitute_model import load_model
+from attacks.blackbox.models import load_model
 from attacks.whitebox.fgsm.adversary import generate_adv_whitebox
 
 app = Flask(__name__)
@@ -50,9 +49,7 @@ def load_app_globals():
 
     # Load MTCNN model
     app.mtcnn = MTCNN()
-    app.substitute_model = load_model(os.path.join(ROOT_DIR,
-                                                   SQUEEZENET_WEIGHTS_PATH),
-                                      NUM_CLASSES_VGGFACE)
+    app.substitute_model = load_model('resnet50', num_classes=NUM_CLASSES_RESNET50)
     atexit.register(webservice_cleanup, app.sess)
 
 
@@ -75,7 +72,7 @@ def blackbox():
         }), 400
 
     set_session(current_app.sess)
-    face_img = extract_face(current_app.mtcnn, img, (224, 224),
+    face_img = extract_face(current_app.mtcnn, img, crop_size=224,
                             graph=current_app.graph).astype(np.float32)
 
     with current_app.graph.as_default():
@@ -101,9 +98,9 @@ def whitebox():
 
     set_session(current_app.sess)
 
-    face_img = extract_face(current_app.mtcnn, img, (160, 160),
+    face_img = extract_face(current_app.mtcnn, img, crop_size=160,
                             graph=current_app.graph).astype(np.float32)
-    target_img = extract_face(current_app.mtcnn, target_img, (160, 160),
+    target_img = extract_face(current_app.mtcnn, target_img, crop_size=160,
                               graph=current_app.graph).astype(np.float32)
 
     with current_app.graph.as_default():
@@ -123,7 +120,7 @@ def face_align():
 
     set_session(current_app.sess)
 
-    face_img = extract_face(current_app.mtcnn, img, (160, 160),
+    face_img = extract_face(current_app.mtcnn, img, crop_size=160,
                             graph=current_app.graph)
 
     file_object = BytesIO()
