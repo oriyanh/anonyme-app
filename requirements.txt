@@ -4,7 +4,6 @@ certifi
 chardet
 Click
 cycler
-easyfacenet
 Flask
 gast
 google-pasta
