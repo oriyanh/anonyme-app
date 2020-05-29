@@ -4,7 +4,6 @@ certifi==2019.9.11
 chardet==3.0.4
 Click==7.0
 cycler==0.10.0
-easyfacenet==1.0.5
 Flask==1.1.1
 gast==0.3.2
 google-pasta==0.1.8
@@ -20,10 +19,9 @@ Keras-Applications==1.0.8
 Keras-Preprocessing==1.1.0
 keras-vggface==0.6
 kiwisolver==1.1.0
-lpips-tf==0.0.0
 Markdown==3.1.1
 MarkupSafe==1.1.1
-matplotlib==3.1.1
+matplotlib
 mtcnn==0.1.0
 numpy==1.17.4
 opencv-python==4.1.1.26
@@ -36,6 +34,7 @@ python-dateutil==2.8.1
 pytz==2019.3
 PyYAML==5.3
 requests==2.22.0
+scikit-image>=0.13.0
 scikit-learn==0.21.3
 scipy==1.1.0
 six==1.13.0
@@ -44,6 +43,9 @@ tensorboard==1.14.0
 tensorflow-estimator==1.14.0
 tensorflow-gpu==1.14.0
 termcolor==1.1.0
+torch==1.5.0+cu101
+torchvision==0.6.0+cu101
+tqdm>=4.28.1
 urllib3==1.25.7
 Werkzeug==0.16.0
 wrapt==1.11.2

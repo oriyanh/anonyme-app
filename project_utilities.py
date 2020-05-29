@@ -1,10 +1,10 @@
+from PIL import Image
 import numpy as np
 import tensorflow as tf
-from PIL import Image
-from lpips_tf import lpips
+import torch
 
 
-def perceptual_loss(im0_batch, im1_batch):
+def perceptual_loss(lpips_network, im0_batch, im1_batch):
     """
     Evaluates Perceptual distance between input batch and output batch
     :param im0_batch: Numpy array representing batch of images
@@ -13,18 +13,11 @@ def perceptual_loss(im0_batch, im1_batch):
     :type im1_batch: np.ndarray
     :return: perceptual loss between the two batches
     """
-    im0_batch_ph = tf.placeholder(tf.float32, im0_batch.shape)
-    im1_batch_ph = tf.placeholder(tf.float32, im1_batch.shape)
+    img_pyt = torch.tensor(np.rollaxis(im0_batch, -1, 1))
+    adv_img_pyt = torch.tensor(np.rollaxis(im1_batch, -1, 1))
+    d = lpips_network.forward(img_pyt, adv_img_pyt).data.numpy()
 
-    distance_ph = lpips(im0_batch_ph, im1_batch_ph, model='net-lin', net='alex')
-
-    with tf.get_default_session() as sess:
-        dist = sess.run(distance_ph, feed_dict={
-            im0_batch_ph: im0_batch,
-            im1_batch_ph: im1_batch,
-        })
-
-    return dist
+    return d
 
 
 def extract_face(mtcnn, pixels, required_size=(224, 224),
