@@ -1,22 +1,20 @@
+print(f"Loading module {__file__}")
+import os
+os.umask(2)
 import tensorflow as tf
 import numpy as np
-from tensorflow.keras import Model, backend as K, layers
-from tensorflow.keras.utils import get_source_inputs, get_file
-from tensorflow.python.keras.applications import ResNet50
+import keras
 from tensorflow.keras.layers import Conv2D, MaxPool2D, Flatten, Dense, Layer, Concatenate, Dropout, \
-    GlobalAveragePooling2D, Activation, GlobalMaxPooling2D, Input, AveragePooling2D, BatchNormalization
-from keras_vggface import VGGFace
+    GlobalAveragePooling2D, Activation, GlobalMaxPooling2D, Input, AveragePooling2D
+from keras_vggface import VGGFace, utils
 
 from attacks.blackbox import params
-
-
+from attacks.blackbox.utilities import Singleton, sess
 
 
 _weights = {'squeeze_net': params.SQUEEZENET_WEIGHTS_PATH,
-           'custom': params.CUSTOM_SUB_WEIGHTS_PATH,
-           'resnet50': params.RESNET50_WEIGHTS_PATH}
-graph = tf.get_default_graph()
-sess = tf.Session(graph=graph)
+            'resnet50': params.RESNET50_WEIGHTS_PATH}
+
 def load_model(model_type='squeeze_net', *args, **kwargs):
     try:
         model_fn = _model_functions[model_type]
@@ -26,7 +24,7 @@ def load_model(model_type='squeeze_net', *args, **kwargs):
 
     assert model.predict(np.random.randn(1, 224, 224, 3)) is not None
 
-    print("Model loaded successfully!")
+    print(f"Model '{model_type}' loaded successfully!")
     return model
 
 def save_model(model, model_type):
@@ -35,28 +33,16 @@ def save_model(model, model_type):
     except KeyError:
         raise NotImplementedError(f"Unsupported model type: '{model_type}'")
 
-    model.save_weights(weights_path, save_format='h5')
-
-
-def custom_model(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
-    optimizer = tf.keras.optimizers.Adam(params.LEARNING_RATE, beta_1=params.MOMENTUM)
-    model = tf.keras.Sequential(layers=[Conv2D(64, 2), MaxPool2D(2), Conv2D(64, 2),
-                                        MaxPool2D(2), Flatten(), Dense(200, activation='sigmoid'),
-                                        Dense(200, activation='sigmoid'), Dense(100, activation='relu'),
-                                        Dense(num_classes, activation='softmax')])
-    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-
-    if trained:
-        model.build(input_shape=[None, 224, 224, 3])
-        model.load_weights(params.CUSTOM_SUB_WEIGHTS_PATH)
-
-    return model
+    try:
+        model.save_weights(weights_path, save_format='h5')
+    except TypeError:  # If model is pure keras
+        model.save_weights(weights_path)
 
 def resnet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
     tf.keras.backend.set_session(sess)
 
-    optimizer = tf.keras.optimizers.Adam(params.LEARNING_RATE, beta_1=params.MOMENTUM)
-    model = ResNet50(include_top=True, weights=None, classes=num_classes)
+    optimizer = keras.optimizers.Adam()
+    model = VGGFace(model='resnet50', include_top=True, weights=None, classes=num_classes)
     model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
     if trained:
@@ -64,7 +50,6 @@ def resnet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
         model.load_weights(params.RESNET50_WEIGHTS_PATH)
 
     return model
-
 
 def squeeze_net(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
     optimizer = tf.keras.optimizers.SGD(params.LEARNING_RATE, momentum=params.MOMENTUM, nesterov=True)
@@ -111,15 +96,28 @@ class FireModule(Layer):
         x = self.concat([left, right])
         return x
 
-
 def blackbox(architecture='resnet50'):
     model = None
     tf.keras.backend.set_session(sess)
     if architecture == 'resnet50':
-        model = VGGFace(model='resnet50')
+        model = BlackboxModel(architecture)
     return model
 
+class BlackboxModel(metaclass=Singleton):
+    """
+    Singleton class representing blackbox model
+    """
+
+    def __init__(self, architecture):
+        self.model = VGGFace(model=architecture)
+
+    def predict(self, batch):
+        preprocessed_batch = utils.preprocess_input(batch, version=2)
+        preds = self.model.predict(preprocessed_batch)
+        return preds
+
 _model_functions = {'squeeze_net': squeeze_net,
-                    'custom': custom_model,
                     'resnet50': resnet50,
                     'blackbox': blackbox}
+
+print(f"Successfully loaded module {__file__}")

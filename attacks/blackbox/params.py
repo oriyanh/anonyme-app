@@ -1,29 +1,37 @@
-import os
-from project_params import ROOT_DIR
+print(f"Loading module {__file__}")
 
-# LEARNING_RATE = 1e-2
+import os
+
 LEARNING_RATE = 0.04
 MOMENTUM = 0.9
-EPOCHS_TRAINING = 10
-EPOCHS_SUBSTITUTE = 6
-BATCH_SIZE = 32
-# LAMBDA = 0.1  # Step size for jacobian augmentation (for images in [0,1]
-LAMBDA = 25.6  # Step size for jacobian augmentation (for images in [0, 255]
-NUM_INIT_SAMPLES = 1000
+EPOCHS_TRAINING = 30
+EPOCHS_SUBSTITUTE = 5
+BATCH_SIZE = 64
+LAMBDA = 0.1  # Step size for jacobian augmentation (for images in [0,1]
 
-WEIGHTS_DIR = os.path.join(ROOT_DIR, 'weights')
-SQUEEZENET_WEIGHTS_FNAME = 'substitute_squeezenet.h5'
+PROJECT_DIR = '/cs/ep/503'  # TODO: change to os-independent path
+
+DATASET_BASE_PATH = os.path.join(PROJECT_DIR, 'dataset')
+TRAIN_SET_ALIGNED = os.path.join(DATASET_BASE_PATH, "train_aligned")
+TEST_SET_ALIGNED = os.path.join(DATASET_BASE_PATH, "test_aligned")
+DATASET_TRAIN_LIST = os.path.join(DATASET_BASE_PATH, "train_list.txt")
+DATASET_TEST_LIST = os.path.join(DATASET_BASE_PATH, "test_list.tx")
+
+TRAIN_SET = os.path.join(DATASET_BASE_PATH, "train_aligned_subset")
+# VALIDATION_SET = os.path.join(DATASET_BASE_PATH, "validation_aligned")
+VALIDATION_SET = os.path.join(DATASET_BASE_PATH, "validation_aligned_pred")
+TRAIN_SET_WORKING = os.path.join(DATASET_BASE_PATH, "working_dataset")
+if not os.path.exists(TRAIN_SET_WORKING):
+    os.makedirs(TRAIN_SET_WORKING)
+
+WEIGHTS_DIR = os.path.join(DATASET_BASE_PATH, 'weights')
+SQUEEZENET_WEIGHTS_FNAME = 'substitute_squeezenet.h5'  # No pre-trained model at the moment
 SQUEEZENET_WEIGHTS_PATH = os.path.join(WEIGHTS_DIR, SQUEEZENET_WEIGHTS_FNAME)
-CUSTOM_SUB_WEIGHTS_FNAME = 'substitute_custom.h5'
-CUSTOM_SUB_WEIGHTS_PATH = os.path.join(WEIGHTS_DIR, CUSTOM_SUB_WEIGHTS_FNAME)
 RESNET50_WEIGHTS_FNAME = 'substitute_resnet50.h5'
 RESNET50_WEIGHTS_PATH = os.path.join(WEIGHTS_DIR, RESNET50_WEIGHTS_FNAME)
 FACENET_WEIGHTS_FNAME = 'facenet_model.pb'
-FACENET_WEIGHTS_PATH = os.path.join(WEIGHTS_DIR, FACENET_WEIGHTS_FNAME)
+FACENET_WEIGHTS_PATH = os.path.join(PROJECT_DIR, FACENET_WEIGHTS_FNAME)
 NUM_CLASSES_VGGFACE = 8631
+NUM_CLASSES_RESNET50 = 195
 
-DATASET_BASE_PATH = os.path.join(os.path.dirname(ROOT_DIR), 'vggface2')
-DATASET_UNALIGNED_PATH = os.path.join(DATASET_BASE_PATH, "vggface2_test", "test")
-DATASET_UNALIGNED_TESTLIST = os.path.join(DATASET_BASE_PATH, "test_list.txt")
-TRAINING_SET_ALIGNED_PATH = os.path.join(DATASET_BASE_PATH, "vggface2_test", "sub_training_aligned")
-DATASET_ALIGNED_TRAINLIST = os.path.join(DATASET_BASE_PATH, "vggface2_test", "train_list.tx")
+print(f"Successfully loaded module {__file__}")
