@@ -13,11 +13,15 @@ def perceptual_loss(lpips_network, im0_batch, im1_batch):
     :type im1_batch: np.ndarray
     :return: perceptual loss between the two batches
     """
-    img_pyt = torch.tensor(np.rollaxis(im0_batch, -1, 1))
-    adv_img_pyt = torch.tensor(np.rollaxis(im1_batch, -1, 1))
-    d = lpips_network.forward(img_pyt, adv_img_pyt).data.numpy()
+    ch_first_im0_batch = np.rollaxis(im0_batch, -1, 1)
+    im0_batch_pyt = torch.tensor(ch_first_im0_batch)
 
-    return d
+    ch_first_im1_batch = np.rollaxis(im1_batch, -1, 1)
+    im1_batch_pyt = torch.tensor(ch_first_im1_batch)
+
+    dist = lpips_network.forward(im0_batch_pyt, im1_batch_pyt).data.numpy()
+
+    return dist
 
 
 def extract_face(mtcnn, pixels, required_size=(224, 224),
