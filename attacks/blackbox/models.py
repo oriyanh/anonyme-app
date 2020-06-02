@@ -38,7 +38,8 @@ def save_model(model, model_type):
     except TypeError:  # If model is pure keras
         model.save_weights(weights_path)
 
-def resnet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
+def resnet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False,
+             weights_path=params.RESNET50_WEIGHTS_PATH):
     tf.keras.backend.set_session(sess)
 
     optimizer = keras.optimizers.Adam()
@@ -47,11 +48,12 @@ def resnet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
 
     if trained:
         model.build(input_shape=[None, 224, 224, 3])
-        model.load_weights(params.RESNET50_WEIGHTS_PATH)
+        model.load_weights(weights_path)
 
     return model
 
-def squeeze_net(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
+def squeeze_net(num_classes=params.NUM_CLASSES_VGGFACE, trained=False,
+                weights_path=params.SQUEEZENET_WEIGHTS_PATH):
     optimizer = tf.keras.optimizers.SGD(params.LEARNING_RATE, momentum=params.MOMENTUM, nesterov=True)
     model = tf.keras.Sequential(layers=[Conv2D(64, 3, 2, padding='valid', activation='relu'),
                                         MaxPool2D(3, 2),
@@ -73,7 +75,7 @@ def squeeze_net(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
 
     if trained:
         model.build(input_shape=[None, 224, 224, 3])
-        model.load_weights(params.SQUEEZENET_WEIGHTS_PATH)
+        model.load_weights(weights_path)
 
     return model
 
@@ -115,6 +117,7 @@ class BlackboxModel(metaclass=Singleton):
         preprocessed_batch = utils.preprocess_input(batch, version=2)
         preds = self.model.predict(preprocessed_batch)
         return preds
+
 
 _model_functions = {'squeeze_net': squeeze_net,
                     'resnet50': resnet50,
