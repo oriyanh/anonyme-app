@@ -17,9 +17,9 @@ def generate_adversarial_sample(model, im_batch, attack, kwargs, sess=tf.get_def
     :param sess: tensorflow session on which to perform the attack
     :return: adversarial samples generated from im_batch
     """
-    im_batch = im_batch.astype(np.float32) / 255.0
+    # im_batch = im_batch.astype(np.float32) / 255.0
     adv_im_batch = attack(model, im_batch, sess, **kwargs)
-    adv_im_batch = (adv_im_batch * 255.0).astype(np.uint8)
+    # adv_im_batch = (adv_im_batch * 255.0).astype(np.uint8)
     return adv_im_batch
 
 
