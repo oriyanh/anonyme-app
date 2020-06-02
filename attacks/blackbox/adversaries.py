@@ -114,26 +114,3 @@ def papernot():
 
 
 print(f"Successfully loaded module {__file__}")
-
-
-if __name__ == '__main__':
-    from attacks.blackbox.utilities import sess
-    from attacks.blackbox.models import load_model
-    from attacks.blackbox.utilities import get_train_set
-    from attacks.blackbox.params import VALIDATION_SET
-    from matplotlib import pyplot as plt
-
-    train_ds, nsteps_train, num_classes, class_indices = get_train_set(VALIDATION_SET, 4)
-
-    model = load_model('resnet50', num_classes=231, trained=True,
-                       weights_path='/cs/ep/503/dataset/weights/substitute_resnet50_4.h5')
-
-    with sess:
-        for batch, _ in train_ds:
-            adv_batch = generate_adversarial_sample(model, batch, run_fgsm_attack, {}, sess=tf.get_default_session())
-            for i in range(len(batch)):
-                fig, axarr = plt.subplots(1, 2)
-                axarr[0].imshow(batch[i])
-                axarr[1].imshow(batch[i])
-                plt.show()
-            break
