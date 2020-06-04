@@ -10,8 +10,8 @@ import tensorflow as tf
 from keras.backend import set_session
 from tensorflow.python.platform import gfile
 
+from attacks.blackbox import params
 from attacks.blackbox.utilities import extract_face
-from project_params import ROOT_DIR
 from attacks.blackbox.params import FACENET_WEIGHTS_PATH, NUM_CLASSES_RESNET50
 from attacks.blackbox.adversaries import run_fgsm_attack, \
     run_papernot_attack, generate_adversarial_sample
@@ -19,7 +19,6 @@ from attacks.blackbox.models import load_model
 from attacks.whitebox.fgsm.adversary import generate_adv_whitebox
 
 app = Flask(__name__)
-
 
 ATTACK_TO_FUNC = {
     'fgsm': run_fgsm_attack,
@@ -49,15 +48,14 @@ def load_app_globals():
 
     # Load MTCNN model
     app.mtcnn = MTCNN()
-    app.substitute_model = load_model('resnet50', num_classes=NUM_CLASSES_RESNET50)
+    app.substitute_model = load_model('resnet50', weights_path=params.RESNET50_WEIGHTS_PATH)
     atexit.register(webservice_cleanup, app.sess)
 
 
 @app.route('/blackbox', methods=['POST'])
 def blackbox():
-    img = np.array(Image.open(request.files['input']))
+    # img = np.array([np.array(Image.open(img_path)) for img_path in img_files])
 
-    # json_dict = request.json
     attack_name = request.form.get('attack')
 
     attack_func = None
@@ -71,20 +69,32 @@ def blackbox():
                      f'of {set(ATTACK_TO_FUNC.keys())}'
         }), 400
 
-    set_session(current_app.sess)
-    face_img = extract_face(current_app.mtcnn, img, crop_size=224,
-                            graph=current_app.graph).astype(np.float32)
+    im_paths = request.files.getlist("input")
+    im_path_batches = ((im_paths[i: i + 4])
+                       for i in range(0, len(im_paths), 4))
 
+    set_session(current_app.sess)
     with current_app.graph.as_default():
         with current_app.sess.as_default():
-            adv_img = generate_adversarial_sample(
-                face_img, current_app.substitute_model, attack_func,
-                attack_args)
-
-    file_object = BytesIO()
-    adv_img.save(file_object, 'jpeg')
-    file_object.seek(0)
-    return send_file(file_object, mimetype='image/jpeg')
+            for im_path_batch in im_path_batches:
+                im_batch = np.array([
+                    extract_face(
+                        current_app.mtcnn,
+                        np.array(Image.open(im_path)),
+                        crop_size=224,
+                        graph=current_app.graph).astype(np.float32)
+                    for im_path in im_path_batch])
+                adv_im_batch = generate_adversarial_sample(
+                    current_app.substitute_model, im_batch,
+                    attack_func, attack_args)
+                for adv_im in adv_im_batch:
+                    file_object = BytesIO()
+                    adv_im.save(file_object, 'jpeg')
+                    file_object.seek(0)
+                    send_file(file_object, mimetype='image/jpeg')
+    return jsonify({
+        'Status': 'All images processed successfully'
+    }), 200
 
 
 @app.route('/whitebox', methods=['POST'])
