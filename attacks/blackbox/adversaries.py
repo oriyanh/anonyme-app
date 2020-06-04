@@ -41,25 +41,25 @@ def calc_preds(model, im_batch):
 
 def run_fgsm_attack(model, im_batch, sess=tf.get_default_session(),
                     eps=0.05, num_iter=100, to_convergence=True):
-    adv_im_batch = np.copy(im_batch)
+    res_batch = np.copy(im_batch)
     batch_ph = tf.placeholder(tf.float32, shape=[None, 224, 224, 3],
                               name="batch_in")
     label_ph = tf.placeholder(tf.int32, shape=[None], name="pred_in")
     adv_im_batch = fgsm(model, batch_ph, label_ph, eps)
 
-    orig_preds = calc_preds(model, adv_im_batch)
+    orig_preds = calc_preds(model, res_batch)
     preds = orig_preds
     idx_mask = np.array([True] * len(preds))
 
     for i in range(num_iter):
         print(f"Iteration {i + 1}/{num_iter}")
-        adv_im_batch[idx_mask] = sess.run(
+        res_batch[idx_mask] = sess.run(
             adv_im_batch,
             feed_dict={
-                batch_ph: adv_im_batch[idx_mask],
-                label_ph: preds[idx_mask],
+                batch_ph: res_batch[idx_mask],
+                label_ph: orig_preds[idx_mask],
             })
-        preds = calc_preds(model, adv_im_batch)
+        preds = calc_preds(model, res_batch)
 
         # Perform adversarial attack on images yet to converge
         idx_mask = preds == orig_preds if to_convergence else idx_mask
@@ -70,7 +70,7 @@ def run_fgsm_attack(model, im_batch, sess=tf.get_default_session(),
     else:
         if to_convergence:
             print("Convergence not reached")
-    return adv_im_batch
+    return res_batch
 
 
 def fgsm(model, x, y, eps, bounds=(0., 1.)):
