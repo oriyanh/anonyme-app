@@ -9,6 +9,8 @@ from mtcnn import MTCNN
 import tensorflow as tf
 from keras.backend import set_session
 from tensorflow.python.platform import gfile
+import torch
+from PerceptualSimilarity.models import PerceptualLoss
 
 from attacks.blackbox import params
 from attacks.blackbox.utilities import extract_face
@@ -49,6 +51,8 @@ def load_app_globals():
     # Load MTCNN model
     app.mtcnn = MTCNN()
     app.substitute_model = load_model('resnet50', weights_path=params.RESNET50_WEIGHTS_PATH)
+    app.perceptual_loss = PerceptualLoss(model='net-lin', net='alex', use_gpu=torch.cuda.is_available())
+
     atexit.register(webservice_cleanup, app.sess)
 
 
