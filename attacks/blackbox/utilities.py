@@ -189,13 +189,13 @@ def save_batch(images, labels, output_dir):
         tf.keras.preprocessing.image.save_img(output, image.astype(np.uint8), scale=False)
 
 def prune_dataset(dataset_dir, threshold=10):
-    print(f"Pruning classes from {dataset_dir} that have less than {threshold} samples")
+    print(f"Pruning classes from {dataset_dir} that have {threshold} samples or less")
     sub_directories = os.listdir(dataset_dir)
     print(f"Initial number of classes: {len(sub_directories)}")
     for sub_dir in sub_directories:
         class_path = os.path.join(dataset_dir, sub_dir)
         num_samples = len(os.listdir(class_path))
-        if num_samples < threshold:
+        if num_samples <= threshold:
             print(f"Pruning class {sub_dir}")
             rmtree(class_path, ignore_errors=True)
     num_classes = len(os.listdir(dataset_dir))
