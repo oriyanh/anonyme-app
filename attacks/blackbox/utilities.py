@@ -92,6 +92,27 @@ def extract_face(mtcnn, pixels, bounding_box_size=256, crop_size=224,
     face = pixels[y1:y2, x1:x2]
     return face
 
+
+def standardize_batch(batch, center=True):
+    """
+
+    :param batch:  Numpy array, dimensions (N, 224, 224, 3) , channels in RGB
+    :param center: boolean, if True will remove mean from batch, if False will add mean to batch.
+    :return: standardized batch
+    """
+    x_temp = np.copy(batch).astype(np.float32)
+    if center:
+        x_temp[..., 0] -= 131.0912
+        x_temp[..., 1] -= 103.8827
+        x_temp[..., 2] -= 91.4953
+    else:
+        x_temp[..., 0] += 131.0912
+        x_temp[..., 1] += 103.8827
+        x_temp[..., 2] += 91.4953
+
+    return x_temp
+
+
 def get_train_set(train_dir, batch_size):
     datagen = tf.keras.preprocessing.image.ImageDataGenerator(rotation_range=10,
                                                               horizontal_flip=True,
