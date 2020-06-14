@@ -60,7 +60,9 @@ def resnet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False,
 
     return model
 
-def senet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
+
+def senet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False,
+            weights_path=params.SENET50_WEIGHTS_PATH):
     tf.keras.backend.set_session(sess)
 
     optimizer = keras.optimizers.Adam()
@@ -69,7 +71,7 @@ def senet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
 
     if trained:
         model.build(input_shape=[None, 224, 224, 3])
-        model.load_weights(params.SENET50_WEIGHTS_PATH)
+        model.load_weights(weights_path)
 
     return model
 
