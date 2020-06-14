@@ -26,7 +26,11 @@ def load_model(model_type='squeeze_net', *args, **kwargs):
 
     assert model.predict(np.random.randn(1, 224, 224, 3)) is not None
 
-    print(f"Model '{model_type}' loaded successfully!")
+    if 'architecture' in kwargs:
+        print(f"Model '{model_type}' loaded successfully with architecture '{kwargs['architecture']}'")
+    else:
+        print(f"Model '{model_type}' loaded successfully!")
+
     return model
 
 def save_model(model, model_type, override=True):
