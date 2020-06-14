@@ -60,6 +60,19 @@ def resnet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False,
 
     return model
 
+def senet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
+    tf.keras.backend.set_session(sess)
+
+    optimizer = keras.optimizers.Adam()
+    model = VGGFace(model='senet50', include_top=True, weights=None, classes=num_classes)
+    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+    if trained:
+        model.build(input_shape=[None, 224, 224, 3])
+        model.load_weights(params.SENET50_WEIGHTS_PATH)
+
+    return model
+
 def squeeze_net(num_classes=params.NUM_CLASSES_VGGFACE, trained=False,
                 weights_path=params.SQUEEZENET_WEIGHTS_PATH):
     optimizer = tf.keras.optimizers.SGD(params.LEARNING_RATE, momentum=params.MOMENTUM, nesterov=True)
@@ -132,6 +145,7 @@ class BlackboxModel(metaclass=Singleton):
 
 _model_functions = {'squeeze_net': squeeze_net,
                     'resnet50': resnet50,
+                    'senet50': senet50,
                     'blackbox': blackbox}
 
 print(f"Successfully loaded module {__file__}")
