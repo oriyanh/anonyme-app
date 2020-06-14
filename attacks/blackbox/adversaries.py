@@ -1,3 +1,5 @@
+from attacks.blackbox.utilities import standardize_batch
+
 print(f"Loading module {__file__}")
 
 import tensorflow as tf
@@ -34,32 +36,34 @@ def calc_preds(model, im_batch):
     preds = np.argmax(batch_preds, axis=-1)
     confidence = batch_preds[np.arange(len(preds)), preds]
 
-    print(f"Confidence: \n{np.column_stack((preds, confidence))}")
+    # print(f"Confidence: \n{np.column_stack((preds, confidence))}")
+    return preds, confidence
 
-    return preds
 
-
-def run_fgsm_attack(model, im_batch, sess=tf.get_default_session(),
-                    eps=0.05, num_iter=100, to_convergence=True):
+def run_fgsm_attack(model, im_batch, sess=tf.get_default_session(), eps=0.05, num_iter=100, to_convergence=True,
+                    preprocess_func=standardize_batch, attack_bounds=(0., 255.)):
     res_batch = np.copy(im_batch)
+    adv_diff_batch = np.zeros_like(res_batch)
     batch_ph = tf.placeholder(tf.float32, shape=[None, 224, 224, 3],
                               name="batch_in")
     label_ph = tf.placeholder(tf.int32, shape=[None], name="pred_in")
     adv_im_batch = fgsm(model, batch_ph, label_ph, eps)
 
-    orig_preds = calc_preds(model, res_batch)
+    orig_preds, _ = calc_preds(model, res_batch)
     preds = orig_preds
     idx_mask = np.array([True] * len(preds))
 
     for i in range(num_iter):
         print(f"Iteration {i + 1}/{num_iter}")
-        res_batch[idx_mask] = sess.run(
+        adv_diff_batch[idx_mask] = sess.run(
             adv_im_batch,
             feed_dict={
-                batch_ph: res_batch[idx_mask],
+                batch_ph: preprocess_func(res_batch[idx_mask]) if preprocess_func else res_batch[idx_mask],
                 label_ph: orig_preds[idx_mask],
             })
-        preds = calc_preds(model, res_batch)
+        res_batch[idx_mask] += adv_diff_batch[idx_mask]
+        res_batch = np.clip(res_batch, *attack_bounds)
+        preds, _ = calc_preds(model, res_batch)
 
         # Perform adversarial attack on images yet to converge
         idx_mask = preds == orig_preds if to_convergence else idx_mask
@@ -73,7 +77,7 @@ def run_fgsm_attack(model, im_batch, sess=tf.get_default_session(),
     return res_batch
 
 
-def fgsm(model, x, y, eps, bounds=(0., 1.)):
+def fgsm(model, x, y, eps):
     """
     Performs fgsm attack on input x with label y using prediction from given
     model.
@@ -85,24 +89,18 @@ def fgsm(model, x, y, eps, bounds=(0., 1.)):
     :type y: tf.Placeholder
     :param eps: Step size for fgsm attack
     :type eps: float
-    :param bounds: 2-Tuple representing image value boundaries
-    :type bounds: Tuple[float, float]
     :return: Image after attack iteration
     """
 
-    (clip_min, clip_max) = bounds
-
     pred = model(x)
+
     loss = CLASSIFICATION_LOSS(y, pred)
     gradient = tf.gradients(loss, x)[0]
 
     # Get the sign of the gradients to create the perturbation
     signed_grad = tf.sign(gradient)
 
-    adv_x = x + eps * signed_grad
-    adv_x = tf.clip_by_value(adv_x, clip_min, clip_max)
-
-    return adv_x
+    return eps * signed_grad
 
 
 def run_papernot_attack(model, img, sess):
