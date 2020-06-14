@@ -226,18 +226,14 @@ def analyze_statistics(df, step_size, image_num, output_dir, model_name):
                                  f'{model_name} - eps_{step_size:.3f}_misscl_success_rate_by_class.jpg'))
 
 @click.command()
-@click.argument('sub_architecture', type=click.Choice(['resnet50', 'squeezenet', 'senet50']))
-@click.argument('sub_weights', type=click.Path(exists=True))
-@click.argument('sub_classes', type=click.INT)
-@click.argument('sub_label')
+@click.argument('architecture', type=click.Choice(['resnet50', 'squeezenet', 'senet50']))
+@click.argument('label')
 @click.argument('eval_dataset', type=click.Path(exists=True))
-@click.option('--blackbox-architecture', default='resnet50', type=click.Choice(['resnet50', 'senet50']))
 @click.option('--batch-size', default=4, help='Evaluation batch size')
 @click.option('--step-size', default=0.004, help='FGSM attack step size')
 @click.option('--max-iter', default=50, help='Max FGSM iterations')
 @click.option('--normalize-images', is_flag=True)
-def evaluate_attack(sub_architecture, sub_weights, sub_classes, sub_label, eval_dataset,
-                    blackbox_architecture, batch_size, step_size, max_iter, normalize_images):
+def evaluate_attack(architecture, label, eval_dataset, batch_size, step_size, max_iter, normalize_images):
 
     datagen = tf.keras.preprocessing.image.ImageDataGenerator()
     val_it = datagen.flow_from_directory(eval_dataset,
@@ -267,9 +263,8 @@ def evaluate_attack(sub_architecture, sub_weights, sub_classes, sub_label, eval_
     train_ds = gen()
     attack_bounds = (0., 255. / (255. if normalize_images else 1.))
 
-    substitute = load_model(sub_architecture, num_classes=sub_classes, trained=True,
-                            weights_path=sub_weights)
-    blackbox = load_model('blackbox', architecture=blackbox_architecture)
+    blackbox = load_model('blackbox', architecture=architecture)
+    substitute = blackbox
 
     with sess:
         batch_ph = tf.placeholder(tf.float32, shape=[None, 224, 224, 3],
@@ -315,7 +310,7 @@ def evaluate_attack(sub_architecture, sub_weights, sub_classes, sub_label, eval_
         print(f"Created result file {res_file_name}")
 
         analyze_statistics(df, step_size, val_it.n, DESTINATION_PATH,
-                           sub_label)
+                           label)
 
 
 if __name__ == '__main__':
