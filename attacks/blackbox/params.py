@@ -24,7 +24,7 @@ TRAIN_SET_WORKING = os.path.join(DATASET_BASE_PATH, "working_dataset")
 if not os.path.exists(TRAIN_SET_WORKING):
     os.makedirs(TRAIN_SET_WORKING)
 
-WEIGHTS_DIR = os.path.join(DATASET_BASE_PATH, 'weights')
+WEIGHTS_DIR = os.path.join(PROJECT_DIR, 'weights')
 SQUEEZENET_WEIGHTS_FNAME = 'substitute_squeezenet.h5'  # No pre-trained model at the moment
 SQUEEZENET_WEIGHTS_PATH = os.path.join(WEIGHTS_DIR, SQUEEZENET_WEIGHTS_FNAME)
 RESNET50_WEIGHTS_FNAME = 'substitute_resnet50.h5'
