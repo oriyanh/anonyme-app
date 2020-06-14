@@ -13,7 +13,9 @@ from attacks.blackbox.utilities import Singleton, sess
 
 
 _weights = {'squeeze_net': params.SQUEEZENET_WEIGHTS_PATH,
-            'resnet50': params.RESNET50_WEIGHTS_PATH}
+            'resnet50': params.RESNET50_WEIGHTS_PATH,
+            'senet50': params.SENET50_WEIGHTS_PATH,
+            }
 
 def load_model(model_type='squeeze_net', *args, **kwargs):
     try:
@@ -27,13 +29,19 @@ def load_model(model_type='squeeze_net', *args, **kwargs):
     print(f"Model '{model_type}' loaded successfully!")
     return model
 
-def save_model(model, model_type):
+def save_model(model, model_type, override=True):
     try:
         weights_path = _weights[model_type]
     except KeyError:
         raise NotImplementedError(f"Unsupported model type: '{model_type}'")
-
+    if not override:
+        counter = 1
+        weights_path = weights_path.replace('.h5', f'_{counter}.h5')
+        while os.path.exists(weights_path):
+            weights_path = weights_path.replace(f'_{counter}.h5', f'_{counter+1}.h5')
+            counter += 1
     try:
+        os.makedirs(os.path.dirname(weights_path), exist_ok=True)
         model.save_weights(weights_path, save_format='h5')
     except TypeError:  # If model is pure keras
         model.save_weights(weights_path)
@@ -101,7 +109,7 @@ class FireModule(Layer):
 def blackbox(architecture='resnet50'):
     model = None
     tf.keras.backend.set_session(sess)
-    if architecture == 'resnet50':
+    if architecture in ('resnet50', 'senet50', 'vgg16'):
         model = BlackboxModel(architecture)
     return model
 

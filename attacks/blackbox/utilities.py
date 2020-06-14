@@ -4,9 +4,28 @@ import os
 os.umask(2)
 import numpy as np
 import tensorflow as tf
-from PIL import Image
 from shutil import rmtree
 
+
+def standardize_batch(batch, center=True):
+    """ Noramlizes batch by adding/subtracting channel-wise mean from batch,
+
+    :param batch:  Numpy array, dimensions (N, 224, 224, 3) , channels in RGB
+    :param center: boolean, if True will subtract mean from batch, if False will add mean to batch.
+    :return: standardized batch in float32
+    """
+
+    x_temp = np.copy(batch).astype(np.float32)
+    if center:
+        x_temp[..., 0] -= 131.0912
+        x_temp[..., 1] -= 103.8827
+        x_temp[..., 2] -= 91.4953
+    else:
+        x_temp[..., 0] += 131.0912
+        x_temp[..., 1] += 103.8827
+        x_temp[..., 2] += 91.4953
+
+    return x_temp
 
 def extract_face(mtcnn, pixels, bounding_box_size=256, crop_size=224,
                  graph=tf.get_default_graph()):
@@ -19,8 +38,8 @@ def extract_face(mtcnn, pixels, bounding_box_size=256, crop_size=224,
 
     # extract the bounding box from the first face
     y1, x1, height, width = results[0]['box']
-    x_mid = x1 + width//2 if width%2 ==0 else x1 + width//2 + 1
-    y_mid = y1 + height//2 if height%2 ==0 else y1 + height//2 + 1
+    x_mid = x1 + width // 2 if width % 2 == 0 else x1 + width // 2 + 1
+    y_mid = y1 + height // 2 if height % 2 == 0 else y1 + height // 2 + 1
     smaller_dim = min((width, height))
 
     if pixels_w < bounding_box_size or pixels_h < bounding_box_size:
@@ -85,9 +104,9 @@ def extract_face(mtcnn, pixels, bounding_box_size=256, crop_size=224,
         x1_new = 0
         x2_new = pixels_w
 
-    x1 = np.random.randint(x1_new, x2_new-crop_size)
+    x1 = np.random.randint(x1_new, x2_new - crop_size)
     x2 = x1 + crop_size
-    y1 = np.random.randint(y1_new, y2_new-crop_size)
+    y1 = np.random.randint(y1_new, y2_new - crop_size)
     y2 = y1 + crop_size
     face = pixels[y1:y2, x1:x2]
     return face
@@ -126,10 +145,10 @@ def get_train_set(train_dir, batch_size):
     def gen():
         while True:
             x_train, y_train = train_it.next()
-            yield x_train.astype(np.float32) / 255.0, y_train.astype(np.int)
+            x_train = standardize_batch(x_train, True)
+            yield x_train, y_train.astype(np.int)
 
     return gen(), nbatches, train_it.num_classes, train_it.class_indices
-
 
 def get_validation_set(validation_dir, train_class_indices, batch_size):
     # TODO validation dir is assumed to be mapped properly, need to resolve this
@@ -146,16 +165,17 @@ def get_validation_set(validation_dir, train_class_indices, batch_size):
     def gen():
         while True:
             x_val, y_unmapped = validation_it.next()
-
+            x_val = standardize_batch(x_val, True)
             y_mapped = [class_map[y] for y in y_unmapped]
             y_val = np.array([train_class_indices.get(y, -1) for y in y_mapped])
             print(f"Number of predictions from non existent classes: {np.count_nonzero(y_val < 0)}")
-            y_val = np.array([train_class_indices.get(y, 194) for y in y_mapped])
-            yield x_val.astype(np.float32) / 255.0, y_val.astype(np.int)
+            y_val = np.array([train_class_indices.get(y, 0) for y in y_mapped])
+            yield x_val, y_val.astype(np.int)
 
     return gen(), nbatches
 
-def oracle_classify_and_save(oracle, dataset_dir, output_dir, batch_size, prune_threshold=0):
+def oracle_classify_and_save(oracle, dataset_dir, output_dir, batch_size, prune_threshold=0,
+                             min_num_samples=0):
     datagen = tf.keras.preprocessing.image.ImageDataGenerator()
     train_it = datagen.flow_from_directory(dataset_dir, class_mode=None, batch_size=batch_size,
                                            shuffle=True, target_size=(224, 224))
@@ -163,17 +183,17 @@ def oracle_classify_and_save(oracle, dataset_dir, output_dir, batch_size, prune_
     nbatches = train_it.n // batch_size
     if nbatches * batch_size < train_it.n:
         nbatches += 1
-
+    print(f"Classifying images from {dataset_dir} and saving to {output_dir}")
     with graph.as_default():
         tf.keras.backend.set_session(sess)
         for step in range(nbatches):
-            print(f"Progress {(step+1)*100/nbatches:.3f}%")
             images = train_it.next()
             label_batch = oracle.predict(images)
             labels = np.argmax(label_batch, axis=1)
             save_batch(images, labels, output_dir)
-    if prune_threshold > 0:
-        prune_dataset(output_dir, prune_threshold)
+
+    if min_num_samples > 0:
+        prune_dataset(output_dir, min_num_samples)
 
 def save_batch(images, labels, output_dir):
     for image, label in zip(images, labels):
@@ -187,17 +207,16 @@ def save_batch(images, labels, output_dir):
             fname = f"{np.random.randint(100000000)}".rjust(9, '0') + ".jpg"
             output = os.path.join(label_dir, fname)
 
-        img = Image.fromarray(image.astype(np.uint8))
-        img.save(output)
+        tf.keras.preprocessing.image.save_img(output, image.astype(np.uint8), scale=False)
 
 def prune_dataset(dataset_dir, threshold=10):
-    print(f"Pruning classes from {dataset_dir} that have less than {threshold} samples")
+    print(f"Pruning classes from {dataset_dir} that have {threshold} samples or less")
     sub_directories = os.listdir(dataset_dir)
     print(f"Initial number of classes: {len(sub_directories)}")
     for sub_dir in sub_directories:
         class_path = os.path.join(dataset_dir, sub_dir)
         num_samples = len(os.listdir(class_path))
-        if num_samples < threshold:
+        if num_samples <= threshold:
             print(f"Pruning class {sub_dir}")
             rmtree(class_path, ignore_errors=True)
     num_classes = len(os.listdir(dataset_dir))
@@ -218,6 +237,7 @@ class Singleton(type):
 
 # config = tf.ConfigProto(device_count={'GPU': 0})  # Used on Oriyan's computer :)
 config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
 graph = tf.get_default_graph()
 sess = tf.Session(graph=graph, config=config)
 
