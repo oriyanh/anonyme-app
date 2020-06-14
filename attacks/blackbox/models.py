@@ -118,6 +118,9 @@ class BlackboxModel(metaclass=Singleton):
         preds = self.model.predict(preprocessed_batch)
         return preds
 
+    def __call__(self, batch):
+        return self.model(batch)
+
 
 _model_functions = {'squeeze_net': squeeze_net,
                     'resnet50': resnet50,
