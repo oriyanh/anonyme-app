@@ -231,13 +231,18 @@ def analyze_statistics(df, step_size, image_num, output_dir, model_name):
 @click.argument('sub_classes', type=click.INT)
 @click.argument('sub_label')
 @click.argument('eval_dataset', type=click.Path(exists=True))
-@click.option('--blackbox-architecture', default='resnet50', type=click.Choice(['resnet50', 'senet50']))
+@click.option('--blackbox-architecture', default=None, type=click.Choice(['resnet50', 'senet50']))
 @click.option('--batch-size', default=4, help='Evaluation batch size')
 @click.option('--step-size', default=0.004, help='FGSM attack step size')
 @click.option('--max-iter', default=50, help='Max FGSM iterations')
 @click.option('--normalize-images', is_flag=True)
 def evaluate_attack(sub_architecture, sub_weights, sub_classes, sub_label, eval_dataset,
                     blackbox_architecture, batch_size, step_size, max_iter, normalize_images):
+
+    if blackbox_architecture is None:
+        if sub_architecture == 'squeezenet':
+            raise ValueError('Blackbox architecture must be specified for squeezenet substitute')
+        blackbox_architecture = sub_architecture
 
     datagen = tf.keras.preprocessing.image.ImageDataGenerator()
     val_it = datagen.flow_from_directory(eval_dataset,
