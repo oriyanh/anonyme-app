@@ -235,6 +235,9 @@ def analyze_statistics(df, step_size, image_num, output_dir, model_name):
 @click.option('--normalize-images', is_flag=True)
 def evaluate_attack(architecture, label, eval_dataset, batch_size, step_size, max_iter, normalize_images):
 
+    global DESTINATION_PATH
+    DESTINATION_PATH = f'{DESTINATION_PATH}-{label}'
+
     datagen = tf.keras.preprocessing.image.ImageDataGenerator()
     val_it = datagen.flow_from_directory(eval_dataset,
                                          shuffle=False, class_mode='sparse', batch_size=batch_size,

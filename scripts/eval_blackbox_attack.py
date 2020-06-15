@@ -239,6 +239,9 @@ def analyze_statistics(df, step_size, image_num, output_dir, model_name):
 def evaluate_attack(sub_architecture, sub_weights, sub_classes, sub_label, eval_dataset,
                     blackbox_architecture, batch_size, step_size, max_iter, normalize_images):
 
+    global DESTINATION_PATH
+    DESTINATION_PATH = f'{DESTINATION_PATH}-{sub_label}'
+
     if blackbox_architecture is None:
         if sub_architecture == 'squeezenet':
             raise ValueError('Blackbox architecture must be specified for squeezenet substitute')
