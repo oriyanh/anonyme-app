@@ -233,7 +233,8 @@ def analyze_statistics(df, step_size, image_num, output_dir, model_name):
 @click.option('--step-size', default=0.004, help='FGSM attack step size')
 @click.option('--max-iter', default=50, help='Max FGSM iterations')
 @click.option('--normalize-images', is_flag=True)
-def evaluate_attack(architecture, label, eval_dataset, batch_size, step_size, max_iter, normalize_images):
+@click.option('--cross', is_flag=True)
+def evaluate_attack(architecture, label, eval_dataset, batch_size, step_size, max_iter, normalize_images, cross):
 
     global DESTINATION_PATH
     DESTINATION_PATH = f'{DESTINATION_PATH}-{label}'
@@ -267,7 +268,11 @@ def evaluate_attack(architecture, label, eval_dataset, batch_size, step_size, ma
     attack_bounds = (0., 255. / (255. if normalize_images else 1.))
 
     blackbox = load_model('blackbox', architecture=architecture)
-    substitute = blackbox
+    if cross:
+        sub_architecture = 'resnet50' if architecture == 'senet50' else 'senet50'
+        substitute = load_model('blackbox', architecture=sub_architecture)
+    else:
+        substitute = blackbox
 
     with sess:
         batch_ph = tf.placeholder(tf.float32, shape=[None, 224, 224, 3],
