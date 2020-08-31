@@ -1,7 +1,7 @@
 #!/bin/csh
 #SBATCH -c2
-#SBATCH --output=/cs/ep/503/outputs/resnet50_step_0.01_train.out
-#SBATCH --err=/cs/ep/503/outputs/resnet50_step_0.01_train.err
+#SBATCH --output=/cs/epold/503/outputs/resnet50_step_0.01_train.out
+#SBATCH --err=/cs/epold/503/outputs/resnet50_step_0.01_train.err
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1,vmem:8G
 #SBATCH --time=4-0
