@@ -10,11 +10,10 @@ import tensorflow as tf
 from keras.backend import set_session
 from tensorflow.python.platform import gfile
 import torch
-from PerceptualSimilarity.models import PerceptualLoss
 
 from attacks.blackbox import params
 from attacks.blackbox.utilities import extract_face
-from attacks.blackbox.params import FACENET_WEIGHTS_PATH, NUM_CLASSES_RESNET50
+from attacks.blackbox.params import FACENET_WEIGHTS_PATH
 from attacks.blackbox.adversaries import run_fgsm_attack, \
     run_papernot_attack, generate_adversarial_sample
 from attacks.blackbox.models import load_model
@@ -51,8 +50,6 @@ def load_app_globals():
     # Load MTCNN model
     app.mtcnn = MTCNN()
     app.substitute_model = load_model('resnet50', weights_path=params.RESNET50_WEIGHTS_PATH)
-    app.perceptual_loss = PerceptualLoss(model='net-lin', net='alex', use_gpu=torch.cuda.is_available())
-
     atexit.register(webservice_cleanup, app.sess)
 
 
