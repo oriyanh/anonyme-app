@@ -1,6 +1,9 @@
 print(f"Loading module {__file__}")
 
 import os
+from project_params import ROOT_DIR
+from pathlib import Path
+
 os.umask(2)
 LEARNING_RATE = 0.04
 MOMENTUM = 0.9
@@ -10,7 +13,7 @@ BATCH_SIZE = 24
 # LAMBDA = 0.01  # Step size for jacobian augmentation (for images in [0,1]
 LAMBDA = 2.5  # Step size for jacobian augmentation (for images in [0,255]
 
-PROJECT_DIR = '/cs/ep/503'  # TODO: change to os-independent path
+PROJECT_DIR = Path(ROOT_DIR).parent
 
 DATASET_BASE_PATH = os.path.join(PROJECT_DIR, 'dataset')
 AUGMENTATION_BASE_PATH = os.path.join(DATASET_BASE_PATH, "augmented_images")
