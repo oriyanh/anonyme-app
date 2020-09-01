@@ -5,7 +5,6 @@ certifi
 chardet
 Click
 cycler
-easyfacenet
 Flask
 gast
 google-pasta
@@ -13,6 +12,7 @@ grpcio
 h5py
 idna
 imageio
+ipython
 itsdangerous
 Jinja2
 joblib
@@ -36,6 +36,7 @@ python-dateutil
 pytz
 PyYAML
 requests
+scikit-image
 scikit-learn
 scipy
 six
@@ -43,6 +44,9 @@ tensorboard==1.14.0
 tensorflow-estimator==1.14.0
 tensorflow-gpu==1.14.0
 termcolor
+torch==1.5.0
+torchvision==0.6.0
+tqdm
 urllib3
 Werkzeug
 wrapt

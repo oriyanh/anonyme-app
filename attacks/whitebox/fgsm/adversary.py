@@ -3,8 +3,12 @@ from imageio import imread, imwrite
 import cv2
 import os
 import numpy as np
+from project_params import ROOT_DIR
 
-OUTPUT_PATH = '/cs/ep/503/outputs/fgsm'
+os.umask(2)
+OUTPUT_PATH = os.path.join(ROOT_DIR, 'outputs', 'fgsm')
+os.makedirs(OUTPUT_PATH, exist_ok=True)
+
 ADV_LOSS_STOP = 0.01
 LOSS_LIMIT = 0.0008
 LOSS_CNT_THRESHOLD = 10

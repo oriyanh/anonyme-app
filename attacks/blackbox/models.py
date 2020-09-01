@@ -26,7 +26,11 @@ def load_model(model_type='squeeze_net', *args, **kwargs):
 
     assert model.predict(np.random.randn(1, 224, 224, 3)) is not None
 
-    print(f"Model '{model_type}' loaded successfully!")
+    if 'architecture' in kwargs:
+        print(f"Model '{model_type}' loaded successfully with architecture '{kwargs['architecture']}'")
+    else:
+        print(f"Model '{model_type}' loaded successfully!")
+
     return model
 
 def save_model(model, model_type, override=True):
@@ -46,7 +50,8 @@ def save_model(model, model_type, override=True):
     except TypeError:  # If model is pure keras
         model.save_weights(weights_path)
 
-def resnet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
+def resnet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False,
+             weights_path=params.RESNET50_WEIGHTS_PATH):
     tf.keras.backend.set_session(sess)
 
     optimizer = keras.optimizers.Adam()
@@ -55,11 +60,13 @@ def resnet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
 
     if trained:
         model.build(input_shape=[None, 224, 224, 3])
-        model.load_weights(params.RESNET50_WEIGHTS_PATH)
+        model.load_weights(weights_path)
 
     return model
 
-def senet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
+
+def senet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False,
+            weights_path=params.SENET50_WEIGHTS_PATH):
     tf.keras.backend.set_session(sess)
 
     optimizer = keras.optimizers.Adam()
@@ -68,11 +75,12 @@ def senet50(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
 
     if trained:
         model.build(input_shape=[None, 224, 224, 3])
-        model.load_weights(params.SENET50_WEIGHTS_PATH)
+        model.load_weights(weights_path)
 
     return model
 
-def squeeze_net(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
+def squeeze_net(num_classes=params.NUM_CLASSES_VGGFACE, trained=False,
+                weights_path=params.SQUEEZENET_WEIGHTS_PATH):
     optimizer = tf.keras.optimizers.SGD(params.LEARNING_RATE, momentum=params.MOMENTUM, nesterov=True)
     model = tf.keras.Sequential(layers=[Conv2D(64, 3, 2, padding='valid', activation='relu'),
                                         MaxPool2D(3, 2),
@@ -94,7 +102,7 @@ def squeeze_net(num_classes=params.NUM_CLASSES_VGGFACE, trained=False):
 
     if trained:
         model.build(input_shape=[None, 224, 224, 3])
-        model.load_weights(params.SQUEEZENET_WEIGHTS_PATH)
+        model.load_weights(weights_path)
 
     return model
 
@@ -136,6 +144,10 @@ class BlackboxModel(metaclass=Singleton):
         preprocessed_batch = utils.preprocess_input(batch, version=2)
         preds = self.model.predict(preprocessed_batch)
         return preds
+
+    def __call__(self, batch):
+        return self.model(batch)
+
 
 _model_functions = {'squeeze_net': squeeze_net,
                     'resnet50': resnet50,
