@@ -36,9 +36,13 @@ For the code to run correctly, facenet_model.pb must be downloaded from our Driv
 
 Running instructions:
 
-A request must be sent to /whitebox endpoint. Its body contains an input image file and a target image file, both 160x160x3. It can also contain a json containing eps and num_iter params, where eps is the FGSM attack step size, and num_iter is the maximum number of iteration for which FGSM attack will run.
+A POST request must be sent to /whitebox endpoint. Its body contains an input image file and a target image file, both 160x160x3. It can also contain a json containing eps and num_iter params, where eps is the FGSM attack step size, and num_iter is the maximum number of iteration for which FGSM attack will run.
 
-In order to view the FGSM attack code, you can view attacks.whitebox.fgsm.adversary.py.
+In order to view the FGSM attack code, you can view attacks.whitebox.fgsm.adversary.py .
+
+### Black-box attack pipeline
+
+Nearly identical to the white-box attack pipeline, except a POST request must be sent to /blackbox with a list if input image files in its body, each image 224x224x3. To review the attack code, you can view attacks.blackbox.adversaries.py . Weights file substitute_resnet50.h5 must be present in the weights directory, available in our google drive directory.
 
 ### Substitute model training
 
