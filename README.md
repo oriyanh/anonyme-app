@@ -19,7 +19,7 @@ In order to install project dependencies, using a new virtual environment, run:
 
 ## Google Drive Folder
 
-All weights and graphs can be found in our Google Drive folder found [here](https://drive.google.com/drive/u/1/folders/1PIufZmHXbAw28SleVHKualghO5t0fcrU). This is a private Google Drive folder, access will be given per request.
+All weights and graphs can be found in our Google Drive folder found [here](https://drive.google.com/drive/u/1/folders/1PIufZmHXbAw28SleVHKualghO5t0fcrU). This is a private Google Drive folder, access will be given per request (currently only to users with @mail.huji addresses).
 
 ## Entry Points & Usage
 
@@ -36,7 +36,7 @@ For the code to run correctly, facenet_model.pb must be downloaded from our Driv
 
 Running instructions:
 
-A request must be sent to /whitebox endpoint. Its body contains an input file and a target file. It can also contain a json containing eps and num_iter params, where eps is the FGSM attack step size, and num_iter is the maximum number of iteration for which FGSM attack will run.
+A request must be sent to /whitebox endpoint. Its body contains an input image file and a target image file, both 160x160x3. It can also contain a json containing eps and num_iter params, where eps is the FGSM attack step size, and num_iter is the maximum number of iteration for which FGSM attack will run.
 
 In order to view the FGSM attack code, you can view attacks.whitebox.fgsm.adversary.py.
 
@@ -46,13 +46,12 @@ To train our substitute model, you must:
 
  1. Create 'dataset/augmented_images' and 'weights' directories in the repo's parent directory.
  2. Pre-process your training set by running `python <repo>/scripts/sort_augmented_images.py <pruning_threshold> <training_directory>`
- 3. Then, for every iteration of training, run first `python <repo>/attacks/blackbox/train.py`, then `python <repo>/attacks/blackbox/augmentation.py`, and finally `  
-python <repo>/scripts/sort_augmented_images.py <pruning_threshold>`
+ 3. Then, for every iteration of training, run first (a) `python <repo>/attacks/blackbox/train.py`, then (b) `python <repo>/attacks/blackbox/augmentation.py`, and finally (c) `python <repo>/scripts/sort_augmented_images.py <pruning_threshold>`
  4. Your trained model will appear in weights path.
 
 NOTES: 
 
- - First iteration of training trains a model on the initial dataset of VGGFace2 found in \<training_directory\>, therefore, in order to train a model on a data set that's been augmented 3 times, step 3 must be performed 4 times.
+ - First iteration of training trains a model on the initial dataset of VGGFace2 found in \<training_directory\>, therefore, in order to train a model on a data set that's been augmented 3 times,  step 3a must be performed 4 times and 3b-c only 3 times.
  - An example script which trains a substitute model with 3 iterations of augmentation can be found in scripts.train.sh 
 
 ### Evaluate black-box attack
