@@ -1,4 +1,3 @@
-
 ♪ README README README a man of the midnight! ♪
 
 # anonyME
@@ -7,6 +6,8 @@
 Amit Segal & Oriyan Hermoni<br>
 <br>
 **anonyME** is a system which allows users to inoculate their personal images against unauthorized machine learning models, with minimal distortion of the input image, without wearing specialized clothing articles, and with no requirement of any previous knowledge in machine learning or face recognition.
+<br>
+A full report with our results can be found [here](https://gitlab.com/mashehu-anonyme/anonyme-app/-/blob/master/anonyME___Anonymization_of_Facial_Footprints_Report_final.pdf) .
 
 ## Requirements & Setup
 
